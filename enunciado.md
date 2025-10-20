@@ -30,7 +30,7 @@
 
 ### 💰 **Estadísticas Visuales**
 - **Gráfico de barras** con la facturación mensual.  
-- Análisis comparativo entre períodos.  
+
 
 ---
 
@@ -38,7 +38,7 @@
 
 ### 🔒 **Módulo de Reservas Anticipadas**
 - Permite a los clientes **reservar vehículos con antelación**.  
-- Incluye confirmación automática de disponibilidad y alertas.  
+
 
 ---
 
