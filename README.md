@@ -39,10 +39,10 @@
 | Legajo |Apellido y Nombre |
 |--------------------|------------------------|
 | 94696 | Heiland Valentina Abril|
-| **[Nombre 2]** | Pugliese Lourdes Belen |
-| **[Nombre 3]** | Mendez Agustin Alberto |
-| **[Nombre 4]** | Baigorria José Alejo  |
-| **[Nombre 4]** | Lucini Gabriel Alejandro |
+| 95196 | Pugliese Lourdes Belen |
+| 94822 | Mendez Agustin Alberto |
+| | Baigorria José Alejo  |
+|  | Lucini Gabriel Alejandro |
 
 
 
