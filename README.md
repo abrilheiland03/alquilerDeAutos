@@ -1,5 +1,16 @@
 # 🚗 **Sistema de Alquiler de Vehículos**
 
+---
+
+## 👥 **Integrantes del Proyecto**
+
+| Legajo |Apellido y Nombre |
+|--------------------|------------------------|
+| 94696 | Heiland Valentina Abril|
+| 95196 | Pugliese Lourdes Belen |
+| 94822 | Mendez Agustin Alberto |
+| 96269 | Baigorria José Alejo  |
+| 98023 | Lucini Gabriel Alejandro |
 
 ---
 
@@ -31,20 +42,6 @@
 ## 🌟 **Opciones Avanzadas**
 
 - 🔒 **Módulo de reservas anticipadas**, con verificación de disponibilidad.  
-
----
-
-## 👥 **Integrantes del Proyecto**
-
-| Legajo |Apellido y Nombre |
-|--------------------|------------------------|
-| 94696 | Heiland Valentina Abril|
-| 95196 | Pugliese Lourdes Belen |
-| 94822 | Mendez Agustin Alberto |
-| 96269 | Baigorria José Alejo  |
-| 98023 | Lucini Gabriel Alejandro |
-
-
 
 ---
 
