@@ -2,6 +2,12 @@
 
 ---
 
+## 🧭 **Introducción**
+
+📘 Proyecto académico orientado al desarrollo de un sistema integral para la **gestión de alquileres de automóviles**, con control de clientes, vehículos y reportes administrativos.
+
+---
+
 ## 👥 **Integrantes del Proyecto**
 
 | Legajo |Apellido y Nombre |
@@ -11,12 +17,6 @@
 | 94822 | Mendez Agustin Alberto |
 | 96269 | Baigorria José Alejo  |
 | 98023 | Lucini Gabriel Alejandro |
-
----
-
-## 🧭 **Introducción**
-
-📘 Proyecto académico orientado al desarrollo de un sistema integral para la **gestión de alquileres de automóviles**, con control de clientes, vehículos y reportes administrativos.
 
 ---
 
