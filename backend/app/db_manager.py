@@ -1,8 +1,9 @@
+from datetime import date
 import sqlite3
 import os
 from modelos import (
     Documento, EstadoAlquiler, EstadoAuto, 
-    EstadoMantenimiento, Permiso
+    EstadoMantenimiento, Permiso, Usuario
 )
 
 
@@ -219,3 +220,134 @@ class DBManager:
             if conn:
                 conn.close()
         return lista
+    
+    def create_full_user(self, persona_data, usuario_data, 
+                         role_data, role_type):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            cursor = conn.cursor()
+            
+            cursor.execute("BEGIN")
+
+            sql_persona = """
+                INSERT INTO Persona (nombre, apellido, mail, telefono, 
+                                     fecha_nacimiento, tipo_documento, nro_documento)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+            cursor.execute(sql_persona, (
+                persona_data['nombre'], persona_data['apellido'], 
+                persona_data['mail'], persona_data['telefono'],
+                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'], 
+                persona_data['nro_documento']
+            ))
+            
+            id_persona = cursor.lastrowid
+            if not id_persona:
+                raise sqlite3.Error("No se pudo obtener el ID de la persona.")
+
+            sql_usuario = """
+                INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
+                VALUES (?, ?, ?, ?)
+            """
+            cursor.execute(sql_usuario, (
+                id_persona, usuario_data['user_name'], 
+                usuario_data['password_hash'], usuario_data['id_permiso']
+            ))
+
+            if role_type == 'cliente':
+                sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
+                cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
+            
+            elif role_type == 'empleado':
+                sql_role = "INSERT INTO Empleado (id_persona, fecha_alta, sueldo) VALUES (?, ?, ?)"
+                cursor.execute(sql_role, (id_persona, role_data['fecha_alta'], role_data['sueldo']))
+            
+            elif role_type == 'admin':
+                sql_role = "INSERT INTO Administrador (id_persona, descripcion) VALUES (?, ?)"
+                cursor.execute(sql_role, (id_persona, role_data['descripcion']))
+            
+            else:
+                raise ValueError("Tipo de rol no válido.")
+
+            conn.commit()
+            return id_persona
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error durante el registro, revirtiendo cambios: {e}")
+            if conn:
+                conn.rollback()
+            return None
+        finally:
+            if conn:
+                conn.close()
+
+    def get_user_data_for_login_by_mail(self, mail):
+        sql = """
+            SELECT u.id_usuario, u.password, u.id_permiso, p.id_persona
+            FROM Usuario u
+            JOIN Persona p ON u.id_persona = p.id_persona
+            WHERE p.mail = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            row = conn.cursor().execute(sql, (mail,)).fetchone()
+            
+            if row:
+                return dict(row)
+        except sqlite3.Error as e:
+            print(f"Error al buscar datos de login: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def get_full_usuario_by_id(self, id_usuario):
+        sql = """
+            SELECT 
+                u.id_usuario, u.user_name, u.password,
+                p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
+                p.fecha_nacimiento, p.nro_documento,
+                perm.id_permiso, perm.descripcion as permiso_desc,
+                doc.id_tipo, doc.descripcion as doc_desc
+            FROM Usuario u
+            JOIN Persona p ON u.id_persona = p.id_persona
+            JOIN Permiso perm ON u.id_permiso = perm.id_permiso
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
+            WHERE u.id_usuario = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            row = conn.cursor().execute(sql, (id_usuario,)).fetchone()
+            
+            if row:
+                doc_obj = Documento(
+                    id_tipo=row['id_tipo'], 
+                    descripcion=row['doc_desc']
+                )
+                perm_obj = Permiso(
+                    id_permiso=row['id_permiso'],
+                    descripcion=row['permiso_desc']
+                )
+                
+                usuario_obj = Usuario(
+                    id_usuario=row['id_usuario'],
+                    user_name=row['user_name'],
+                    password=row['password'],
+                    permiso=perm_obj,
+                )
+                return usuario_obj
+        except sqlite3.Error as e:
+            print(f"Error al buscar usuario completo: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
