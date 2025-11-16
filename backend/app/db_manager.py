@@ -742,4 +742,28 @@ class DBManager:
             return False
         finally:
             if conn: conn.close()
+
+    # --- BUSCAR VEHICULOS LIBRES ---
+
+    def get_vehiculos_libres(self):
+        sql = """
+            SELECT v.*, e.descripcion as estado_desc
+            FROM Vehiculo v
+            JOIN EstadoAuto e ON v.id_estado = e.id_estado
+            WHERE e.descripcion = 'Libre'
+            ORDER BY v.marca, v.modelo
+        """
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute(sql).fetchall()
+            for row in rows:
+                lista.append(self._rebuild_vehiculo_obj(row))
+        except sqlite3.Error as e:
+            print(f"Error al obtener vehiculos libres: {e}")
+        finally:
+            if conn: conn.close()
+        return lista
                 

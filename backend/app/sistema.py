@@ -294,3 +294,8 @@ class SistemaAlquiler:
         except Exception as e:
             print(f"Error inesperado al eliminar vehiculo: {e}")
             return False
+        
+    # --- BUSCAR VEHICULOS LIBRES ---
+
+    def listar_vehiculos_libres(self):
+        return self.db_manager.get_vehiculos_libres()

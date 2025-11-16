@@ -46,5 +46,7 @@ print(matricula)
 print(f"Vehículo creado con ID: {matricula}")
 vehiculo = sistema.buscar_vehiculo_por_matricula(matricula)
 print(f"Vehículo encontrado: {vehiculo.marca} {vehiculo.modelo} con patente {vehiculo.patente}")
-sistema.listar_vehiculos()
+libres = sistema.listar_vehiculos_libres()
+for v in libres:
+    print(f"Vehículo libre: {v.marca} {v.modelo} con patente {v.patente}")
 sistema.eliminar_vehiculo(matricula)
