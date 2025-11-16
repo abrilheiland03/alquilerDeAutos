@@ -114,7 +114,7 @@ class EstadoAlquiler:
 class Persona:
     def __init__(self, id_persona: int, nombre: str, apellido: str, mail: str, 
                  telefono: str, fecha_nacimiento: date, tipo_documento: Documento, 
-                 nro_documento: int, usuario: 'Usuario'):
+                 nro_documento: int, usuario: 'Usuario' = None):
         self.id_persona = id_persona
         self.nombre = nombre
         self.apellido = apellido
@@ -208,8 +208,8 @@ class Persona:
 
     @usuario.setter
     def usuario(self, value):
-        if not isinstance(value, Usuario):
-            raise ValueError('usuario debe ser una instancia de la clase Empleado')
+        if not isinstance(value, Usuario) and value is not None:
+            raise ValueError('usuario debe ser una instancia de la clase Usuario o None')
         self._usuario = value
 
 # --- Clases Derivadas de Persona ---
@@ -218,10 +218,10 @@ class Cliente(Persona):
     def __init__(self, id_cliente: int, fecha_alta: date, 
                  id_persona: int, nombre: str, apellido: str, mail: str, 
                  telefono: str, fecha_nacimiento: date, tipo_documento: Documento, 
-                 nro_documento: int):
+                 nro_documento: int, usuario: 'Usuario' = None):
         
         super().__init__(id_persona, nombre, apellido, mail, telefono, 
-                         fecha_nacimiento, tipo_documento, nro_documento)
+                         fecha_nacimiento, tipo_documento, nro_documento, usuario)
         
         self.id_cliente = id_cliente
         self.fecha_alta = fecha_alta
@@ -250,10 +250,10 @@ class Empleado(Persona):
     def __init__(self, id_empleado: int, fecha_alta: date, sueldo: float,
                  id_persona: int, nombre: str, apellido: str, mail: str, 
                  telefono: str, fecha_nacimiento: date, tipo_documento: Documento, 
-                 nro_documento: int):
+                 nro_documento: int, usuario: 'Usuario' = None):
         
         super().__init__(id_persona, nombre, apellido, mail, telefono, 
-                         fecha_nacimiento, tipo_documento, nro_documento)
+                         fecha_nacimiento, tipo_documento, nro_documento, usuario)
         
         self.id_empleado = id_empleado
         self.fecha_alta = fecha_alta
@@ -293,10 +293,10 @@ class Administrador(Persona):
     def __init__(self, id_administrador: int, descripcion: str,
                  id_persona: int, nombre: str, apellido: str, mail: str, 
                  telefono: str, fecha_nacimiento: date, tipo_documento: Documento, 
-                 nro_documento: int):
+                 nro_documento: int, usuario: 'Usuario' = None):
         
         super().__init__(id_persona, nombre, apellido, mail, telefono, 
-                         fecha_nacimiento, tipo_documento, nro_documento)
+                         fecha_nacimiento, tipo_documento, nro_documento, usuario)
         
         self.id_administrador = id_administrador
         self.descripcion = descripcion

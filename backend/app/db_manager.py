@@ -2,7 +2,7 @@ from datetime import date
 import sqlite3
 import os
 from modelos import (
-    Documento, EstadoAlquiler, EstadoAuto, 
+    Cliente, Documento, EstadoAlquiler, EstadoAuto, 
     EstadoMantenimiento, Permiso, Usuario
 )
 
@@ -351,3 +351,256 @@ class DBManager:
             if conn:
                 conn.close()
         return None
+    
+    # --- ABMC de CLIENTE ---
+
+    def create_client_only(self, persona_data, role_data):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            sql_persona = """
+                INSERT INTO Persona (nombre, apellido, mail, telefono, 
+                                     fecha_nacimiento, tipo_documento, nro_documento)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+            cursor.execute(sql_persona, (
+                persona_data['nombre'], persona_data['apellido'], 
+                persona_data['mail'], persona_data['telefono'],
+                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'], 
+                persona_data['nro_documento']
+            ))
+            
+            id_persona = cursor.lastrowid
+            if not id_persona:
+                raise sqlite3.Error("No se pudo obtener el ID de la persona.")
+
+            sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
+            cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
+            
+            id_cliente = cursor.lastrowid
+            
+            conn.commit()
+            return id_cliente
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error durante la creación del cliente, revirtiendo cambios: {e}")
+            if conn:
+                conn.rollback()
+            return None
+        finally:
+            if conn:
+                conn.close()
+
+    def get_client_by_id(self, id_cliente):
+        sql = """
+            SELECT 
+                c.id_cliente, c.fecha_alta,
+                p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
+                p.fecha_nacimiento, p.nro_documento,
+                doc.id_tipo, doc.descripcion as doc_desc
+            FROM Cliente c
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
+            WHERE c.id_cliente = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            row = conn.cursor().execute(sql, (id_cliente,)).fetchone()
+            
+            if row:
+                doc_obj = Documento(
+                    id_tipo=row['id_tipo'], 
+                    descripcion=row['doc_desc']
+                )
+                
+                cliente_obj = Cliente(
+                    id_cliente=row['id_cliente'],
+                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    id_persona=row['id_persona'],
+                    nombre=row['nombre'],
+                    apellido=row['apellido'],
+                    mail=row['mail'],
+                    telefono=row['telefono'],
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    tipo_documento=doc_obj,
+                    nro_documento=row['nro_documento']
+                )
+                return cliente_obj
+        except sqlite3.Error as e:
+            print(f"Error al buscar cliente por ID: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def get_client_by_document(self, tipo_documento_id, nro_documento):
+        sql = """
+            SELECT 
+                c.id_cliente, c.fecha_alta,
+                p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
+                p.fecha_nacimiento, p.nro_documento,
+                doc.id_tipo, doc.descripcion as doc_desc
+            FROM Cliente c
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
+            WHERE p.tipo_documento = ? AND p.nro_documento = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            row = conn.cursor().execute(sql, (tipo_documento_id, nro_documento)).fetchone()
+            
+            if row:
+                doc_obj = Documento(
+                    id_tipo=row['id_tipo'], 
+                    descripcion=row['doc_desc']
+                )
+                
+                cliente_obj = Cliente(
+                    id_cliente=row['id_cliente'],
+                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    id_persona=row['id_persona'],
+                    nombre=row['nombre'],
+                    apellido=row['apellido'],
+                    mail=row['mail'],
+                    telefono=row['telefono'],
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    tipo_documento=doc_obj,
+                    nro_documento=row['nro_documento']
+                )
+                return cliente_obj
+        except sqlite3.Error as e:
+            print(f"Error al buscar cliente por documento: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def get_all_clients(self):
+        sql = """
+            SELECT 
+                c.id_cliente, c.fecha_alta,
+                p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
+                p.fecha_nacimiento, p.nro_documento,
+                doc.id_tipo, doc.descripcion as doc_desc
+            FROM Cliente c
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
+            ORDER BY p.apellido, p.nombre
+        """
+        conn = None
+        lista_clientes = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista_clientes
+            
+            rows = conn.cursor().execute(sql).fetchall()
+            
+            for row in rows:
+                doc_obj = Documento(
+                    id_tipo=row['id_tipo'], 
+                    descripcion=row['doc_desc']
+                )
+                cliente_obj = Cliente(
+                    id_cliente=row['id_cliente'],
+                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    id_persona=row['id_persona'],
+                    nombre=row['nombre'],
+                    apellido=row['apellido'],
+                    mail=row['mail'],
+                    telefono=row['telefono'],
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    tipo_documento=doc_obj,
+                    nro_documento=row['nro_documento']
+                )
+                lista_clientes.append(cliente_obj)
+            return lista_clientes
+        except sqlite3.Error as e:
+            print(f"Error al obtener todos los clientes: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return lista_clientes
+
+    def update_client_persona_data(self, id_cliente, persona_data):
+        sql_update_persona = """
+            UPDATE Persona
+            SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
+                fecha_nacimiento = ?, tipo_documento = ?, nro_documento = ?
+            WHERE id_persona = (SELECT id_persona FROM Cliente WHERE id_cliente = ?)
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute(sql_update_persona, (
+                persona_data['nombre'], persona_data['apellido'],
+                persona_data['mail'], persona_data['telefono'],
+                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'],
+                persona_data['nro_documento'],
+                id_cliente
+            ))
+            conn.commit()
+            return cursor.rowcount > 0 
+        except sqlite3.Error as e:
+            print(f"Error al actualizar cliente: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
+
+    def delete_client_full(self, id_cliente):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            
+            row = cursor.execute(
+                "SELECT id_persona FROM Cliente WHERE id_cliente = ?", (id_cliente,)
+            ).fetchone()
+            
+            if not row:
+                print("Error: Cliente no encontrado.")
+                return False
+                
+            id_persona = row['id_persona']
+
+            cursor.execute("BEGIN")
+            
+            cursor.execute("DELETE FROM Usuario WHERE id_persona = ?", (id_persona,))
+            cursor.execute("DELETE FROM Cliente WHERE id_cliente = ?", (id_cliente,))
+            cursor.execute("DELETE FROM Persona WHERE id_persona = ?", (id_persona,))
+            
+            conn.commit()
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"Error de integridad: No se puede eliminar. El cliente (ID: {id_cliente}) probablemente tiene alquileres asociados.")
+            if conn:
+                conn.rollback()
+            return False
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al eliminar cliente: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
+                

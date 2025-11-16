@@ -124,7 +124,7 @@ class SistemaAlquiler:
             print("Acción fallida: No hay usuario logueado.")
             return False
         
-        if self.usuario_actual.permiso.descripcion == required_permission_desc:
+        if self.usuario_actual.permiso.descripcion.upper() == required_permission_desc.upper():
             return True
         else:
             print(f"Acción fallida: Se requiere permiso de '{required_permission_desc}'.")
@@ -132,3 +132,111 @@ class SistemaAlquiler:
     
     def obtener_estado_auto_por_id(self, id_estado: int):
         return self.db_manager.get_estado_auto_by_id(id_estado)
+    
+    # --- ABMC de CLIENTE ---
+
+    def crear_cliente_mostrador(self, data):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return None
+        
+        try:
+            persona_data = {
+                'nombre': data['nombre'], 'apellido': data['apellido'],
+                'mail': data['mail'], 'telefono': data['telefono'],
+                'fecha_nacimiento': data['fecha_nacimiento'],
+                'tipo_documento_id': data['tipo_documento_id'],
+                'nro_documento': data['nro_documento']
+            }
+            role_data = {
+                'fecha_alta': data.get('fecha_alta')
+            }
+
+            id_cliente_creado = self.db_manager.create_client_only(
+                persona_data, role_data
+            )
+
+            if id_cliente_creado:
+                print(f"Cliente (mostrador) creado con ID: {id_cliente_creado}")
+                return id_cliente_creado
+            else:
+                print("La creación del cliente falló.")
+                return None
+                
+        except KeyError as e:
+            print(f"Error en los datos de creación: falta la clave {e}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado durante la creación: {e}")
+            return None
+
+    def buscar_cliente_por_id(self, id_cliente):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return None
+            
+        cliente = self.db_manager.get_client_by_id(id_cliente)
+        
+        if not cliente:
+            print(f"No se encontró cliente con ID: {id_cliente}")
+            return None
+        
+        return cliente
+
+    def buscar_cliente_por_documento(self, tipo_documento_id, nro_documento):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return None
+            
+        cliente = self.db_manager.get_client_by_document(tipo_documento_id, nro_documento)
+        
+        if not cliente:
+            print(f"No se encontró cliente con documento: {tipo_documento_id} / {nro_documento}")
+            return None
+        
+        return cliente
+
+    def listar_todos_los_clientes(self):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return []
+        
+        return self.db_manager.get_all_clients()
+
+    def actualizar_datos_cliente(self, id_cliente, data):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return False
+            
+        try:
+            persona_data = {
+                'nombre': data['nombre'], 'apellido': data['apellido'],
+                'mail': data['mail'], 'telefono': data['telefono'],
+                'fecha_nacimiento': data['fecha_nacimiento'],
+                'tipo_documento_id': data['tipo_documento_id'],
+                'nro_documento': data['nro_documento']
+            }
+            
+            exito = self.db_manager.update_client_persona_data(id_cliente, persona_data)
+            
+            if exito:
+                print(f"Datos del cliente {id_cliente} actualizados.")
+                return True
+            else:
+                print(f"No se pudo actualizar al cliente {id_cliente} (o no hubo cambios).")
+                return False
+
+        except KeyError as e:
+            print(f"Error en los datos de actualización: falta la clave {e}")
+            return False
+        except Exception as e:
+            print(f"Error inesperado durante la actualización: {e}")
+            return False
+
+    def eliminar_cliente(self, id_cliente):
+        if not self.check_permission('admin') and not self.check_permission('empleado'):
+            return False
+            
+        exito = self.db_manager.delete_client_full(id_cliente)
+        
+        if exito:
+            print(f"Cliente {id_cliente} eliminado exitosamente.")
+            return True
+        else:
+            print(f"No se pudo eliminar al cliente {id_cliente}.")
+            return False
