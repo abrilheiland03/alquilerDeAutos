@@ -240,3 +240,57 @@ class SistemaAlquiler:
         else:
             print(f"No se pudo eliminar al cliente {id_cliente}.")
             return False
+        
+    # --- ABMC de VEHICULOS ---
+
+    def listar_vehiculos(self):
+        return self.db_manager.get_all_vehiculos()
+
+    def buscar_vehiculo_por_matricula(self, patente):
+        return self.db_manager.get_vehiculo_by_patente(patente)
+
+    def crear_vehiculo(self, data):
+        if not self.check_permission("Admin"):
+            return False
+        try:
+            exito = self.db_manager.create_vehiculo(data)
+            if exito:
+                print(f"Vehiculo {data['patente']} creado.")
+            return data['patente']
+        except KeyError as e:
+            print(f"Error en datos de vehiculo: falta la clave {e}")
+            return False
+        except Exception as e:
+            print(f"Error inesperado al crear vehiculo: {e}")
+            return False
+
+    def actualizar_vehiculo(self, patente, data):
+        if not (self.check_permission("Admin") or self.check_permission("Empleado")):
+            return False
+        try:
+            exito = self.db_manager.update_vehiculo(patente, data)
+            if exito:
+                print(f"Vehiculo {patente} actualizado.")
+            else:
+                print(f"No se actualizó vehiculo {patente} (no se encontró o no hubo cambios).")
+            return exito
+        except KeyError as e:
+            print(f"Error en datos de vehiculo: falta la clave {e}")
+            return False
+        except Exception as e:
+            print(f"Error inesperado al actualizar vehiculo: {e}")
+            return False
+
+    def eliminar_vehiculo(self, patente):
+        if not self.check_permission("Admin"):
+            return False
+        try:
+            exito = self.db_manager.delete_vehiculo(patente)
+            if exito:
+                print(f"Vehiculo {patente} eliminado.")
+            else:
+                print(f"No se pudo eliminar vehiculo {patente} (no encontrado o con dependencias).")
+            return exito
+        except Exception as e:
+            print(f"Error inesperado al eliminar vehiculo: {e}")
+            return False

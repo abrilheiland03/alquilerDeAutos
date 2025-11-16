@@ -3,7 +3,7 @@ import sqlite3
 import os
 from modelos import (
     Cliente, Documento, EstadoAlquiler, EstadoAuto, 
-    EstadoMantenimiento, Permiso, Usuario
+    EstadoMantenimiento, Permiso, Usuario, Vehiculo
 )
 
 
@@ -603,4 +603,143 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
+
+    # --- ABMC de VEHICULOS ---
+
+    def _rebuild_vehiculo_obj(self, row):
+        estado_obj = EstadoAuto(
+            id_estado=row['id_estado'],
+            descripcion=row['estado_desc']
+        )
+        vehiculo_obj = Vehiculo(
+            patente=row['patente'],
+            modelo=row['modelo'],
+            marca=row['marca'],
+            anio=row['anio'],
+            precio_flota=row['precio_flota'],
+            asientos=row['asientos'],
+            puertas=row['puertas'],
+            caja_manual=bool(row['caja_manual']),
+            aire_acondicionado=bool(row['aire_acondicionado']),
+            estado=estado_obj
+        )
+        return vehiculo_obj
+
+    def get_all_vehiculos(self):
+        sql = """
+            SELECT v.*, e.descripcion as estado_desc
+            FROM Vehiculo v
+            JOIN EstadoAuto e ON v.id_estado = e.id_estado
+            ORDER BY v.marca, v.modelo
+        """
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute(sql).fetchall()
+            for row in rows:
+                lista.append(self._rebuild_vehiculo_obj(row))
+        except sqlite3.Error as e:
+            print(f"Error al obtener vehiculos: {e}")
+        finally:
+            if conn: conn.close()
+        return lista
+
+    def get_vehiculo_by_patente(self, patente):
+        sql = """
+            SELECT v.*, e.descripcion as estado_desc
+            FROM Vehiculo v
+            JOIN EstadoAuto e ON v.id_estado = e.id_estado
+            WHERE v.patente = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(sql, (patente,)).fetchone()
+            if row:
+                return self._rebuild_vehiculo_obj(row)
+        except sqlite3.Error as e:
+            print(f"Error al obtener vehiculo: {e}")
+        finally:
+            if conn: conn.close()
+        return None
+
+    def create_vehiculo(self, data):
+        sql = """
+            INSERT INTO Vehiculo (patente, modelo, marca, anio, precio_flota, 
+                                  asientos, puertas, caja_manual, 
+                                  aire_acondicionado, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (
+                data['patente'], data['modelo'], data['marca'],
+                data['anio'], data['precio_flota'], data['asientos'],
+                data['puertas'], int(data['caja_manual']), 
+                int(data['aire_acondicionado']), data['id_estado']
+            ))
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al crear vehiculo: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+
+    def update_vehiculo(self, patente, data):
+        sql = """
+            UPDATE Vehiculo SET
+            modelo = ?, marca = ?, anio = ?, precio_flota = ?,
+            asientos = ?, puertas = ?, caja_manual = ?,
+            aire_acondicionado = ?, id_estado = ?
+            WHERE patente = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (
+                data['modelo'], data['marca'], data['anio'],
+                data['precio_flota'], data['asientos'], data['puertas'],
+                int(data['caja_manual']), int(data['aire_acondicionado']),
+                data['id_estado'], patente
+            ))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar vehiculo: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+            
+    def delete_vehiculo(self, patente):
+        sql = "DELETE FROM Vehiculo WHERE patente = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (patente,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.IntegrityError:
+            print(f"Error de integridad: No se puede eliminar vehiculo {patente}. Tiene alquileres o mantenimientos asociados.")
+            if conn: conn.rollback()
+            return False
+        except sqlite3.Error as e:
+            print(f"Error al eliminar vehiculo: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
                 
