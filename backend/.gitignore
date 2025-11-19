@@ -1,0 +1,23 @@
+# --- Python ---
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Bases de Datos ---
+*.db
+*.sqlite3
+*.sqlite
+
+# --- Entornos Virtuales (Recomendado) ---
+venv/
+env/
+.venv/
+.env
+
+# --- Logs y temporales ---
+*.log
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db
