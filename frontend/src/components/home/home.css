@@ -1,0 +1,64 @@
+.home-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.historia h1 {
+    font-size: 32px;
+    color: #2c7a3b;
+}
+
+.historia p {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.opiniones {
+    margin-top: 30px;
+}
+
+.opiniones h2 {
+    color: #2c7a3b;
+}
+
+.opinion {
+    background: #eef5ee;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #2c7a3b;
+    border-radius: 4px;
+}
+
+.login, .registro {
+    margin-top: 40px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input {
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px;
+    background: #2c7a3b;
+    color: white;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #256532;
+}
+
+.oculto {
+    display: none;
+}
