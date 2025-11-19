@@ -337,10 +337,6 @@ class DBManager:
             row = conn.cursor().execute(sql, (id_usuario,)).fetchone()
             
             if row:
-                doc_obj = Documento(
-                    id_tipo=row['id_tipo'], 
-                    descripcion=row['doc_desc']
-                )
                 perm_obj = Permiso(
                     id_permiso=row['id_permiso'],
                     descripcion=row['permiso_desc']
@@ -350,16 +346,8 @@ class DBManager:
                     id_usuario=row['id_usuario'],
                     user_name=row['user_name'],
                     password=row['password'],
-                    permiso=perm_obj,
-                    id_persona=row['id_persona'],
-                    nombre=row['nombre'],
-                    apellido=row['apellido'],
-                    mail=row['mail'],
-                    telefono=str(row['telefono']),
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
-                    tipo_documento=doc_obj,
-                    nro_documento=row['nro_documento']
-                )
+                    permiso=perm_obj)
+                
                 return usuario_obj
         except sqlite3.Error as e:
             print(f"Error al buscar usuario completo: {e}")

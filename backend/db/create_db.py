@@ -1,3 +1,4 @@
+import hashlib
 import os
 import sqlite3
 from datetime import datetime, timedelta, time
@@ -281,6 +282,38 @@ cursor.executemany("INSERT INTO EstadoMantenimiento (id_estado, descripcion) VAL
     (3, 'Pendiente'), 
     (4, 'Cancelado')
 ])
+
+# ==========================
+# CREACION ADMIN
+# ==========================
+
+try:
+    cursor.execute("SELECT id_persona FROM Persona WHERE nro_documento = 20123456")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, ('Carlos', 'Administrador', 'juan@email.com', '555-9988', '1980-05-20', 1, 20123456))
+        
+        id_persona_admin = cursor.lastrowid
+
+        pass_hash = hashlib.sha256("12345".encode('utf-8')).hexdigest()
+
+        cursor.execute("""
+            INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
+            VALUES (?, ?, ?, ?)
+        """, (id_persona_admin, 'admin_master', pass_hash, 3))
+
+        cursor.execute("""
+            INSERT INTO Administrador (id_persona, descripcion)
+            VALUES (?, ?)
+        """, (id_persona_admin, 'Administrador general con acceso total'))
+        print("Admin creado.")
+    else:
+        print("El admin ya existe.")
+
+except sqlite3.Error as e:
+    print(f"Error creando admin: {e}")
 
 # Guardar cambios
 conn.commit()
