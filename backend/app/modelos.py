@@ -367,10 +367,62 @@ class Usuario:
 # 3. CLASES DE ENTIDADES PRINCIPALES
 # ####################################################################
 
+# color y marca
+class Color:
+    def __init__(self, id_color: int, descripcion: str):
+        self.id_color = id_color
+        self.descripcion = descripcion
+
+    @property
+    def id_color(self):
+        return self._id_color
+
+    @id_color.setter
+    def id_color(self, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError('El ID de color debe ser un entero positivo')
+        self._id_color = value
+
+    @property
+    def descripcion(self):
+        return self._descripcion
+
+    @descripcion.setter
+    def descripcion(self, value):
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError('La descripción del color no puede estar vacía')
+        self._descripcion = value
+
+class Marca:
+    def __init__(self, id_marca: int, descripcion: str):
+        self.id_marca = id_marca
+        self.descripcion = descripcion
+
+    @property
+    def id_marca(self):
+        return self._id_marca
+
+    @id_marca.setter
+    def id_marca(self, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError('El ID de marca debe ser un entero positivo')
+        self._id_marca = value
+
+    @property
+    def descripcion(self):
+        return self._descripcion
+
+    @descripcion.setter
+    def descripcion(self, value):
+        if not isinstance(value, str) or value.strip() == "":
+            raise ValueError('La descripción de la marca no puede estar vacía')
+        self._descripcion = value
+
+
 class Vehiculo:
-    def __init__(self, patente: str, modelo: str, marca: str, anio: int, 
-                 precio_flota: float, asientos: int, puertas: int, 
-                 caja_manual: bool, estado: EstadoAuto):
+    def __init__(self, patente: str, modelo: str, marca: Marca, anio: int,
+                 precio_flota: float, asientos: int, puertas: int,
+                 caja_manual: bool, estado: EstadoAuto, color: Color):
         self.patente = patente
         self.modelo = modelo
         self.marca = marca
@@ -380,6 +432,7 @@ class Vehiculo:
         self.puertas = puertas
         self.caja_manual = caja_manual
         self.estado = estado
+        self.color = color
 
     @property
     def patente(self):
@@ -387,7 +440,6 @@ class Vehiculo:
 
     @patente.setter
     def patente(self, value):
-        # Asumo un patrón de patente Argentina (AAA-123 o AA-123-AA)
         patron_regex = r'^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$'
         if not re.fullmatch(patron_regex, value, re.IGNORECASE):
             raise ValueError('Patente invalida')
@@ -399,6 +451,8 @@ class Vehiculo:
 
     @modelo.setter
     def modelo(self, value):
+        if not value:
+            raise ValueError("El modelo no puede estar vacío")
         self._modelo = value
 
     @property
@@ -407,6 +461,8 @@ class Vehiculo:
 
     @marca.setter
     def marca(self, value):
+        if not isinstance(value, Marca):
+            raise ValueError("marca debe ser una instancia de la clase Marca")
         self._marca = value
 
     @property
@@ -416,7 +472,7 @@ class Vehiculo:
     @anio.setter
     def anio(self, value):
         if not isinstance(value, int) or value < 2000 or value > datetime.now().year + 1:
-            raise ValueError('El año debe ser un número válido (ej: 2000-2026)')
+            raise ValueError('El año debe ser un número válido (2000–año siguiente)')
         self._anio = value
 
     @property
@@ -456,7 +512,7 @@ class Vehiculo:
     @caja_manual.setter
     def caja_manual(self, value):
         if not isinstance(value, bool):
-            raise ValueError('caja_manual debe ser un valor booleano (True/False)')
+            raise ValueError('caja_manual debe ser booleano')
         self._caja_manual = value
 
     @property
@@ -466,8 +522,19 @@ class Vehiculo:
     @estado.setter
     def estado(self, value):
         if not isinstance(value, EstadoAuto):
-            raise ValueError('estado debe ser una instancia de la clase EstadoAuto')
+            raise ValueError('estado debe ser una instancia de EstadoAuto')
         self._estado = value
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    def color(self, value):
+        if not isinstance(value, Color):
+            raise ValueError("color debe ser una instancia de la clase Color")
+        self._color = value
+
 
 # ####################################################################
 # 4. CLASES TRANSACCIONALES (Las que unen todo)
