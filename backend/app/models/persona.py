@@ -70,8 +70,17 @@ class Persona:
     def fecha_nacimiento(self, value):
         if not isinstance(value, date):
             raise ValueError('La fecha de nacimiento debe ser un objeto date')
-        if value >= date.today():
+        
+        hoy = date.today()
+        
+        if value >= hoy:
             raise ValueError('La fecha de nacimiento debe ser anterior al día de hoy')
+
+        edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
+
+        if edad < 18:
+            raise ValueError(f'La persona debe ser mayor de 18 años. (Edad calculada: {edad})')
+
         self._fecha_nacimiento = value
 
     @property
