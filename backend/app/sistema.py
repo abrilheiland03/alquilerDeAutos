@@ -1,7 +1,5 @@
+from datetime import date
 from db_manager import DBManager
-from .models.vehiculo import Vehiculo
-from .models.usuario import Usuario
-from .models.estadoAuto import EstadoAuto
 import hashlib
 
 class SistemaAlquiler:
@@ -251,6 +249,9 @@ class SistemaAlquiler:
     def buscar_vehiculo_por_matricula(self, patente):
         return self.db_manager.get_vehiculo_by_patente(patente)
 
+    def buscar_vehiculo_por_id(self, patente):
+        return self.db_manager.get_vehiculo_by_patente(patente)
+
     def crear_vehiculo(self, data):
         if not self.check_permission("Admin"):
             return False
@@ -258,7 +259,8 @@ class SistemaAlquiler:
             exito = self.db_manager.create_vehiculo(data)
             if exito:
                 print(f"Vehiculo {data['patente']} creado.")
-            return data['patente']
+                return data['patente']
+            return False
         except KeyError as e:
             print(f"Error en datos de vehiculo: falta la clave {e}")
             return False
@@ -301,3 +303,155 @@ class SistemaAlquiler:
 
     def listar_vehiculos_libres(self):
         return self.db_manager.get_vehiculos_libres()
+
+    # --- FUNCIONES DE ALQUILER ---
+
+    def crear_nuevo_alquiler(self, patente, id_cliente, fecha_inicio, fecha_fin, estado):
+        if not self.usuario_actual:
+            print("Debe estar logueado para crear un alquiler.")
+            return False
+
+        alquiler_data = {
+            'patente': patente,
+            'id_cliente': id_cliente,
+            'id_empleado': self.usuario_actual.id_usuario, 
+            'fecha_inicio': fecha_inicio, 
+            'fecha_fin': fecha_fin,
+            'estado': estado
+        }
+        
+        if self.db_manager.create_alquiler_transactional(alquiler_data):
+            print("Alquiler creado exitosamente.")
+            return True
+        return False
+
+    def consultar_todos_alquileres(self):
+        if not self.usuario_actual:
+            return []
+
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+
+        if es_admin or es_empleado:
+            return self.db_manager.get_all_alquileres()
+        else:
+            return self.db_manager.get_all_alquileres(id_persona_filtro=self.usuario_actual.id_persona)
+
+    def consultar_alquiler_por_id(self, id_alquiler):
+        if not self.usuario_actual:
+            return None
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return None
+
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+
+        if es_admin or es_empleado:
+            return alquiler
+        
+        if alquiler['id_persona_cliente'] == self.usuario_actual.id_persona:
+            return alquiler
+        
+        print("No tiene permisos para ver este alquiler.")
+        return None
+
+    def actualizar_estado_alquiler(self, id_alquiler, nuevo_id_estado):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        if self.db_manager.update_alquiler_estado_only(id_alquiler, nuevo_id_estado):
+            print(f"Estado del alquiler {id_alquiler} actualizado.")
+            return True
+        print("No se pudo actualizar el alquiler.")
+        return False
+
+    def eliminar_alquiler(self, id_alquiler):
+        if not self.check_permission("Admin"):
+            print("Se requiere permiso de Admin.")
+            return False
+        
+        if self.db_manager.delete_alquiler(id_alquiler):
+            print(f"Alquiler {id_alquiler} eliminado.")
+            return True
+        print("No se pudo eliminar el alquiler.")
+        return False
+
+    def marcar_alquiler_como_atrasado(self, id_alquiler):
+        if not self.check_permission_admin_or_empleado():
+            return False
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return False
+
+        ESTADOS_FINALES = [4, 5]
+        if alquiler['id_estado'] in ESTADOS_FINALES:
+            print("El alquiler ya está finalizado o cancelado.")
+            return False
+
+        fecha_fin = date.fromisoformat(alquiler['fecha_fin'])
+        hoy = date.today()
+
+        if hoy > fecha_fin:
+            if self.db_manager.update_alquiler_estado_only(id_alquiler, 3):
+                print(f"Alquiler {id_alquiler} marcado como ATRASADO.")
+                return True
+        else:
+            print(f"No se puede marcar atrasado. La fecha de fin ({fecha_fin}) aún no ha pasado.")
+        
+        return False
+
+    def finalizar_alquiler(self, id_alquiler):
+        if not self.check_permission_admin_or_empleado():
+            return False
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return False
+
+        if alquiler['id_estado'] not in [2, 3]:
+            print(f"No se puede finalizar. El estado actual es: {alquiler['estado_desc']}")
+            return False
+
+        if self.db_manager.finalize_or_cancel_alquiler(id_alquiler, 4):
+            print(f"Alquiler {id_alquiler} FINALIZADO. Vehículo liberado.")
+            return True
+        
+        return False
+
+    def cancelar_alquiler(self, id_alquiler):
+        if not self.usuario_actual:
+            print("Debe estar logueado para cancelar.")
+            return False
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return False
+
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+                print("No tiene permiso para cancelar este alquiler (no le pertenece).")
+                return False
+
+        if alquiler['id_estado'] in [4, 5]:
+            print("El alquiler ya está cerrado, no se puede cancelar.")
+            return False
+
+        if self.db_manager.finalize_or_cancel_alquiler(id_alquiler, 5):
+            print(f"Alquiler {id_alquiler} CANCELADO. Vehículo liberado.")
+            return True
+        
+        return False

@@ -9,6 +9,8 @@ from models.estadoAuto import EstadoAuto
 from models.estadoMantenimiento import EstadoMantenimiento
 from models.permiso import Permiso
 from models.usuario import Usuario
+from models.color import Color
+from models.marca import Marca
 
 
 
@@ -16,7 +18,7 @@ from models.usuario import Usuario
 #Armar ruta de bd
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.dirname(APP_DIR)
-DB_PATH = os.path.join(BACKEND_DIR, 'db', 'alquileres.db')
+DB_PATH = os.path.join(BACKEND_DIR, 'db', 'alquileresNuevo.db')
 
 class DBManager:
     _instance = None
@@ -239,7 +241,7 @@ class DBManager:
 
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
-                                     fecha_nacimiento, tipo_documento, nro_documento)
+                                     fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             cursor.execute(sql_persona, (
@@ -317,7 +319,7 @@ class DBManager:
             SELECT 
                 u.id_usuario, u.user_name, u.password,
                 p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
-                p.fecha_nacimiento, p.nro_documento,
+                p.fecha_nac, p.nro_documento,
                 perm.id_permiso, perm.descripcion as permiso_desc,
                 doc.id_tipo, doc.descripcion as doc_desc
             FROM Usuario u
@@ -370,7 +372,7 @@ class DBManager:
 
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
-                                     fecha_nacimiento, tipo_documento, nro_documento)
+                                     fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             cursor.execute(sql_persona, (
@@ -406,7 +408,7 @@ class DBManager:
             SELECT 
                 c.id_cliente, c.fecha_alta,
                 p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
-                p.fecha_nacimiento, p.nro_documento,
+                p.fecha_nac, p.nro_documento,
                 doc.id_tipo, doc.descripcion as doc_desc
             FROM Cliente c
             JOIN Persona p ON c.id_persona = p.id_persona
@@ -451,7 +453,7 @@ class DBManager:
             SELECT 
                 c.id_cliente, c.fecha_alta,
                 p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
-                p.fecha_nacimiento, p.nro_documento,
+                p.fecha_nac, p.nro_documento,
                 doc.id_tipo, doc.descripcion as doc_desc
             FROM Cliente c
             JOIN Persona p ON c.id_persona = p.id_persona
@@ -496,7 +498,7 @@ class DBManager:
             SELECT 
                 c.id_cliente, c.fecha_alta,
                 p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
-                p.fecha_nacimiento, p.nro_documento,
+                p.fecha_nac, p.nro_documento,
                 doc.id_tipo, doc.descripcion as doc_desc
             FROM Cliente c
             JOIN Persona p ON c.id_persona = p.id_persona
@@ -541,7 +543,7 @@ class DBManager:
         sql_update_persona = """
             UPDATE Persona
             SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
-                fecha_nacimiento = ?, tipo_documento = ?, nro_documento = ?
+                fecha_nac = ?, tipo_documento = ?, nro_documento = ?
             WHERE id_persona = (SELECT id_persona FROM Cliente WHERE id_cliente = ?)
         """
         conn = None
@@ -613,30 +615,48 @@ class DBManager:
     # --- ABMC de VEHICULOS ---
 
     def _rebuild_vehiculo_obj(self, row):
+        # Construimos el objeto EstadoAuto
         estado_obj = EstadoAuto(
             id_estado=row['id_estado'],
             descripcion=row['estado_desc']
         )
+        # Construimos el objeto Marca
+        marca_obj = Marca(
+            id_marca=row['id_marca'],
+            descripcion=row['marca_desc']
+        )
+        # Construimos el objeto Color
+        color_obj = Color(
+            id_color=row['id_color'],
+            descripcion=row['color_desc']
+        )
+        
+        # Construimos el Vehículo con todos sus objetos relacionados
         vehiculo_obj = Vehiculo(
             patente=row['patente'],
             modelo=row['modelo'],
-            marca=row['marca'],
+            marca=marca_obj, 
             anio=row['anio'],
             precio_flota=row['precio_flota'],
             asientos=row['asientos'],
             puertas=row['puertas'],
             caja_manual=bool(row['caja_manual']),
-            aire_acondicionado=bool(row['aire_acondicionado']),
-            estado=estado_obj
+            estado=estado_obj,
+            color=color_obj
         )
         return vehiculo_obj
 
     def get_all_vehiculos(self):
         sql = """
-            SELECT v.*, e.descripcion as estado_desc
+            SELECT v.*, 
+                   ea.descripcion as estado_desc,
+                   m.descripcion as marca_desc,
+                   c.descripcion as color_desc
             FROM Vehiculo v
-            JOIN EstadoAuto e ON v.id_estado = e.id_estado
-            ORDER BY v.marca, v.modelo
+            JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN Color c ON v.id_color = c.id_color
+            ORDER BY m.descripcion, v.modelo
         """
         conn = None
         lista = []
@@ -654,9 +674,14 @@ class DBManager:
 
     def get_vehiculo_by_patente(self, patente):
         sql = """
-            SELECT v.*, e.descripcion as estado_desc
+            SELECT v.*, 
+                   ea.descripcion as estado_desc,
+                   m.descripcion as marca_desc,
+                   c.descripcion as color_desc
             FROM Vehiculo v
-            JOIN EstadoAuto e ON v.id_estado = e.id_estado
+            JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN Color c ON v.id_color = c.id_color
             WHERE v.patente = ?
         """
         conn = None
@@ -674,9 +699,9 @@ class DBManager:
 
     def create_vehiculo(self, data):
         sql = """
-            INSERT INTO Vehiculo (patente, modelo, marca, anio, precio_flota, 
+            INSERT INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, 
                                   asientos, puertas, caja_manual, 
-                                  aire_acondicionado, id_estado)
+                                  id_estado, id_color)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         conn = None
@@ -685,10 +710,16 @@ class DBManager:
             if conn is None: return False
             cursor = conn.cursor()
             cursor.execute(sql, (
-                data['patente'], data['modelo'], data['marca'],
-                data['anio'], data['precio_flota'], data['asientos'],
-                data['puertas'], int(data['caja_manual']), 
-                int(data['aire_acondicionado']), data['id_estado']
+                data['patente'], 
+                data['modelo'], 
+                data['id_marca'], 
+                data['anio'], 
+                data['precio_flota'], 
+                data['asientos'],
+                data['puertas'], 
+                int(data['caja_manual']), 
+                data['id_estado'], 
+                data['id_color']
             ))
             conn.commit()
             return True
@@ -702,9 +733,9 @@ class DBManager:
     def update_vehiculo(self, patente, data):
         sql = """
             UPDATE Vehiculo SET
-            modelo = ?, marca = ?, anio = ?, precio_flota = ?,
+            modelo = ?, id_marca = ?, anio = ?, precio_flota = ?,
             asientos = ?, puertas = ?, caja_manual = ?,
-            aire_acondicionado = ?, id_estado = ?
+            id_estado = ?, id_color = ?
             WHERE patente = ?
         """
         conn = None
@@ -713,10 +744,16 @@ class DBManager:
             if conn is None: return False
             cursor = conn.cursor()
             cursor.execute(sql, (
-                data['modelo'], data['marca'], data['anio'],
-                data['precio_flota'], data['asientos'], data['puertas'],
-                int(data['caja_manual']), int(data['aire_acondicionado']),
-                data['id_estado'], patente
+                data['modelo'], 
+                data['id_marca'], 
+                data['anio'], 
+                data['precio_flota'], 
+                data['asientos'], 
+                data['puertas'], 
+                int(data['caja_manual']), 
+                data['id_estado'], 
+                data['id_color'], 
+                patente
             ))
             conn.commit()
             return cursor.rowcount > 0
@@ -738,7 +775,7 @@ class DBManager:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.IntegrityError:
-            print(f"Error de integridad: No se puede eliminar vehiculo {patente}. Tiene alquileres o mantenimientos asociados.")
+            print(f"Error de integridad: No se puede eliminar vehiculo {patente}. Tiene alquileres asociados.")
             if conn: conn.rollback()
             return False
         except sqlite3.Error as e:
@@ -748,15 +785,18 @@ class DBManager:
         finally:
             if conn: conn.close()
 
-    # --- BUSCAR VEHICULOS LIBRES ---
-
     def get_vehiculos_libres(self):
         sql = """
-            SELECT v.*, e.descripcion as estado_desc
+            SELECT v.*, 
+                   ea.descripcion as estado_desc,
+                   m.descripcion as marca_desc,
+                   c.descripcion as color_desc
             FROM Vehiculo v
-            JOIN EstadoAuto e ON v.id_estado = e.id_estado
-            WHERE e.descripcion = 'Libre'
-            ORDER BY v.marca, v.modelo
+            JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN Color c ON v.id_color = c.id_color
+            WHERE ea.descripcion = 'Libre'
+            ORDER BY m.descripcion, v.modelo
         """
         conn = None
         lista = []
@@ -771,4 +811,187 @@ class DBManager:
         finally:
             if conn: conn.close()
         return lista
-                
+
+    
+    
+    # --- FUNCIONES DE ALQUILER ---
+
+    def create_alquiler_transactional(self, data):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT id_estado FROM Vehiculo WHERE patente = ?", (data['patente'],))
+            row = cursor.fetchone()
+            
+            if not row:
+                raise ValueError(f"El vehículo {data['patente']} no existe.")
+            
+            if row['id_estado'] != 1: 
+                raise ValueError(f"El vehículo {data['patente']} no está libre (Estado ID: {row['id_estado']}).")
+
+            fecha_inicio = date.fromisoformat(data['fecha_inicio'])
+            fecha_fin = date.fromisoformat(data['fecha_fin'])
+            hoy = date.today()
+
+            if fecha_inicio < hoy:
+                raise ValueError("La fecha de inicio debe ser futura o igual a hoy.")
+            
+            if fecha_fin <= fecha_inicio:
+                raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio.")
+
+            sql_alquiler = """
+                INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
+                                      fecha_inicio, fecha_fin, id_estado)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """
+
+            if data['estado'].upper() == 'RESERVADO':
+                id_estado = 1
+            else:
+                id_estado = 2
+
+            cursor.execute(sql_alquiler, (
+                data['patente'],
+                data['id_cliente'],
+                data['id_empleado'],
+                data['fecha_inicio'],
+                data['fecha_fin'],
+                id_estado
+            ))
+
+            sql_update_auto = "UPDATE Vehiculo SET id_estado = 2 WHERE patente = ?"
+            cursor.execute(sql_update_auto, (data['patente'],))
+
+            conn.commit()
+            return True
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al crear alquiler: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
+
+    def get_all_alquileres(self, id_persona_filtro=None):
+        base_sql = """
+            SELECT a.*, v.marca, v.modelo, ea.descripcion as estado_desc
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+        """
+        
+        if id_persona_filtro:
+            base_sql += " JOIN Cliente c ON a.id_cliente = c.id_cliente WHERE c.id_persona = ?"
+            params = (id_persona_filtro,)
+        else:
+            params = ()
+
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            
+            cursor = conn.cursor()
+            rows = cursor.execute(base_sql, params).fetchall()
+            
+            for row in rows:
+                lista.append(dict(row))
+            return lista
+        except sqlite3.Error as e:
+            print(f"Error al listar alquileres: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_alquiler_by_id(self, id_alquiler):
+        sql = """
+            SELECT a.*, c.id_persona as id_persona_cliente
+            FROM Alquiler a
+            JOIN Cliente c ON a.id_cliente = c.id_cliente
+            WHERE a.id_alquiler = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(sql, (id_alquiler,)).fetchone()
+            if row:
+                return dict(row)
+        except sqlite3.Error as e:
+            print(f"Error al obtener alquiler: {e}")
+        finally:
+            if conn: conn.close()
+        return None
+
+    def update_alquiler_estado_only(self, id_alquiler, nuevo_id_estado):
+        sql = "UPDATE Alquiler SET id_estado = ? WHERE id_alquiler = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (nuevo_id_estado, id_alquiler))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar estado alquiler: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def delete_alquiler(self, id_alquiler):
+        sql = "DELETE FROM Alquiler WHERE id_alquiler = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_alquiler,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al eliminar alquiler: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def finalize_or_cancel_alquiler(self, id_alquiler, nuevo_id_estado):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT patente FROM Alquiler WHERE id_alquiler = ?", (id_alquiler,))
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("Alquiler no encontrado.")
+            
+            patente = row['patente']
+
+            sql_alquiler = "UPDATE Alquiler SET id_estado = ? WHERE id_alquiler = ?"
+            cursor.execute(sql_alquiler, (nuevo_id_estado, id_alquiler))
+
+            sql_vehiculo = "UPDATE Vehiculo SET id_estado = 1 WHERE patente = ?"
+            cursor.execute(sql_vehiculo, (patente,))
+
+            conn.commit()
+            return True
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al finalizar/cancelar alquiler: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()

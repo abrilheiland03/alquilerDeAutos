@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, time
 # ============================================================
 
 # Conexión a la base de datos (se crea si no existe)
-conn = sqlite3.connect("./alquileres.db")
+conn = sqlite3.connect("./alquileresNuevo.db")
 cursor = conn.cursor()
 
 # ==========================
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Persona (
     mail TEXT NOT NULL,
     fecha_nac DATE NOT NULL,
     tipo_documento INTEGER NOT NULL,
-    nro_documento INTEGER NOT NULL UNIQUE
+    nro_documento INTEGER NOT NULL UNIQUE,
     FOREIGN KEY (tipo_documento) REFERENCES Documento(id_tipo)
 
 );
@@ -86,6 +86,13 @@ CREATE TABLE IF NOT EXISTS EstadoAuto (
     descripcion TEXT NOT NULL                   
 );
 """)
+# Tabla EstadoAlquiler
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS EstadoAlquiler (
+    id_estado INTEGER PRIMARY KEY,   
+    descripcion TEXT NOT NULL        
+);
+""")
 
 
 # ==========================
@@ -110,6 +117,35 @@ CREATE TABLE IF NOT EXISTS Vehiculo (
 );
 """)
 #REAL refiere a float para la bd
+
+# Tabla Multa
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Multa (
+    id_multa INTEGER PRIMARY KEY,      
+    alquiler_id INTEGER NOT NULL,      
+    costo REAL NOT NULL,              
+    detalle TEXT,                      
+    fecha_multa TEXT NOT NULL,         
+    FOREIGN KEY (alquiler_id) REFERENCES Alquiler(id_alquiler)
+);
+""")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Administrador (
+        id_administrador INTEGER PRIMARY KEY,
+        descripcion TEXT,
+        id_persona INTEGER NOT NULL UNIQUE,
+        FOREIGN KEY (id_persona) REFERENCES Persona(id_persona)
+    );
+""")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Empleado (
+        id_empleado INTEGER PRIMARY KEY,
+        fecha_alta DATE NOT NULL,
+        sueldo REAL NOT NULL,
+        id_persona INTEGER NOT NULL UNIQUE,
+        FOREIGN KEY (id_persona) REFERENCES Persona(id_persona)
+    );
+""")
 
 # ==========================
 # ALQUILERES   desde aca no tengo base de datos asi que adivino los nombres
@@ -162,6 +198,32 @@ CREATE TABLE IF NOT EXISTS Mantenimiento (
     FOREIGN KEY (id_estado) REFERENCES EstadoMantenimiento(id_estado)
 );
 """)
+# Tabla Danio
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Danio (
+    id_danio INTEGER PRIMARY KEY,      
+    id_alquiler INTEGER NOT NULL,      
+    costo REAL NOT NULL,               
+    detalle TEXT,                      
+
+    FOREIGN KEY (id_alquiler) REFERENCES Alquiler(id_alquiler)
+);
+""")
+
+# Tabla Permiso
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Permiso (
+    id_permiso INTEGER PRIMARY KEY,   
+    descripcion TEXT NOT NULL         
+);
+""")
+# Tabla Documento
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Documento (
+    id_tipo INTEGER PRIMARY KEY,   
+    descripcion TEXT NOT NULL      
+);
+""")
 
 
 # Guardar cambios
@@ -169,3 +231,4 @@ conn.commit()
 conn.close()
 
 print("Base de datos creada correctamente.")
+

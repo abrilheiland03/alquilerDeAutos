@@ -1,3 +1,4 @@
+import re
 from .documento import Documento
 from .usuario import Usuario
 from datetime import date
