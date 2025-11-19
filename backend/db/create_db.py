@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from datetime import datetime, timedelta, time
 
@@ -5,8 +6,11 @@ from datetime import datetime, timedelta, time
 # CREACIÓN DE BASE DE DATOS PARA EL SISTEMA DE ALQUILERES
 # ============================================================
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "alquileres.db")
+
 # Conexión a la base de datos (se crea si no existe)
-conn = sqlite3.connect("./alquileresNuevo.db")
+conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
 # ==========================
@@ -225,6 +229,58 @@ CREATE TABLE IF NOT EXISTS Documento (
 );
 """)
 
+# ==========================
+# POBLACION DE DATOS
+# ==========================
+cursor.executemany("INSERT INTO Documento (id_tipo, descripcion) VALUES (?, ?)", [
+    (1, 'DNI'), 
+    (2, 'Pasaporte')
+])
+
+cursor.executemany("INSERT INTO Permiso (id_permiso, descripcion) VALUES (?, ?)", [
+    (1, 'Cliente'), 
+    (2, 'Empleado'), 
+    (3, 'Admin')
+])
+
+cursor.executemany("INSERT INTO Color (id_color, descripcion) VALUES (?, ?)", [
+    (1, 'Negro'), 
+    (2, 'Blanco'), 
+    (3, 'Rojo'), 
+    (4, 'Azul'), 
+    (5, 'Gris'), 
+    (6, 'Plateado')
+])
+
+cursor.executemany("INSERT INTO Marca (id_marca, descripcion) VALUES (?, ?)", [
+    (1, 'Toyota'), 
+    (2, 'Ford'), 
+    (3, 'Chevrolet'), 
+    (4, 'Renault'), 
+    (5, 'Volkswagen'), 
+    (6, 'Peugeot')
+])
+
+cursor.executemany("INSERT INTO EstadoAuto (id_estado, descripcion) VALUES (?, ?)", [
+    (1, 'Libre'), 
+    (2, 'Ocupado'), 
+    (3, 'En mantenimiento')
+])
+
+cursor.executemany("INSERT INTO EstadoAlquiler (id_estado, descripcion) VALUES (?, ?)", [
+    (1, 'Reservado'), 
+    (2, 'Activo'), 
+    (3, 'Atrasado'), 
+    (4, 'Finalizado'), 
+    (5, 'Cancelado')
+])
+
+cursor.executemany("INSERT INTO EstadoMantenimiento (id_estado, descripcion) VALUES (?, ?)", [
+    (1, 'Realizando'), 
+    (2, 'Finalizado'), 
+    (3, 'Pendiente'), 
+    (4, 'Cancelado')
+])
 
 # Guardar cambios
 conn.commit()

@@ -18,7 +18,7 @@ from models.marca import Marca
 #Armar ruta de bd
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.dirname(APP_DIR)
-DB_PATH = os.path.join(BACKEND_DIR, 'db', 'alquileresNuevo.db')
+DB_PATH = os.path.join(BACKEND_DIR, 'db', 'alquileres.db')
 
 class DBManager:
     _instance = None
