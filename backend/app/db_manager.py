@@ -1,10 +1,15 @@
 from datetime import date
 import sqlite3
 import os
-from modelos import (
-    Cliente, Documento, EstadoAlquiler, EstadoAuto, 
-    EstadoMantenimiento, Permiso, Usuario, Vehiculo
-)
+from models.cliente import Cliente
+from models.vehiculo import Vehiculo
+from models.documento import Documento
+from models.estadoAlquiler import EstadoAlquiler
+from models.estadoAuto import EstadoAuto
+from models.estadoMantenimiento import EstadoMantenimiento
+from models.permiso import Permiso
+from models.usuario import Usuario
+
 
 
 

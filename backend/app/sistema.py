@@ -1,5 +1,7 @@
 from db_manager import DBManager
-from modelos import Vehiculo, Usuario, EstadoAuto
+from .models.vehiculo import Vehiculo
+from .models.usuario import Usuario
+from .models.estadoAuto import EstadoAuto
 import hashlib
 
 class SistemaAlquiler:
