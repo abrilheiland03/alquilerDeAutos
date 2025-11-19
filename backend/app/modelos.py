@@ -370,7 +370,7 @@ class Usuario:
 class Vehiculo:
     def __init__(self, patente: str, modelo: str, marca: str, anio: int, 
                  precio_flota: float, asientos: int, puertas: int, 
-                 caja_manual: bool, aire_acondicionado: bool, estado: EstadoAuto):
+                 caja_manual: bool, estado: EstadoAuto):
         self.patente = patente
         self.modelo = modelo
         self.marca = marca
@@ -379,7 +379,6 @@ class Vehiculo:
         self.asientos = asientos
         self.puertas = puertas
         self.caja_manual = caja_manual
-        self.aire_acondicionado = aire_acondicionado
         self.estado = estado
 
     @property
@@ -459,16 +458,6 @@ class Vehiculo:
         if not isinstance(value, bool):
             raise ValueError('caja_manual debe ser un valor booleano (True/False)')
         self._caja_manual = value
-
-    @property
-    def aire_acondicionado(self):
-        return self._aire_acondicionado
-
-    @aire_acondicionado.setter
-    def aire_acondicionado(self, value):
-        if not isinstance(value, bool):
-            raise ValueError('aire_acondicionado debe ser un valor booleano (True/False)')
-        self._aire_acondicionado = value
 
     @property
     def estado(self):
