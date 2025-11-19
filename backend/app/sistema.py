@@ -446,12 +446,164 @@ class SistemaAlquiler:
                 print("No tiene permiso para cancelar este alquiler (no le pertenece).")
                 return False
 
-        if alquiler['id_estado'] in [4, 5]:
-            print("El alquiler ya está cerrado, no se puede cancelar.")
+        if alquiler['id_estado'] in [2,3, 4, 5]:
+            print("El alquiler ya comenzó, no se puede cancelar.")
             return False
 
         if self.db_manager.finalize_or_cancel_alquiler(id_alquiler, 5):
             print(f"Alquiler {id_alquiler} CANCELADO. Vehículo liberado.")
             return True
         
+        return False
+    
+    def comenzar_alquiler(self, id_alquiler):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+
+        if self.db_manager.start_reserved_rental(id_alquiler):
+            print(f"Alquiler {id_alquiler} iniciado (Pasó de Reservado a Activo).")
+            return True
+        else:
+            print(f"No se pudo iniciar el alquiler {id_alquiler}. Verifique que exista y esté en estado 'Reservado'.")
+            return False
+    
+    # --- FUNCIONES DE DANIO ---
+
+    def registrar_danio(self, id_alquiler, costo, detalle):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        data = {
+            'id_alquiler': id_alquiler,
+            'costo': costo,
+            'detalle': detalle
+        }
+        if self.db_manager.create_danio(data):
+            print("Daño registrado exitosamente.")
+            return True
+        return False
+
+    def consultar_danios_alquiler(self, id_alquiler):
+        if not self.usuario_actual:
+            return []
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return []
+
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+
+        if not (es_admin or es_empleado):
+            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+                print("No tiene permisos para ver daños de este alquiler.")
+                return []
+
+        return self.db_manager.get_danios_by_alquiler(id_alquiler)
+
+    def modificar_danio(self, id_danio, costo, detalle):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        data = {'costo': costo, 'detalle': detalle}
+        if self.db_manager.update_danio(id_danio, data):
+            print("Daño actualizado.")
+            return True
+        return False
+
+    def eliminar_danio(self, id_danio):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        if self.db_manager.delete_danio(id_danio):
+            print("Daño eliminado.")
+            return True
+        return False
+
+    # --- FUNCIONES DE MULTA ---
+
+    def registrar_multa(self, id_alquiler, costo, detalle, fecha_multa):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        data = {
+            'alquiler_id': id_alquiler,
+            'costo': costo,
+            'detalle': detalle,
+            'fecha_multa': fecha_multa
+        }
+        if self.db_manager.create_multa(data):
+            print("Multa registrada exitosamente.")
+            return True
+        return False
+
+    def consultar_multas_alquiler(self, id_alquiler):
+        if not self.usuario_actual:
+            return []
+
+        alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
+        if not alquiler:
+            print("Alquiler no encontrado.")
+            return []
+
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+
+        if not (es_admin or es_empleado):
+            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+                print("No tiene permisos para ver multas de este alquiler.")
+                return []
+
+        return self.db_manager.get_multas_by_alquiler(id_alquiler)
+
+    def modificar_multa(self, id_multa, costo, detalle, fecha_multa):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        data = {
+            'costo': costo, 
+            'detalle': detalle, 
+            'fecha_multa': fecha_multa
+        }
+        if self.db_manager.update_multa(id_multa, data):
+            print("Multa actualizada.")
+            return True
+        return False
+
+    def eliminar_multa(self, id_multa):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        if self.db_manager.delete_multa(id_multa):
+            print("Multa eliminada.")
+            return True
         return False

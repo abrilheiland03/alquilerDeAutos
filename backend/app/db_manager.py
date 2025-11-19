@@ -1002,3 +1002,157 @@ class DBManager:
             return False
         finally:
             if conn: conn.close()
+
+    def start_reserved_rental(self, id_alquiler):
+        sql = "UPDATE Alquiler SET id_estado = 2 WHERE id_alquiler = ? AND id_estado = 1"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_alquiler,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al comenzar alquiler: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    # --- FUNCIONES DE DANIO ---
+
+    def create_danio(self, data):
+        sql = "INSERT INTO Danio (id_alquiler, costo, detalle) VALUES (?, ?, ?)"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (data['id_alquiler'], data['costo'], data['detalle']))
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al crear daño: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def get_danios_by_alquiler(self, id_alquiler):
+        sql = "SELECT * FROM Danio WHERE id_alquiler = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (id_alquiler,)).fetchall()
+            return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            print(f"Error al obtener daños: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def update_danio(self, id_danio, data):
+        sql = "UPDATE Danio SET costo = ?, detalle = ? WHERE id_danio = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (data['costo'], data['detalle'], id_danio))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar daño: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def delete_danio(self, id_danio):
+        sql = "DELETE FROM Danio WHERE id_danio = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_danio,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al eliminar daño: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    # --- FUNCIONES DE MULTA ---
+
+    def create_multa(self, data):
+        sql = "INSERT INTO Multa (alquiler_id, costo, detalle, fecha_multa) VALUES (?, ?, ?, ?)"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (
+                data['alquiler_id'], 
+                data['costo'], 
+                data['detalle'], 
+                data['fecha_multa']
+            ))
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al crear multa: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def get_multas_by_alquiler(self, alquiler_id):
+        sql = "SELECT * FROM Multa WHERE alquiler_id = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (alquiler_id,)).fetchall()
+            return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            print(f"Error al obtener multas: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def update_multa(self, id_multa, data):
+        sql = "UPDATE Multa SET costo = ?, detalle = ?, fecha_multa = ? WHERE id_multa = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (
+                data['costo'], 
+                data['detalle'], 
+                data['fecha_multa'], 
+                id_multa
+            ))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar multa: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    def delete_multa(self, id_multa):
+        sql = "DELETE FROM Multa WHERE id_multa = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_multa,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al eliminar multa: {e}")
+            return False
+        finally:
+            if conn: conn.close()
