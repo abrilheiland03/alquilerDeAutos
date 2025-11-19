@@ -241,13 +241,14 @@ class DBManager:
 
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
-                                     fecha_nac, tipo_documento, nro_documento)
+                                        fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             cursor.execute(sql_persona, (
                 persona_data['nombre'], persona_data['apellido'], 
                 persona_data['mail'], persona_data['telefono'],
-                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'], 
+                persona_data['fecha_nacimiento'], 
+                persona_data['tipo_documento_id'], 
                 persona_data['nro_documento']
             ))
             
@@ -350,6 +351,14 @@ class DBManager:
                     user_name=row['user_name'],
                     password=row['password'],
                     permiso=perm_obj,
+                    id_persona=row['id_persona'],
+                    nombre=row['nombre'],
+                    apellido=row['apellido'],
+                    mail=row['mail'],
+                    telefono=str(row['telefono']),
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
+                    tipo_documento=doc_obj,
+                    nro_documento=row['nro_documento']
                 )
                 return usuario_obj
         except sqlite3.Error as e:
@@ -370,6 +379,7 @@ class DBManager:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
+            # AJUSTE: Se cambió 'fecha_nacimiento' por 'fecha_nac' en la columna SQL
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
                                      fecha_nac, tipo_documento, nro_documento)
@@ -378,7 +388,8 @@ class DBManager:
             cursor.execute(sql_persona, (
                 persona_data['nombre'], persona_data['apellido'], 
                 persona_data['mail'], persona_data['telefono'],
-                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'], 
+                persona_data['fecha_nacimiento'], # El dato viene del dict python como 'fecha_nacimiento'
+                persona_data['tipo_documento_id'], 
                 persona_data['nro_documento']
             ))
             
@@ -404,6 +415,7 @@ class DBManager:
                 conn.close()
 
     def get_client_by_id(self, id_cliente):
+        # AJUSTE: Se selecciona 'p.fecha_nac' en lugar de 'p.fecha_nacimiento'
         sql = """
             SELECT 
                 c.id_cliente, c.fecha_alta,
@@ -435,8 +447,9 @@ class DBManager:
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
-                    telefono=row['telefono'],
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    telefono=str(row['telefono']), # Convertimos a str porque en BD es INTEGER pero Persona suele usar str
+                    # AJUSTE: Se lee row['fecha_nac']
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -449,6 +462,7 @@ class DBManager:
         return None
 
     def get_client_by_document(self, tipo_documento_id, nro_documento):
+        # AJUSTE: Se selecciona 'p.fecha_nac'
         sql = """
             SELECT 
                 c.id_cliente, c.fecha_alta,
@@ -480,8 +494,9 @@ class DBManager:
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
-                    telefono=row['telefono'],
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    telefono=str(row['telefono']),
+                    # AJUSTE: Se lee row['fecha_nac']
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -494,6 +509,7 @@ class DBManager:
         return None
 
     def get_all_clients(self):
+        # AJUSTE: Se selecciona 'p.fecha_nac'
         sql = """
             SELECT 
                 c.id_cliente, c.fecha_alta,
@@ -525,8 +541,9 @@ class DBManager:
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
-                    telefono=row['telefono'],
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nacimiento']),
+                    telefono=str(row['telefono']),
+                    # AJUSTE: Se lee row['fecha_nac']
+                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -540,6 +557,7 @@ class DBManager:
         return lista_clientes
 
     def update_client_persona_data(self, id_cliente, persona_data):
+        # AJUSTE: Se actualiza la columna 'fecha_nac'
         sql_update_persona = """
             UPDATE Persona
             SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
@@ -555,7 +573,8 @@ class DBManager:
             cursor.execute(sql_update_persona, (
                 persona_data['nombre'], persona_data['apellido'],
                 persona_data['mail'], persona_data['telefono'],
-                persona_data['fecha_nacimiento'], persona_data['tipo_documento_id'],
+                persona_data['fecha_nacimiento'], # El dato viene del dict como nacimiento
+                persona_data['tipo_documento_id'],
                 persona_data['nro_documento'],
                 id_cliente
             ))
