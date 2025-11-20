@@ -576,6 +576,115 @@ def eliminar_alquiler(id_alquiler):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# --- Endpoints Gestión de Daños ---
+
+@api.route('/alquileres/<id_alquiler>/danios', methods=['POST'])
+def crear_danio(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        costo = data.get('costo')
+        detalle = data.get('detalle')
+
+        if not costo or not detalle:
+             return jsonify({"error": "Faltan datos (costo, detalle)"}), 400
+
+        exito = sistema.registrar_danio(id_alquiler, costo, detalle, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Daño registrado exitosamente"}), 201
+        return jsonify({"error": "No se pudo registrar (Permisos insuficientes o alquiler no encontrado)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/danios/<id_danio>', methods=['DELETE'])
+def eliminar_danio(id_danio):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_danio(id_danio, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Daño eliminado exitosamente"}), 200
+        return jsonify({"error": "No se pudo eliminar (Permisos insuficientes o daño no encontrado)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/alquileres/<id_alquiler>/danios', methods=['GET'])
+def listar_danios_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.consultar_danios_alquiler(id_alquiler, usuario)
+        return jsonify(lista), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- Endpoints Gestión de Multas ---
+
+@api.route('/alquileres/<id_alquiler>/multas', methods=['POST'])
+def crear_multa(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        costo = data.get('costo')
+        detalle = data.get('detalle')
+        fecha_multa = data.get('fecha_multa') # Debe ser string ISO (YYYY-MM-DDTHH:MM:SS)
+
+        if not costo or not detalle or not fecha_multa:
+             return jsonify({"error": "Faltan datos (costo, detalle, fecha_multa)"}), 400
+
+        exito = sistema.registrar_multa(id_alquiler, costo, detalle, fecha_multa, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Multa registrada exitosamente"}), 201
+        return jsonify({"error": "No se pudo registrar (Permisos insuficientes o alquiler no encontrado)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/multas/<id_multa>', methods=['DELETE'])
+def eliminar_multa(id_multa):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_multa(id_multa, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Multa eliminada exitosamente"}), 200
+        return jsonify({"error": "No se pudo eliminar (Permisos insuficientes o multa no encontrada)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/alquileres/<id_alquiler>/multas', methods=['GET'])
+def listar_multas_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.consultar_multas_alquiler(id_alquiler, usuario)
+        return jsonify(lista), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------
 # EJECUCIÓN
