@@ -771,7 +771,7 @@ class DBManager:
         try:
             conn = self._get_connection()
             if conn is None: return None
-            row = conn.cursor().execute(sql, (patente,)).fetchone()
+            row = conn.cursor().execute(sql, (patente.upper(),)).fetchone()
             if row:
                 return self._rebuild_vehiculo_obj(row)
         except sqlite3.Error as e:
@@ -793,7 +793,7 @@ class DBManager:
             if conn is None: return False
             cursor = conn.cursor()
             cursor.execute(sql, (
-                data['patente'], 
+                data['patente'].upper(), 
                 data['modelo'], 
                 data['id_marca'], 
                 data['anio'], 
@@ -814,6 +814,7 @@ class DBManager:
             if conn: conn.close()
 
     def update_vehiculo(self, patente, data):
+        patente = patente.upper()
         sql = """
             UPDATE Vehiculo SET
             modelo = ?, id_marca = ?, anio = ?, precio_flota = ?,
@@ -850,6 +851,7 @@ class DBManager:
     def delete_vehiculo(self, patente):
         sql = "DELETE FROM Vehiculo WHERE patente = ?"
         conn = None
+        patente = patente.upper()
         try:
             conn = self._get_connection()
             if conn is None: return False
