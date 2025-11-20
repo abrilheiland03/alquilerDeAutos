@@ -432,6 +432,44 @@ class DBManager:
                 conn.close()
         return None
     
+    def delete_user_full(self, id_usuario):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            
+            row = cursor.execute("SELECT id_persona FROM Usuario WHERE id_usuario = ?", (id_usuario,)).fetchone()
+            if not row:
+                return False 
+            
+            id_persona = row['id_persona']
+
+            cursor.execute("BEGIN")
+
+            cursor.execute("DELETE FROM Usuario WHERE id_usuario = ?", (id_usuario,))
+            
+            cursor.execute("DELETE FROM Cliente WHERE id_persona = ?", (id_persona,))
+            cursor.execute("DELETE FROM Empleado WHERE id_persona = ?", (id_persona,))
+            cursor.execute("DELETE FROM Administrador WHERE id_persona = ?", (id_persona,))
+            
+            cursor.execute("DELETE FROM Persona WHERE id_persona = ?", (id_persona,))
+            
+            conn.commit()
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"Error: No se puede eliminar el usuario {id_usuario}. Tiene registros asociados (Alquileres, Mantenimientos, etc).")
+            if conn: conn.rollback()
+            return False
+        except sqlite3.Error as e:
+            print(f"Error al eliminar usuario: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+    
     # --- ABMC de CLIENTE ---
 
     def create_client_only(self, persona_data, role_data):
@@ -506,14 +544,14 @@ class DBManager:
                 
                 cliente_obj = Cliente(
                     id_cliente=row['id_cliente'],
-                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    fecha_alta=datetime.fromisoformat(row['fecha_alta']),
                     id_persona=row['id_persona'],
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
                     telefono=str(row['telefono']), # Convertimos a str porque en BD es INTEGER pero Persona suele usar str
                     # AJUSTE: Se lee row['fecha_nac']
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
+                    fecha_nacimiento=datetime.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -553,14 +591,14 @@ class DBManager:
                 
                 cliente_obj = Cliente(
                     id_cliente=row['id_cliente'],
-                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    fecha_alta=datetime.fromisoformat(row['fecha_alta']),
                     id_persona=row['id_persona'],
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
                     telefono=str(row['telefono']),
                     # AJUSTE: Se lee row['fecha_nac']
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
+                    fecha_nacimiento=datetime.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -600,14 +638,14 @@ class DBManager:
                 )
                 cliente_obj = Cliente(
                     id_cliente=row['id_cliente'],
-                    fecha_alta=date.fromisoformat(row['fecha_alta']),
+                    fecha_alta=datetime.fromisoformat(row['fecha_alta']),
                     id_persona=row['id_persona'],
                     nombre=row['nombre'],
                     apellido=row['apellido'],
                     mail=row['mail'],
                     telefono=str(row['telefono']),
                     # AJUSTE: Se lee row['fecha_nac']
-                    fecha_nacimiento=date.fromisoformat(row['fecha_nac']),
+                    fecha_nacimiento=datetime.fromisoformat(row['fecha_nac']),
                     tipo_documento=doc_obj,
                     nro_documento=row['nro_documento']
                 )
@@ -919,9 +957,9 @@ class DBManager:
             if row['id_estado'] != 1: 
                 raise ValueError(f"El vehículo {data['patente']} no está libre (Estado ID: {row['id_estado']}).")
 
-            fecha_inicio = date.fromisoformat(data['fecha_inicio'])
-            fecha_fin = date.fromisoformat(data['fecha_fin'])
-            hoy = date.today()
+            fecha_inicio = datetime.fromisoformat(data['fecha_inicio'])
+            fecha_fin = datetime.fromisoformat(data['fecha_fin'])
+            hoy = datetime.now()
 
             if fecha_inicio < hoy:
                 raise ValueError("La fecha de inicio debe ser futura o igual a hoy.")
@@ -983,14 +1021,18 @@ class DBManager:
 
     def get_all_alquileres(self, id_persona_filtro=None):
         base_sql = """
-            SELECT a.*, v.marca, v.modelo, ea.descripcion as estado_desc
+            SELECT a.*, m.descripcion, v.modelo, ea.descripcion as estado_desc
             FROM Alquiler a
             JOIN Vehiculo v ON a.patente = v.patente
             JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN Color c ON v.id_color = c.id_color
         """
         
         if id_persona_filtro:
-            base_sql += " JOIN Cliente c ON a.id_cliente = c.id_cliente WHERE c.id_persona = ?"
+            base_sql += """ JOIN Cliente c ON a.id_cliente = c.id_cliente 
+                            JOIN Usuario u ON c.id_persona = u.id_persona 
+                            WHERE u.id_usuario = ?"""
             params = (id_persona_filtro,)
         else:
             params = ()

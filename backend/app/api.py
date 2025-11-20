@@ -94,6 +94,22 @@ def obtener_usuario_actual():
     
     return sistema.db_manager.get_full_usuario_by_id(user_id)
 
+@api.route('/usuarios/<id_usuario>', methods=['DELETE'])
+def eliminar_usuario_sistema(id_usuario):
+    try:
+        usuario_solicitante = obtener_usuario_actual()
+        if not usuario_solicitante:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_usuario(id_usuario, usuario_solicitante)
+        
+        if exito:
+            return jsonify({"mensaje": f"Usuario {id_usuario} eliminado exitosamente"}), 200
+        return jsonify({"error": "No se pudo eliminar (Permisos insuficientes, usuario no encontrado o tiene datos asociados)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # --- Endpoint LOGIN ---
 @api.route('/login', methods=['POST'])
 def login():
@@ -109,31 +125,47 @@ def login():
         }), 200
     return jsonify({"error": "Credenciales invalidas"}), 401
 
-@api.route('/clientes', methods=['GET'])
-def api_listar_clientes():
+    
+@api.route('/registro', methods=['POST'])
+def registrar_usuario_unificado():
     try:
-        usuario = obtener_usuario_actual()
+        body = request.get_json()
         
-        if not usuario:
-            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+        tipo_usuario = body.get('tipo', '').lower()
+        datos_usuario = body.get('datos')
 
-        lista_clientes = sistema.listar_todos_los_clientes(usuario)
+        if not tipo_usuario or not datos_usuario:
+            return jsonify({"error": "Faltan campos 'tipo' o 'datos'"}), 400
+
+        if tipo_usuario == 'cliente':
+            exito = sistema.registrar_usuario_cliente(datos_usuario)
+            if exito:
+                return jsonify({"mensaje": "Cliente registrado exitosamente"}), 201
+            return jsonify({"error": "Error al registrar cliente"}), 400
+
+        usuario_solicitante = obtener_usuario_actual()
         
-        respuesta = []
-        for c in lista_clientes:
-            respuesta.append({
-                "id_cliente": c.id_cliente,
-                "id_persona": c.id_persona,
-                "nombre": c.nombre,
-                "apellido": c.apellido,
-                "nro_documento": c.nro_documento,
-                "mail": c.mail,
-                "telefono": c.telefono,
-                "fecha_alta": str(c.fecha_alta),
-                "tipo_documento": c.tipo_documento.descripcion if c.tipo_documento else None
-            })
+        if not usuario_solicitante:
+            return jsonify({"error": "No autorizado. Se requiere login"}), 401
             
-        return jsonify(respuesta), 200
+        es_admin = sistema.check_permission("Admin", usuario_solicitante)
+        if not es_admin:
+            return jsonify({"error": "Solo un Administrador puede crear empleados o administradores"}), 403
+
+        if tipo_usuario == 'empleado':
+            exito = sistema.registrar_usuario_empleado(datos_usuario)
+            if exito:
+                return jsonify({"mensaje": "Empleado registrado exitosamente"}), 201
+            
+        elif tipo_usuario == 'admin':
+            exito = sistema.registrar_usuario_admin(datos_usuario)
+            if exito:
+                return jsonify({"mensaje": "Administrador registrado exitosamente"}), 201
+        
+        else:
+             return jsonify({"error": "Tipo de usuario no válido (cliente, empleado, admin)"}), 400
+
+        return jsonify({"error": "Error al registrar usuario staff (Datos duplicados o inválidos)"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -256,6 +288,292 @@ def listar_vehiculos():
                 "caja_manual": v.caja_manual
             })
         return jsonify(respuesta), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# --- Endpoints ABMC Clientes ---
+
+@api.route('/clientes', methods=['POST'])
+def crear_cliente():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        id_creado = sistema.crear_cliente_mostrador(data, usuario)
+        
+        if id_creado:
+            return jsonify({"mensaje": "Cliente creado exitosamente", "id_cliente": id_creado}), 201
+        return jsonify({"error": "No se pudo crear el cliente (Permisos insuficientes o error de datos)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/clientes', methods=['GET'])
+def listar_clientes():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.listar_todos_los_clientes(usuario)
+        respuesta = []
+        
+        for c in lista:
+            respuesta.append({
+                "id_cliente": c.id_cliente,
+                "id_persona": c.id_persona,
+                "nombre": c.nombre,
+                "apellido": c.apellido,
+                "mail": c.mail,
+                "telefono": c.telefono,
+                "nro_documento": c.nro_documento,
+                "fecha_nacimiento": str(c.fecha_nacimiento),
+                "fecha_alta": str(c.fecha_alta),
+                "tipo_documento": c.tipo_documento.descripcion if c.tipo_documento else None,
+                "id_tipo_documento": c.tipo_documento.id_tipo if c.tipo_documento else None
+            })
+            
+        return jsonify(respuesta), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/clientes/<id_cliente>', methods=['GET'])
+def obtener_cliente_por_id(id_cliente):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        c = sistema.buscar_cliente_por_id(id_cliente, usuario)
+        
+        if c:
+            respuesta = {
+                "id_cliente": c.id_cliente,
+                "id_persona": c.id_persona,
+                "nombre": c.nombre,
+                "apellido": c.apellido,
+                "mail": c.mail,
+                "telefono": c.telefono,
+                "nro_documento": c.nro_documento,
+                "fecha_nacimiento": str(c.fecha_nacimiento),
+                "fecha_alta": str(c.fecha_alta),
+                "tipo_documento": c.tipo_documento.descripcion if c.tipo_documento else None,
+                "id_tipo_documento": c.tipo_documento.id_tipo if c.tipo_documento else None
+            }
+            return jsonify(respuesta), 200
+            
+        return jsonify({"error": "Cliente no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/clientes/buscar', methods=['GET'])
+def buscar_cliente_por_documento():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        tipo = request.args.get('tipo')
+        nro = request.args.get('nro')
+
+        if not tipo or not nro:
+            return jsonify({"error": "Faltan parámetros 'tipo' y 'nro'"}), 400
+
+        c = sistema.buscar_cliente_por_documento(tipo, nro, usuario)
+        
+        if c:
+            respuesta = {
+                "id_cliente": c.id_cliente,
+                "id_persona": c.id_persona,
+                "nombre": c.nombre,
+                "apellido": c.apellido,
+                "mail": c.mail,
+                "telefono": c.telefono,
+                "nro_documento": c.nro_documento,
+                "fecha_nacimiento": str(c.fecha_nacimiento),
+                "fecha_alta": str(c.fecha_alta),
+                "tipo_documento": c.tipo_documento.descripcion if c.tipo_documento else None
+            }
+            return jsonify(respuesta), 200
+            
+        return jsonify({"error": "Cliente no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/clientes/<id_cliente>', methods=['PUT'])
+def actualizar_cliente(id_cliente):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        exito = sistema.actualizar_datos_cliente(id_cliente, data, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Datos del cliente actualizados"}), 200
+        return jsonify({"error": "No se pudo actualizar (Permisos o Cliente no encontrado)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/clientes/<id_cliente>', methods=['DELETE'])
+def eliminar_cliente(id_cliente):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_cliente(id_cliente, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Cliente eliminado exitosamente"}), 200
+        return jsonify({"error": "No se pudo eliminar (Permisos o tiene alquileres asociados)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# --- Endpoints Gestión Alquileres ---
+
+@api.route('/alquileres', methods=['POST'])
+def crear_alquiler():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        
+        exito = sistema.crear_nuevo_alquiler(
+            data.get('patente'),
+            data.get('id_cliente'),
+            data.get('id_empleado'),
+            data.get('fecha_inicio'),
+            data.get('fecha_fin'),
+            data.get('estado', 'RESERVADO'),
+            usuario
+        )
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler creado exitosamente"}), 201
+        return jsonify({"error": "No se pudo crear (Validación de fechas, auto ocupado o permisos)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/alquileres/<id_alquiler>/comenzar', methods=['POST'])
+def comenzar_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.comenzar_alquiler(id_alquiler, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler iniciado (Estado Activo)"}), 200
+        return jsonify({"error": "No se pudo iniciar (No es reservado o permisos insuficientes)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/alquileres/<id_alquiler>/cancelar', methods=['POST'])
+def cancelar_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.cancelar_alquiler(id_alquiler, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler cancelado"}), 200
+        return jsonify({"error": "No se pudo cancelar (Ya iniciado o permisos insuficientes)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/alquileres/<id_alquiler>/finalizar', methods=['POST'])
+def finalizar_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.finalizar_alquiler(id_alquiler, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler finalizado. Vehículo liberado"}), 200
+        return jsonify({"error": "No se pudo finalizar (Estado incorrecto o permisos insuficientes)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/alquileres/<id_alquiler>/atrasado', methods=['POST'])
+def marcar_alquiler_atrasado(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.marcar_alquiler_como_atrasado(id_alquiler, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler marcado como atrasado"}), 200
+        return jsonify({"error": "No se pudo marcar (Fecha fin no superada o permisos insuficientes)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/alquileres', methods=['GET'])
+def listar_alquileres():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.consultar_todos_alquileres(usuario)
+        return jsonify(lista), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/alquileres/<id_alquiler>', methods=['GET'])
+def obtener_alquiler_por_id(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        alquiler = sistema.consultar_alquiler_por_id(id_alquiler, usuario)
+        
+        if alquiler:
+            return jsonify(alquiler), 200
+        
+        return jsonify({"error": "Alquiler no encontrado o acceso denegado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@api.route('/alquileres/<id_alquiler>', methods=['DELETE'])
+def eliminar_alquiler(id_alquiler):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_alquiler(id_alquiler, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Alquiler eliminado exitosamente"}), 200
+        return jsonify({"error": "No se pudo eliminar (Permisos insuficientes o no encontrado)"}), 400
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

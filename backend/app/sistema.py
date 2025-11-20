@@ -91,6 +91,46 @@ class SistemaAlquiler:
         except Exception as e:
             print(f"Error inesperado durante el registro: {e}")
             return False
+        
+    def registrar_usuario_empleado(self, data):
+        try:
+            persona_data = {
+                'nombre': data['nombre'], 'apellido': data['apellido'],
+                'mail': data['mail'], 'telefono': data['telefono'],
+                'fecha_nacimiento': data['fecha_nacimiento'],
+                'tipo_documento_id': data['tipo_documento_id'],
+                'nro_documento': data['nro_documento']
+            }
+            
+            permiso_id_empleado = 2 
+            usuario_data = {
+                'user_name': data['user_name'],
+                'password_hash': self._hash_password(data['password']),
+                'id_permiso': permiso_id_empleado
+            }
+
+            role_data = {
+                'fecha_alta': data.get('fecha_alta'),
+                'sueldo': data['sueldo']
+            }
+
+            id_persona_creada = self.db_manager.create_full_user(
+                persona_data, usuario_data, role_data, 'empleado'
+            )
+
+            if id_persona_creada:
+                print(f"Usuario empleado creado con ID de persona: {id_persona_creada}")
+                return True
+            else:
+                print("El registro falló.")
+                return False
+                
+        except KeyError as e:
+            print(f"Error en los datos de registro: falta la clave {e}")
+            return False
+        except Exception as e:
+            print(f"Error inesperado durante el registro: {e}")
+            return False
 
     def login(self, mail, password):
         user_login_data = self.db_manager.get_user_data_for_login_by_mail(mail)
@@ -130,6 +170,21 @@ class SistemaAlquiler:
             print(f"Acción fallida: Se requiere permiso de '{required_permission_desc}'.")
             return False
     
+    def eliminar_usuario(self, id_usuario_eliminar, usuario_solicitante):
+        if not self.check_permission("Admin", usuario_solicitante):
+            print("Se requiere permiso de Admin para eliminar usuarios.")
+            return False
+        
+        if str(id_usuario_eliminar) == str(usuario_solicitante.id_usuario):
+            print("No puedes eliminarte a ti mismo.")
+            return False
+
+        if self.db_manager.delete_user_full(id_usuario_eliminar):
+            print(f"Usuario {id_usuario_eliminar} eliminado correctamente.")
+            return True
+        
+        return False
+
     def obtener_estado_auto_por_id(self, id_estado: int):
         return self.db_manager.get_estado_auto_by_id(id_estado)
     
@@ -306,7 +361,7 @@ class SistemaAlquiler:
 
     # --- FUNCIONES DE ALQUILER ---
 
-    def crear_nuevo_alquiler(self, patente, id_cliente, fecha_inicio, fecha_fin, estado, usuario):
+    def crear_nuevo_alquiler(self, patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, estado, usuario):
         if not usuario:
             print("Debe estar logueado para crear un alquiler.")
             return False
@@ -314,7 +369,7 @@ class SistemaAlquiler:
         alquiler_data = {
             'patente': patente,
             'id_cliente': id_cliente,
-            'id_empleado': usuario.id_usuario, 
+            'id_empleado': id_empleado, 
             'fecha_inicio': fecha_inicio, 
             'fecha_fin': fecha_fin,
             'estado': estado
@@ -335,7 +390,7 @@ class SistemaAlquiler:
         if es_admin or es_empleado:
             return self.db_manager.get_all_alquileres()
         else:
-            return self.db_manager.get_all_alquileres(id_persona_filtro=usuario.id_persona)
+            return self.db_manager.get_all_alquileres(id_persona_filtro=usuario.id_usuario)
 
     def consultar_alquiler_por_id(self, id_alquiler, usuario):
         if not usuario:
@@ -352,7 +407,7 @@ class SistemaAlquiler:
         if es_admin or es_empleado:
             return alquiler
         
-        if alquiler['id_persona_cliente'] == usuario.id_persona:
+        if alquiler['id_persona_cliente'] == usuario.id_usuario:
             return alquiler
         
         print("No tiene permisos para ver este alquiler.")
