@@ -97,34 +97,34 @@ class SistemaAlquiler:
 
         if not user_login_data:
             print("Login fallido: Email no encontrado.")
-            return False
+            return None
 
         stored_hash = user_login_data['password']
         if not self._verify_password(password, stored_hash):
             print("Login fallido: Contraseña incorrecta.")
-            return False
+            return None
 
         id_usuario = user_login_data['id_usuario']
         usuario_completo = self.db_manager.get_full_usuario_by_id(id_usuario)
 
         if not usuario_completo:
             print("Error: El usuario existe pero no se pudo cargar el perfil completo.")
-            return False
+            return None
 
         self.usuario_actual = usuario_completo
         print(f"Login exitoso. Bienvenido {self.usuario_actual.user_name}")
-        return True
+        return usuario_completo
 
     def logout(self):
         print(f"Cerrando sesión de {self.usuario_actual.user_name}.")
         self.usuario_actual = None
 
-    def check_permission(self, required_permission_desc):
-        if not self.usuario_actual:
+    def check_permission(self, required_permission_desc, usuario=None):
+        if not usuario:
             print("Acción fallida: No hay usuario logueado.")
             return False
         
-        if self.usuario_actual.permiso.descripcion.upper() == required_permission_desc.upper():
+        if usuario.permiso.descripcion.upper() == required_permission_desc.upper():
             return True
         else:
             print(f"Acción fallida: Se requiere permiso de '{required_permission_desc}'.")
@@ -135,8 +135,8 @@ class SistemaAlquiler:
     
     # --- ABMC de CLIENTE ---
 
-    def crear_cliente_mostrador(self, data):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def crear_cliente_mostrador(self, data, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return None
         
         try:
@@ -169,8 +169,8 @@ class SistemaAlquiler:
             print(f"Error inesperado durante la creación: {e}")
             return None
 
-    def buscar_cliente_por_id(self, id_cliente):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def buscar_cliente_por_id(self, id_cliente, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return None
             
         cliente = self.db_manager.get_client_by_id(id_cliente)
@@ -181,8 +181,8 @@ class SistemaAlquiler:
         
         return cliente
 
-    def buscar_cliente_por_documento(self, tipo_documento_id, nro_documento):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def buscar_cliente_por_documento(self, tipo_documento_id, nro_documento, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return None
             
         cliente = self.db_manager.get_client_by_document(tipo_documento_id, nro_documento)
@@ -193,14 +193,14 @@ class SistemaAlquiler:
         
         return cliente
 
-    def listar_todos_los_clientes(self):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def listar_todos_los_clientes(self, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return []
         
         return self.db_manager.get_all_clients()
 
-    def actualizar_datos_cliente(self, id_cliente, data):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def actualizar_datos_cliente(self, id_cliente, data, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return False
             
         try:
@@ -228,8 +228,8 @@ class SistemaAlquiler:
             print(f"Error inesperado durante la actualización: {e}")
             return False
 
-    def eliminar_cliente(self, id_cliente):
-        if not self.check_permission('admin') and not self.check_permission('empleado'):
+    def eliminar_cliente(self, id_cliente, usuario):
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return False
             
         exito = self.db_manager.delete_client_full(id_cliente)
@@ -252,8 +252,8 @@ class SistemaAlquiler:
     def buscar_vehiculo_por_id(self, patente):
         return self.db_manager.get_vehiculo_by_patente(patente)
 
-    def crear_vehiculo(self, data):
-        if not self.check_permission("Admin"):
+    def crear_vehiculo(self, data, usuario):
+        if not self.check_permission("Admin", usuario):
             return False
         try:
             exito = self.db_manager.create_vehiculo(data)
@@ -268,8 +268,8 @@ class SistemaAlquiler:
             print(f"Error inesperado al crear vehiculo: {e}")
             return False
 
-    def actualizar_vehiculo(self, patente, data):
-        if not (self.check_permission("Admin") or self.check_permission("Empleado")):
+    def actualizar_vehiculo(self, patente, data, usuario):
+        if not (self.check_permission("Admin", usuario) or self.check_permission("Empleado", usuario)):
             return False
         try:
             exito = self.db_manager.update_vehiculo(patente, data)
@@ -285,8 +285,8 @@ class SistemaAlquiler:
             print(f"Error inesperado al actualizar vehiculo: {e}")
             return False
 
-    def eliminar_vehiculo(self, patente):
-        if not self.check_permission("Admin"):
+    def eliminar_vehiculo(self, patente, usuario):
+        if not self.check_permission("Admin", usuario):
             return False
         try:
             exito = self.db_manager.delete_vehiculo(patente)
@@ -306,15 +306,15 @@ class SistemaAlquiler:
 
     # --- FUNCIONES DE ALQUILER ---
 
-    def crear_nuevo_alquiler(self, patente, id_cliente, fecha_inicio, fecha_fin, estado):
-        if not self.usuario_actual:
+    def crear_nuevo_alquiler(self, patente, id_cliente, fecha_inicio, fecha_fin, estado, usuario):
+        if not usuario:
             print("Debe estar logueado para crear un alquiler.")
             return False
 
         alquiler_data = {
             'patente': patente,
             'id_cliente': id_cliente,
-            'id_empleado': self.usuario_actual.id_usuario, 
+            'id_empleado': usuario.id_usuario, 
             'fecha_inicio': fecha_inicio, 
             'fecha_fin': fecha_fin,
             'estado': estado
@@ -325,20 +325,20 @@ class SistemaAlquiler:
             return True
         return False
 
-    def consultar_todos_alquileres(self):
-        if not self.usuario_actual:
+    def consultar_todos_alquileres(self, usuario):
+        if not usuario:
             return []
 
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
 
         if es_admin or es_empleado:
             return self.db_manager.get_all_alquileres()
         else:
-            return self.db_manager.get_all_alquileres(id_persona_filtro=self.usuario_actual.id_persona)
+            return self.db_manager.get_all_alquileres(id_persona_filtro=usuario.id_persona)
 
-    def consultar_alquiler_por_id(self, id_alquiler):
-        if not self.usuario_actual:
+    def consultar_alquiler_por_id(self, id_alquiler, usuario):
+        if not usuario:
             return None
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
@@ -346,21 +346,21 @@ class SistemaAlquiler:
             print("Alquiler no encontrado.")
             return None
 
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
 
         if es_admin or es_empleado:
             return alquiler
         
-        if alquiler['id_persona_cliente'] == self.usuario_actual.id_persona:
+        if alquiler['id_persona_cliente'] == usuario.id_persona:
             return alquiler
         
         print("No tiene permisos para ver este alquiler.")
         return None
 
-    def actualizar_estado_alquiler(self, id_alquiler, nuevo_id_estado):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def actualizar_estado_alquiler(self, id_alquiler, nuevo_id_estado, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
 
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -372,8 +372,8 @@ class SistemaAlquiler:
         print("No se pudo actualizar el alquiler.")
         return False
 
-    def eliminar_alquiler(self, id_alquiler):
-        if not self.check_permission("Admin"):
+    def eliminar_alquiler(self, id_alquiler, usuario):
+        if not self.check_permission("Admin", usuario):
             print("Se requiere permiso de Admin.")
             return False
         
@@ -383,8 +383,11 @@ class SistemaAlquiler:
         print("No se pudo eliminar el alquiler.")
         return False
 
-    def marcar_alquiler_como_atrasado(self, id_alquiler):
-        if not self.check_permission_admin_or_empleado():
+    def marcar_alquiler_como_atrasado(self, id_alquiler, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
             return False
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
@@ -409,8 +412,11 @@ class SistemaAlquiler:
         
         return False
 
-    def finalizar_alquiler(self, id_alquiler):
-        if not self.check_permission_admin_or_empleado():
+    def finalizar_alquiler(self, id_alquiler, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
             return False
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
@@ -428,8 +434,8 @@ class SistemaAlquiler:
         
         return False
 
-    def cancelar_alquiler(self, id_alquiler):
-        if not self.usuario_actual:
+    def cancelar_alquiler(self, id_alquiler, usuario):
+        if not usuario:
             print("Debe estar logueado para cancelar.")
             return False
 
@@ -438,15 +444,15 @@ class SistemaAlquiler:
             print("Alquiler no encontrado.")
             return False
 
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+            if alquiler['id_persona_cliente'] != usuario.id_persona:
                 print("No tiene permiso para cancelar este alquiler (no le pertenece).")
                 return False
 
-        if alquiler['id_estado'] in [2,3, 4, 5]:
+        if alquiler['id_estado'] in [2, 3, 4, 5]:
             print("El alquiler ya comenzó, no se puede cancelar.")
             return False
 
@@ -456,9 +462,9 @@ class SistemaAlquiler:
         
         return False
     
-    def comenzar_alquiler(self, id_alquiler):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def comenzar_alquiler(self, id_alquiler, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -473,9 +479,9 @@ class SistemaAlquiler:
     
     # --- FUNCIONES DE DANIO ---
 
-    def registrar_danio(self, id_alquiler, costo, detalle):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def registrar_danio(self, id_alquiler, costo, detalle, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -491,8 +497,8 @@ class SistemaAlquiler:
             return True
         return False
 
-    def consultar_danios_alquiler(self, id_alquiler):
-        if not self.usuario_actual:
+    def consultar_danios_alquiler(self, id_alquiler, usuario):
+        if not usuario:
             return []
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
@@ -500,19 +506,19 @@ class SistemaAlquiler:
             print("Alquiler no encontrado.")
             return []
 
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
 
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+            if alquiler['id_persona_cliente'] != usuario.id_persona:
                 print("No tiene permisos para ver daños de este alquiler.")
                 return []
 
         return self.db_manager.get_danios_by_alquiler(id_alquiler)
 
-    def modificar_danio(self, id_danio, costo, detalle):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def modificar_danio(self, id_danio, costo, detalle, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -524,9 +530,9 @@ class SistemaAlquiler:
             return True
         return False
 
-    def eliminar_danio(self, id_danio):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def eliminar_danio(self, id_danio, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -539,9 +545,9 @@ class SistemaAlquiler:
 
     # --- FUNCIONES DE MULTA ---
 
-    def registrar_multa(self, id_alquiler, costo, detalle, fecha_multa):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def registrar_multa(self, id_alquiler, costo, detalle, fecha_multa, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -558,8 +564,8 @@ class SistemaAlquiler:
             return True
         return False
 
-    def consultar_multas_alquiler(self, id_alquiler):
-        if not self.usuario_actual:
+    def consultar_multas_alquiler(self, id_alquiler, usuario):
+        if not usuario:
             return []
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
@@ -567,19 +573,19 @@ class SistemaAlquiler:
             print("Alquiler no encontrado.")
             return []
 
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
 
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != self.usuario_actual.id_persona:
+            if alquiler['id_persona_cliente'] != usuario.id_persona:
                 print("No tiene permisos para ver multas de este alquiler.")
                 return []
 
         return self.db_manager.get_multas_by_alquiler(id_alquiler)
 
-    def modificar_multa(self, id_multa, costo, detalle, fecha_multa):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def modificar_multa(self, id_multa, costo, detalle, fecha_multa, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -595,9 +601,9 @@ class SistemaAlquiler:
             return True
         return False
 
-    def eliminar_multa(self, id_multa):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def eliminar_multa(self, id_multa, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -610,9 +616,9 @@ class SistemaAlquiler:
     
     # --- FUNCIONES DE MANTENIMIENTO ---
 
-    def programar_mantenimiento(self, patente, fecha_inicio, fecha_fin_estimada, detalle):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def programar_mantenimiento(self, patente, fecha_inicio, fecha_fin_estimada, detalle, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -620,7 +626,7 @@ class SistemaAlquiler:
         
         data = {
             'patente': patente,
-            'id_empleado': self.usuario_actual.id_usuario,
+            'id_empleado': usuario.id_usuario,
             'fecha_inicio': fecha_inicio,
             'fecha_fin': fecha_fin_estimada,
             'detalle': detalle
@@ -631,9 +637,9 @@ class SistemaAlquiler:
             return True
         return False
 
-    def iniciar_mantenimiento(self, id_mantenimiento):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def iniciar_mantenimiento(self, id_mantenimiento, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -645,9 +651,9 @@ class SistemaAlquiler:
         print("No se pudo iniciar el mantenimiento.")
         return False
 
-    def finalizar_mantenimiento(self, id_mantenimiento):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def finalizar_mantenimiento(self, id_mantenimiento, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
@@ -659,9 +665,9 @@ class SistemaAlquiler:
         print("No se pudo finalizar el mantenimiento.")
         return False
 
-    def cancelar_mantenimiento(self, id_mantenimiento):
-        es_admin = self.check_permission("Admin")
-        es_empleado = self.check_permission("Empleado")
+    def cancelar_mantenimiento(self, id_mantenimiento, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
         
         if not (es_admin or es_empleado):
             print("Se requiere permiso de Admin o Empleado.")
