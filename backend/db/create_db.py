@@ -315,6 +315,140 @@ try:
 except sqlite3.Error as e:
     print(f"Error creando admin: {e}")
 
+# ==========================
+# SEEDING DE DATOS DE PRUEBA (Clientes, Empleados, Autos, Operaciones)
+# ==========================
+print("Insertando datos de prueba...")
+
+try:
+    # --- 1. CREAR EMPLEADO (Ana) ---
+    cursor.execute("SELECT id_persona FROM Persona WHERE nro_documento = 30111222")
+    if not cursor.fetchone():
+        # Persona
+        cursor.execute("""
+            INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+            VALUES ('Ana', 'Lopez', 'ana.empleado@rentcar.com', '351-111111', '1990-03-15', 1, 30111222)
+        """)
+        id_persona_emp = cursor.lastrowid
+        
+        # Usuario (Permiso 2 = Empleado)
+        pass_hash = hashlib.sha256("12345".encode('utf-8')).hexdigest()
+        cursor.execute("""
+            INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
+            VALUES (?, 'ana_emp', ?, 2)
+        """, (id_persona_emp, pass_hash))
+
+        # Rol Empleado
+        cursor.execute("""
+            INSERT INTO Empleado (id_persona, fecha_alta, sueldo)
+            VALUES (?, '2024-01-01', 850000.00)
+        """, (id_persona_emp,))
+        id_empleado_ana = cursor.lastrowid # Guardamos ID para usar en alquileres/mantenimientos
+
+    # --- 2. CREAR CLIENTE 1 (Juan - El que va a tener historial) ---
+    cursor.execute("SELECT id_persona FROM Persona WHERE nro_documento = 40111222")
+    row_juan = cursor.fetchone()
+    if not row_juan:
+        # Persona
+        cursor.execute("""
+            INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+            VALUES ('Juan', 'Perez', 'juan.cliente@gmail.com', '351-222222', '1995-08-20', 1, 40111222)
+        """)
+        id_persona_juan = cursor.lastrowid
+        
+        # Usuario (Permiso 1 = Cliente)
+        pass_hash = hashlib.sha256("12345".encode('utf-8')).hexdigest()
+        cursor.execute("""
+            INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
+            VALUES (?, 'juan_cli', ?, 1)
+        """, (id_persona_juan, pass_hash))
+
+        # Rol Cliente
+        cursor.execute("INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, '2025-01-10')", (id_persona_juan,))
+        id_cliente_juan = cursor.lastrowid
+    else:
+        # Si ya existe, buscamos su ID de cliente para usarlo abajo
+        cursor.execute("SELECT id_cliente FROM Cliente WHERE id_persona = (SELECT id_persona FROM Persona WHERE nro_documento = 40111222)")
+        id_cliente_juan = cursor.fetchone()[0]
+
+    # --- 3. CREAR CLIENTE 2 (Sofia - Sin historial aun) ---
+    cursor.execute("SELECT id_persona FROM Persona WHERE nro_documento = 40333444")
+    if not cursor.fetchone():
+        # Persona
+        cursor.execute("""
+            INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+            VALUES ('Sofia', 'Garcia', 'sofia.g@gmail.com', '351-333333', '1998-12-05', 1, 40333444)
+        """)
+        id_persona_sofia = cursor.lastrowid
+        
+        # Usuario
+        pass_hash = hashlib.sha256("12345".encode('utf-8')).hexdigest()
+        cursor.execute("""
+            INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
+            VALUES (?, 'sofia_cli', ?, 1)
+        """, (id_persona_sofia, pass_hash))
+
+        # Rol Cliente
+        cursor.execute("INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, '2025-02-01')", (id_persona_sofia,))
+
+    # --- 4. CREAR VEHICULOS (Todos Libres) ---
+    # Toyota Corolla (Usado para el alquiler finalizado)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('AA111AA', 'Corolla', 1, 2023, 25000.0, 5, 4, 0, 1, 2)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
+
+    # Ford Focus (Usado para el mantenimiento finalizado)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('BB222BB', 'Focus', 2, 2022, 18000.0, 5, 5, 1, 1, 4)) # Estado 1 = Libre, Marca 2=Ford, Color 4=Azul
+
+    # Chevrolet Cruze (Nuevo, sin uso)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('CC333CC', 'Cruze', 3, 2024, 30000.0, 5, 4, 0, 1, 5)) # Estado 1 = Libre, Marca 3=Chevrolet, Color 5=Gris
+
+    # Obtener IDs necesarios para operaciones (suponiendo que se acaban de insertar o ya existían)
+    # Necesitamos el ID de empleado de Ana. Si no se creó recién, lo buscamos.
+    if 'id_empleado_ana' not in locals():
+        cursor.execute("SELECT id_empleado FROM Empleado e JOIN Persona p ON e.id_persona = p.id_persona WHERE p.nro_documento = 30111222")
+        res = cursor.fetchone()
+        id_empleado_ana = res[0] if res else 1 # Fallback a 1 si falla algo raro
+
+    # --- 5. CREAR ALQUILER FINALIZADO (Para Juan con el Toyota) ---
+    # Verificamos si ya existe para no duplicar
+    cursor.execute("SELECT id_alquiler FROM Alquiler WHERE patente = 'AA111AA' AND fecha_inicio = '2025-01-15T10:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('AA111AA', id_cliente_juan, id_empleado_ana, '2025-01-15T10:00:00', '2025-01-20T18:00:00', 4)) # 4 = Finalizado
+        
+        id_alquiler_juan = cursor.lastrowid
+
+        # --- 6. AGREGAR MULTA Y DAÑO A ESE ALQUILER ---
+        
+        # Daño
+        cursor.execute("""
+            INSERT INTO Danio (id_alquiler, costo, detalle)
+            VALUES (?, 15000.50, 'Rayón en paragolpes trasero')
+        """, (id_alquiler_juan,))
+
+        # Multa
+        cursor.execute("""
+            INSERT INTO Multa (alquiler_id, costo, detalle, fecha_multa)
+            VALUES (?, 45000.00, 'Exceso de velocidad en Ruta 9', '2025-01-18T14:30:00')
+        """, (id_alquiler_juan,))
+
+    # --- 7. CREAR MANTENIMIENTO FINALIZADO (Para el Ford) ---
+    cursor.execute("SELECT id_mantenimiento FROM Mantenimiento WHERE patente = 'BB222BB' AND fecha_inicio = '2024-12-01T08:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Mantenimiento (patente, id_empleado, fecha_inicio, fecha_fin, detalle, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('BB222BB', id_empleado_ana, '2024-12-01T08:00:00', '2024-12-03T12:00:00', 'Cambio de aceite y filtros', 2)) # 2 = Finalizado
+
+    print("Datos de prueba (Usuarios, Vehículos, Operaciones) insertados correctamente.")
+
+except Exception as e:
+    print(f"Ocurrió un error al insertar datos de prueba: {e}")
+
 # Guardar cambios
 conn.commit()
 conn.close()
