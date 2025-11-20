@@ -785,6 +785,69 @@ def eliminar_mantenimiento(id_mantenimiento):
         return jsonify({"error": "No se pudo eliminar (Tal vez está en curso o falta permiso Admin)"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# --- Endpoints Reportes y Estadísticas ---
+
+@api.route('/reportes/cliente/<id_cliente>', methods=['GET'])
+def reporte_cliente(id_cliente):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        data = sistema.reporte_alquileres_cliente(id_cliente, usuario)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/reportes/ranking-vehiculos', methods=['GET'])
+def reporte_ranking():
+    try:
+        f_desde = request.args.get('fecha_desde', '2000-01-01')
+        f_hasta = request.args.get('fecha_hasta', '2100-01-01')
+        
+        data = sistema.reporte_ranking_vehiculos(f_desde, f_hasta)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/reportes/evolucion-alquileres', methods=['GET'])
+def reporte_evolucion():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        f_desde = request.args.get('fecha_desde', '2000-01-01')
+        f_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        data = sistema.reporte_evolucion_alquileres(f_desde, f_hasta, usuario)
+        
+        if data is None:
+            return jsonify({"error": "Permisos insuficientes"}), 403
+            
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/reportes/facturacion', methods=['GET'])
+def reporte_facturacion():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        f_desde = request.args.get('fecha_desde', '2000-01-01')
+        f_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        data = sistema.reporte_facturacion_mensual(f_desde, f_hasta, usuario)
+        
+        if data is None:
+            return jsonify({"error": "Permisos insuficientes"}), 403
+            
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------
 # EJECUCIÓN

@@ -1496,3 +1496,150 @@ class DBManager:
             return False
         finally:
             if conn: conn.close()
+
+    # --- REPORTES Y ESTADISTICAS ---
+
+    def get_report_alquileres_por_cliente(self, id_cliente):
+        sql = """
+            SELECT 
+                a.id_alquiler, a.fecha_inicio, a.fecha_fin, 
+                v.modelo, m.descripcion as marca, v.patente, v.precio_flota,
+                COALESCE((SELECT SUM(costo) FROM Multa WHERE alquiler_id = a.id_alquiler), 0) as total_multas,
+                COALESCE((SELECT SUM(costo) FROM Danio WHERE id_alquiler = a.id_alquiler), 0) as total_danios
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            JOIN Marca m ON v.id_marca = m.id_marca
+            WHERE a.id_cliente = ?
+            ORDER BY a.fecha_inicio DESC
+        """
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute(sql, (id_cliente,)).fetchall()
+            
+            for row in rows:
+                fmt = '%Y-%m-%dT%H:%M:%S'
+                try:
+                    inicio = datetime.strptime(row['fecha_inicio'], fmt)
+                    fin = datetime.strptime(row['fecha_fin'], fmt)
+                except ValueError:
+                    # Fallback por si la fecha no tiene hora
+                    fmt_short = '%Y-%m-%d'
+                    inicio = datetime.strptime(row['fecha_inicio'][:10], fmt_short)
+                    fin = datetime.strptime(row['fecha_fin'][:10], fmt_short)
+
+                dias = (fin - inicio).days
+                if dias < 1: dias = 1
+                
+                costo_alquiler = dias * row['precio_flota']
+                costo_total = costo_alquiler + row['total_multas'] + row['total_danios']
+
+                item = dict(row)
+                item['dias_alquilado'] = dias
+                item['costo_alquiler_base'] = costo_alquiler
+                item['costo_final_total'] = costo_total
+                lista.append(item)
+            return lista
+        except Exception as e:
+            print(f"Error reporte cliente: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_report_ranking_vehiculos(self, fecha_desde, fecha_hasta):
+        sql = """
+            SELECT v.patente, v.modelo, m.descripcion as marca, COUNT(a.id_alquiler) as cantidad_alquileres
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            JOIN Marca m ON v.id_marca = m.id_marca
+            WHERE a.fecha_inicio >= ? AND a.fecha_inicio <= ?
+            GROUP BY v.patente
+            ORDER BY cantidad_alquileres DESC
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (fecha_desde, fecha_hasta)).fetchall()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"Error reporte ranking: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_report_evolucion_temporal(self, fecha_desde, fecha_hasta):
+        sql = """
+            SELECT strftime('%Y-%m', fecha_inicio) as periodo, COUNT(id_alquiler) as total_alquileres
+            FROM Alquiler
+            WHERE fecha_inicio >= ? AND fecha_inicio <= ?
+            GROUP BY periodo
+            ORDER BY periodo ASC
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (fecha_desde, fecha_hasta)).fetchall()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"Error reporte evolución: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_report_facturacion_mensual(self, fecha_desde, fecha_hasta):
+        # Solo alquileres FINALIZADOS (id_estado = 4)
+        sql = """
+            SELECT 
+                strftime('%Y-%m', a.fecha_fin) as periodo,
+                a.fecha_inicio, a.fecha_fin, v.precio_flota,
+                COALESCE((SELECT SUM(costo) FROM Multa WHERE alquiler_id = a.id_alquiler), 0) as multas,
+                COALESCE((SELECT SUM(costo) FROM Danio WHERE id_alquiler = a.id_alquiler), 0) as danios
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            WHERE a.id_estado = 4 
+            AND a.fecha_fin >= ? AND a.fecha_fin <= ?
+            ORDER BY periodo ASC
+        """
+        conn = None
+        facturacion_por_mes = {}
+        
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (fecha_desde, fecha_hasta)).fetchall()
+            
+            for row in rows:
+                periodo = row['periodo']
+                
+                fmt = '%Y-%m-%dT%H:%M:%S'
+                try:
+                    inicio = datetime.strptime(row['fecha_inicio'], fmt)
+                    fin = datetime.strptime(row['fecha_fin'], fmt)
+                except ValueError:
+                    fmt_short = '%Y-%m-%d'
+                    inicio = datetime.strptime(row['fecha_inicio'][:10], fmt_short)
+                    fin = datetime.strptime(row['fecha_fin'][:10], fmt_short)
+
+                dias = (fin - inicio).days
+                if dias < 1: dias = 1
+                
+                total_row = (dias * row['precio_flota']) + row['multas'] + row['danios']
+                
+                if periodo in facturacion_por_mes:
+                    facturacion_por_mes[periodo] += total_row
+                else:
+                    facturacion_por_mes[periodo] = total_row
+            
+            resultado = [{"periodo": k, "total_facturado": v} for k, v in facturacion_por_mes.items()]
+            resultado.sort(key=lambda x: x['periodo'])
+            return resultado
+
+        except Exception as e:
+            print(f"Error reporte facturación: {e}")
+            return []
+        finally:
+            if conn: conn.close()

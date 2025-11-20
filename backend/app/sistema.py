@@ -784,3 +784,40 @@ class SistemaAlquiler:
 
     def listar_permisos(self):
         return self.db_manager.get_all_permisos()
+
+# Ejemplo de uso del sistema# --- REPORTES ---
+
+    def reporte_alquileres_cliente(self, id_cliente, usuario):
+        if not usuario:
+            return []
+
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            if str(usuario.id_persona) != str(self.buscar_cliente_por_id(id_cliente, usuario).id_persona):
+                return []
+        
+        return self.db_manager.get_report_alquileres_por_cliente(id_cliente)
+
+    def reporte_ranking_vehiculos(self, fecha_desde, fecha_hasta):
+        # Público
+        return self.db_manager.get_report_ranking_vehiculos(fecha_desde, fecha_hasta)
+
+    def reporte_evolucion_alquileres(self, fecha_desde, fecha_hasta, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return None
+        
+        return self.db_manager.get_report_evolucion_temporal(fecha_desde, fecha_hasta)
+
+    def reporte_facturacion_mensual(self, fecha_desde, fecha_hasta, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return None
+        
+        return self.db_manager.get_report_facturacion_mensual(fecha_desde, fecha_hasta)
