@@ -672,3 +672,26 @@ class SistemaAlquiler:
             return True
         print("No se pudo cancelar (Tal vez ya no está pendiente).")
         return False
+    
+    # --- LISTADOS DE CATÁLOGOS (PÚBLICOS) ---
+
+    def listar_tipos_documento(self):
+        return self.db_manager.get_all_documentos()
+
+    def listar_marcas(self):
+        return self.db_manager.get_all_marcas()
+
+    def listar_colores(self):
+        return self.db_manager.get_all_colores()
+
+    def listar_estados_auto(self):
+        return self.db_manager.get_all_estados_auto()
+
+    def listar_estados_alquiler(self):
+        return self.db_manager.get_all_estados_alquiler()
+
+    def listar_estados_mantenimiento(self):
+        return self.db_manager.get_all_estados_mantenimiento()
+
+    def listar_permisos(self):
+        return self.db_manager.get_all_permisos()

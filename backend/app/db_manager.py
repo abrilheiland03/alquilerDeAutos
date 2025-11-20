@@ -228,6 +228,82 @@ class DBManager:
                 conn.close()
         return lista
     
+    # --- LECTURA COLOR ---
+
+    def get_color_by_id(self, id_color: int):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(
+                "SELECT * FROM Color WHERE id_color = ?", (id_color,)
+            ).fetchone()
+            if row:
+                return Color(id_color=row['id_color'], descripcion=row['descripcion'])
+        except sqlite3.Error as e:
+            print(f"Error al obtener Color: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def get_all_colores(self):
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute("SELECT * FROM Color").fetchall()
+            for row in rows:
+                lista.append(
+                    Color(id_color=row['id_color'], descripcion=row['descripcion'])
+                )
+        except sqlite3.Error as e:
+            print(f"Error al obtener Colores: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return lista
+
+    # --- LECTURA MARCA ---
+
+    def get_marca_by_id(self, id_marca: int):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(
+                "SELECT * FROM Marca WHERE id_marca = ?", (id_marca,)
+            ).fetchone()
+            if row:
+                return Marca(id_marca=row['id_marca'], descripcion=row['descripcion'])
+        except sqlite3.Error as e:
+            print(f"Error al obtener Marca: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def get_all_marcas(self):
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute("SELECT * FROM Marca").fetchall()
+            for row in rows:
+                lista.append(
+                    Marca(id_marca=row['id_marca'], descripcion=row['descripcion'])
+                )
+        except sqlite3.Error as e:
+            print(f"Error al obtener Marcas: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return lista
+    
+    # --- ABMC DE USUARIO ---
+    
     def create_full_user(self, persona_data, usuario_data, 
                          role_data, role_type):
         conn = None
