@@ -685,6 +685,106 @@ def listar_multas_alquiler(id_alquiler):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@api.route('/mantenimientos', methods=['GET'])
+def listar_mantenimientos():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.listar_todos_mantenimientos(usuario)
+        return jsonify(lista), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos/<id_mantenimiento>', methods=['GET'])
+def obtener_mantenimiento(id_mantenimiento):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        mant = sistema.consultar_mantenimiento_por_id(id_mantenimiento, usuario)
+        if mant:
+            return jsonify(mant), 200
+        return jsonify({"error": "Mantenimiento no encontrado o acceso denegado"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos', methods=['POST'])
+def programar_mantenimiento():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        patente = data.get('patente')
+        fecha_inicio = data.get('fecha_inicio')
+        fecha_fin = data.get('fecha_fin')
+        detalle = data.get('detalle')
+
+        exito = sistema.programar_mantenimiento(patente, fecha_inicio, fecha_fin, detalle, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Mantenimiento programado (Pendiente)"}), 201
+        return jsonify({"error": "No se pudo programar (Fechas ocupadas o permisos insuficientes)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos/<id_mantenimiento>/iniciar', methods=['POST'])
+def iniciar_mantenimiento(id_mantenimiento):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        if sistema.iniciar_mantenimiento(id_mantenimiento, usuario):
+            return jsonify({"mensaje": "Mantenimiento iniciado"}), 200
+        return jsonify({"error": "No se pudo iniciar"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos/<id_mantenimiento>/finalizar', methods=['POST'])
+def finalizar_mantenimiento(id_mantenimiento):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        if sistema.finalizar_mantenimiento(id_mantenimiento, usuario):
+            return jsonify({"mensaje": "Mantenimiento finalizado"}), 200
+        return jsonify({"error": "No se pudo finalizar"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos/<id_mantenimiento>/cancelar', methods=['POST'])
+def cancelar_mantenimiento(id_mantenimiento):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        if sistema.cancelar_mantenimiento(id_mantenimiento, usuario):
+            return jsonify({"mensaje": "Mantenimiento cancelado"}), 200
+        return jsonify({"error": "No se pudo cancelar"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mantenimientos/<id_mantenimiento>', methods=['DELETE'])
+def eliminar_mantenimiento(id_mantenimiento):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        if sistema.eliminar_mantenimiento(id_mantenimiento, usuario):
+            return jsonify({"mensaje": "Mantenimiento eliminado"}), 200
+        return jsonify({"error": "No se pudo eliminar (Tal vez está en curso o falta permiso Admin)"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------
 # EJECUCIÓN

@@ -734,6 +734,34 @@ class SistemaAlquiler:
         print("No se pudo cancelar (Tal vez ya no está pendiente).")
         return False
     
+    def listar_todos_mantenimientos(self, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return []
+        
+        return self.db_manager.get_all_mantenimientos()
+
+    def consultar_mantenimiento_por_id(self, id_mantenimiento, usuario):
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return None
+
+        return self.db_manager.get_mantenimiento_by_id(id_mantenimiento)
+
+    def eliminar_mantenimiento(self, id_mantenimiento, usuario):
+        if not self.check_permission("Admin", usuario):
+            print("Se requiere permiso de Admin para eliminar registros de mantenimiento.")
+            return False
+
+        if self.db_manager.delete_mantenimiento(id_mantenimiento):
+            print(f"Mantenimiento {id_mantenimiento} eliminado.")
+            return True
+        return False
+    
     # --- LISTADOS DE CATÁLOGOS (PÚBLICOS) ---
 
     def listar_tipos_documento(self):

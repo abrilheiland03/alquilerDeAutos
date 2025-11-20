@@ -1426,3 +1426,73 @@ class DBManager:
             return False
         finally:
             if conn: conn.close()
+
+    def get_all_mantenimientos(self):
+        sql = """
+            SELECT m.*, v.modelo, m.id_estado, em.descripcion as estado_desc
+            FROM Mantenimiento m
+            JOIN Vehiculo v ON m.patente = v.patente
+            JOIN EstadoMantenimiento em ON m.id_estado = em.id_estado
+            ORDER BY m.fecha_inicio DESC
+        """
+        conn = None
+        lista = []
+        try:
+            conn = self._get_connection()
+            if conn is None: return lista
+            rows = conn.cursor().execute(sql).fetchall()
+            for row in rows:
+                lista.append(dict(row))
+            return lista
+        except sqlite3.Error as e:
+            print(f"Error al listar mantenimientos: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_mantenimiento_by_id(self, id_mantenimiento):
+        sql = """
+            SELECT m.*, v.modelo, em.descripcion as estado_desc
+            FROM Mantenimiento m
+            JOIN Vehiculo v ON m.patente = v.patente
+            JOIN EstadoMantenimiento em ON m.id_estado = em.id_estado
+            WHERE m.id_mantenimiento = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(sql, (id_mantenimiento,)).fetchone()
+            if row:
+                return dict(row)
+            return None
+        except sqlite3.Error as e:
+            print(f"Error al obtener mantenimiento: {e}")
+            return None
+        finally:
+            if conn: conn.close()
+
+    def delete_mantenimiento(self, id_mantenimiento):
+        sql_check = "SELECT id_estado FROM Mantenimiento WHERE id_mantenimiento = ?"
+        sql_delete = "DELETE FROM Mantenimiento WHERE id_mantenimiento = ?"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            
+            cursor.execute(sql_check, (id_mantenimiento,))
+            row = cursor.fetchone()
+            if not row: return False
+            
+            if row['id_estado'] == 1: 
+                raise ValueError("No se puede eliminar un mantenimiento en curso. Finalícelo o cancálelo primero.")
+
+            cursor.execute(sql_delete, (id_mantenimiento,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al eliminar mantenimiento: {e}")
+            return False
+        finally:
+            if conn: conn.close()
