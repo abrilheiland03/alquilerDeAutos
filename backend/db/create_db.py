@@ -233,18 +233,18 @@ CREATE TABLE IF NOT EXISTS Documento (
 # ==========================
 # POBLACION DE DATOS
 # ==========================
-cursor.executemany("INSERT INTO Documento (id_tipo, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO Documento (id_tipo, descripcion) VALUES (?, ?)", [
     (1, 'DNI'), 
     (2, 'Pasaporte')
 ])
 
-cursor.executemany("INSERT INTO Permiso (id_permiso, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO Permiso (id_permiso, descripcion) VALUES (?, ?)", [
     (1, 'Cliente'), 
     (2, 'Empleado'), 
     (3, 'Admin')
 ])
 
-cursor.executemany("INSERT INTO Color (id_color, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO Color (id_color, descripcion) VALUES (?, ?)", [
     (1, 'Negro'), 
     (2, 'Blanco'), 
     (3, 'Rojo'), 
@@ -253,7 +253,7 @@ cursor.executemany("INSERT INTO Color (id_color, descripcion) VALUES (?, ?)", [
     (6, 'Plateado')
 ])
 
-cursor.executemany("INSERT INTO Marca (id_marca, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO Marca (id_marca, descripcion) VALUES (?, ?)", [
     (1, 'Toyota'), 
     (2, 'Ford'), 
     (3, 'Chevrolet'), 
@@ -262,13 +262,13 @@ cursor.executemany("INSERT INTO Marca (id_marca, descripcion) VALUES (?, ?)", [
     (6, 'Peugeot')
 ])
 
-cursor.executemany("INSERT INTO EstadoAuto (id_estado, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO EstadoAuto (id_estado, descripcion) VALUES (?, ?)", [
     (1, 'Libre'), 
     (2, 'Ocupado'), 
     (3, 'En mantenimiento')
 ])
 
-cursor.executemany("INSERT INTO EstadoAlquiler (id_estado, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO EstadoAlquiler (id_estado, descripcion) VALUES (?, ?)", [
     (1, 'Reservado'), 
     (2, 'Activo'), 
     (3, 'Atrasado'), 
@@ -276,7 +276,7 @@ cursor.executemany("INSERT INTO EstadoAlquiler (id_estado, descripcion) VALUES (
     (5, 'Cancelado')
 ])
 
-cursor.executemany("INSERT INTO EstadoMantenimiento (id_estado, descripcion) VALUES (?, ?)", [
+cursor.executemany("INSERT OR IGNORE INTO EstadoMantenimiento (id_estado, descripcion) VALUES (?, ?)", [
     (1, 'Realizando'), 
     (2, 'Finalizado'), 
     (3, 'Pendiente'), 
