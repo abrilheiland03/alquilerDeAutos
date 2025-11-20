@@ -53,6 +53,10 @@ class Mantenimiento:
     def fecha_inicio(self, value):
         if not isinstance(value, datetime):
             raise ValueError('fecha_inicio debe ser un objeto datetime')
+        
+        if value < datetime.now():
+            raise ValueError('La fecha de inicio debe ser mayor a la fecha actual')
+            
         self._fecha_inicio = value
 
     @property

@@ -607,3 +607,68 @@ class SistemaAlquiler:
             print("Multa eliminada.")
             return True
         return False
+    
+    # --- FUNCIONES DE MANTENIMIENTO ---
+
+    def programar_mantenimiento(self, patente, fecha_inicio, fecha_fin_estimada, detalle):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+        
+        data = {
+            'patente': patente,
+            'id_empleado': self.usuario_actual.id_usuario,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin_estimada,
+            'detalle': detalle
+        }
+
+        if self.db_manager.schedule_mantenimiento(data):
+            print("Mantenimiento programado exitosamente (Pendiente).")
+            return True
+        return False
+
+    def iniciar_mantenimiento(self, id_mantenimiento):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+
+        if self.db_manager.start_mantenimiento(id_mantenimiento):
+            print("Mantenimiento iniciado. Vehículo puesto 'En Mantenimiento'.")
+            return True
+        print("No se pudo iniciar el mantenimiento.")
+        return False
+
+    def finalizar_mantenimiento(self, id_mantenimiento):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+
+        if self.db_manager.finish_mantenimiento(id_mantenimiento):
+            print("Mantenimiento finalizado. Vehículo liberado.")
+            return True
+        print("No se pudo finalizar el mantenimiento.")
+        return False
+
+    def cancelar_mantenimiento(self, id_mantenimiento):
+        es_admin = self.check_permission("Admin")
+        es_empleado = self.check_permission("Empleado")
+        
+        if not (es_admin or es_empleado):
+            print("Se requiere permiso de Admin o Empleado.")
+            return False
+
+        if self.db_manager.cancel_pending_mantenimiento(id_mantenimiento):
+            print("Mantenimiento cancelado.")
+            return True
+        print("No se pudo cancelar (Tal vez ya no está pendiente).")
+        return False

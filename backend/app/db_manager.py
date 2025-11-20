@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 import sqlite3
 import os
 from models.cliente import Cliente
@@ -851,13 +851,30 @@ class DBManager:
             if fecha_fin <= fecha_inicio:
                 raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio.")
 
+            sql_check_mantenimiento = """
+                SELECT id_mantenimiento 
+                FROM Mantenimiento 
+                WHERE patente = ? 
+                AND id_estado IN (1, 3) 
+                AND (fecha_inicio <= ? AND fecha_fin >= ?)
+            """
+            
+            cursor.execute(sql_check_mantenimiento, (
+                data['patente'], 
+                data['fecha_fin'],    
+                data['fecha_inicio']  
+            ))
+            
+            if cursor.fetchone():
+                raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado que coincide con las fechas solicitadas.")
+
             sql_alquiler = """
                 INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
                                       fecha_inicio, fecha_fin, id_estado)
                 VALUES (?, ?, ?, ?, ?, ?)
             """
 
-            if data['estado'].upper() == 'RESERVADO':
+            if data.get('estado', '').upper() == 'RESERVADO':
                 id_estado = 1
             else:
                 id_estado = 2
@@ -1153,6 +1170,139 @@ class DBManager:
             return cursor.rowcount > 0
         except sqlite3.Error as e:
             print(f"Error al eliminar multa: {e}")
+            return False
+        finally:
+            if conn: conn.close()
+
+    # --- FUNCIONES DE MANTENIMIENTO ---
+
+    def schedule_mantenimiento(self, data):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            sql_check_alquiler = """
+                SELECT id_alquiler FROM Alquiler 
+                WHERE patente = ? 
+                AND id_estado IN (1, 2, 3)
+                AND (
+                    (fecha_inicio <= ? AND fecha_fin >= ?) 
+                )
+            """
+            cursor.execute(sql_check_alquiler, (
+                data['patente'], 
+                data['fecha_fin'], 
+                data['fecha_inicio']
+            ))
+            
+            if cursor.fetchone():
+                raise ValueError("El vehículo tiene alquileres programados en esas fechas.")
+
+            sql_insert = """
+                INSERT INTO Mantenimiento (patente, id_empleado, fecha_inicio, fecha_fin, detalle, id_estado)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """
+            cursor.execute(sql_insert, (
+                data['patente'],
+                data['id_empleado'],
+                data['fecha_inicio'],
+                data['fecha_fin'],
+                data['detalle'],
+                3 
+            ))
+
+            conn.commit()
+            return True
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al programar mantenimiento: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+
+    def start_mantenimiento(self, id_mantenimiento):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT patente FROM Mantenimiento WHERE id_mantenimiento = ?", (id_mantenimiento,))
+            row = cursor.fetchone()
+            if not row: raise ValueError("Mantenimiento no encontrado.")
+            patente = row['patente']
+
+            sql_maint = "UPDATE Mantenimiento SET id_estado = 1 WHERE id_mantenimiento = ? AND id_estado = 3"
+            cursor.execute(sql_maint, (id_mantenimiento,))
+            
+            if cursor.rowcount == 0:
+                raise ValueError("El mantenimiento no está en estado Pendiente.")
+
+            sql_vehiculo = "UPDATE Vehiculo SET id_estado = 3 WHERE patente = ?"
+            cursor.execute(sql_vehiculo, (patente,))
+
+            conn.commit()
+            return True
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al iniciar mantenimiento: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+
+    def finish_mantenimiento(self, id_mantenimiento):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT patente FROM Mantenimiento WHERE id_mantenimiento = ?", (id_mantenimiento,))
+            row = cursor.fetchone()
+            if not row: raise ValueError("Mantenimiento no encontrado.")
+            patente = row['patente']
+
+            fecha_real_fin = datetime.now()
+
+            sql_maint = "UPDATE Mantenimiento SET id_estado = 2, fecha_fin = ? WHERE id_mantenimiento = ? AND id_estado = 1"
+            cursor.execute(sql_maint, (fecha_real_fin, id_mantenimiento))
+
+            if cursor.rowcount == 0:
+                raise ValueError("El mantenimiento no está en curso (Realizando).")
+
+            sql_vehiculo = "UPDATE Vehiculo SET id_estado = 1 WHERE patente = ?"
+            cursor.execute(sql_vehiculo, (patente,))
+
+            conn.commit()
+            return True
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al finalizar mantenimiento: {e}")
+            if conn: conn.rollback()
+            return False
+        finally:
+            if conn: conn.close()
+
+    def cancel_pending_mantenimiento(self, id_mantenimiento):
+        sql = "UPDATE Mantenimiento SET id_estado = 4 WHERE id_mantenimiento = ? AND id_estado = 3"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_mantenimiento,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al cancelar mantenimiento: {e}")
             return False
         finally:
             if conn: conn.close()
