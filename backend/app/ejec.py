@@ -27,7 +27,6 @@ sistema = SistemaAlquiler()
 data_usuario = sistema.login('juan@email.com', '12345')
 print(data_usuario)
 
-
 #data_cliente_prueba = {
 #    "nombre": "ClienteTemporal",
 #    "apellido": "Borrame",
