@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import axios from 'axios';
+import { vehicleService } from '../../services/vehicleService';
+import { catalogService } from '../../services/catalogService';
 import { 
   Car, 
   Plus, 
@@ -20,9 +21,6 @@ import {
   Download,
   Upload
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de Modal para Crear/Editar Vehículo
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
@@ -78,15 +76,15 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
 
   const fetchCatalogos = async () => {
     try {
-      const [marcasRes, coloresRes, estadosRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/marcas`),
-        axios.get(`${API_BASE_URL}/colores`),
-        axios.get(`${API_BASE_URL}/estados-auto`)
+      const [marcasData, coloresData, estadosData] = await Promise.all([
+        catalogService.getBrands(),
+        catalogService.getColors(),
+        catalogService.getVehicleStates()
       ]);
       
-      setMarcas(marcasRes.data);
-      setColores(coloresRes.data);
-      setEstados(estadosRes.data);
+      setMarcas(marcasData);
+      setColores(coloresData);
+      setEstados(estadosData);
     } catch (error) {
       console.error('Error fetching catalogos:', error);
     }
@@ -458,8 +456,8 @@ const VehicleManagement = () => {
   const fetchVehicles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/vehiculos`);
-      setVehicles(response.data);
+      const vehiclesData = await vehicleService.getAll();
+      setVehicles(vehiclesData);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       showNotification('Error al cargar los vehículos', 'error');
@@ -490,7 +488,7 @@ const VehicleManagement = () => {
 
   const handleCreateVehicle = async (vehicleData) => {
     try {
-      await axios.post(`${API_BASE_URL}/vehiculos`, vehicleData);
+      await vehicleService.create(vehicleData);
       showNotification('Vehículo creado exitosamente', 'success');
       fetchVehicles();
     } catch (error) {
@@ -502,7 +500,7 @@ const VehicleManagement = () => {
 
   const handleUpdateVehicle = async (vehicleData) => {
     try {
-      await axios.put(`${API_BASE_URL}/vehiculos/${selectedVehicle.patente}`, vehicleData);
+      await vehicleService.update(selectedVehicle.patente, vehicleData);
       showNotification('Vehículo actualizado exitosamente', 'success');
       fetchVehicles();
     } catch (error) {
@@ -518,7 +516,7 @@ const VehicleManagement = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/vehiculos/${vehicle.patente}`);
+      await vehicleService.delete(vehicle.patente);
       showNotification('Vehículo eliminado exitosamente', 'success');
       fetchVehicles();
     } catch (error) {
@@ -761,6 +759,16 @@ const VehicleManagement = () => {
       />
     </div>
   );
+};
+
+// Helper function para obtener clase de estado
+const getStatusBadge = (estado) => {
+  const statusMap = {
+    'Libre': 'status-free',
+    'Ocupado': 'status-occupied', 
+    'En mantenimiento': 'status-maintenance'
+  };
+  return statusMap[estado] || 'status-free';
 };
 
 export default VehicleManagement;

@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { UserPlus, Car, ArrowLeft, Loader2 } from 'lucide-react';
-
-// URL base de la API Flask
-const API_BASE_URL = 'http://localhost:5000/api';
+import { authService } from '../../services/authService';
 
 // Componente para mensajes de estado
 const FormMessage = ({ type, text }) => {
@@ -80,18 +77,16 @@ const Register = () => {
                 return;
             }
 
-            const response = await axios.post(`${API_BASE_URL}/registro`, registroData);
+            await authService.register(registroData);
 
-            if (response.status === 201) {
-                setMessage({ 
-                    type: 'success', 
-                    text: "¡Registro exitoso! Serás redirigido al login." 
-                });
-                
-                setTimeout(() => {
-                    navigate('/login');
-                }, 2000);
-            }
+            setMessage({ 
+                type: 'success', 
+                text: "¡Registro exitoso! Serás redirigido al login." 
+            });
+            
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
 
         } catch (error) {
             console.error("Error en registro:", error);

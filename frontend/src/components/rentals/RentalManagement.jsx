@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import axios from 'axios';
+import { rentalService } from '../../services/rentalService';
+import { vehicleService } from '../../services/vehicleService';
+import { clientService } from '../../services/clientService';
 import { 
   Calendar, 
   Plus, 
@@ -25,9 +27,6 @@ import {
   Users,
   MapPin
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de Modal para Crear/Editar Alquiler
 const RentalModal = ({ isOpen, onClose, rental, onSave }) => {
@@ -77,13 +76,13 @@ const RentalModal = ({ isOpen, onClose, rental, onSave }) => {
 
   const fetchAvailableData = async () => {
     try {
-      const [vehiclesRes, clientsRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/vehiculos/libres`),
-        axios.get(`${API_BASE_URL}/clientes`)
+      const [vehiclesData, clientsData] = await Promise.all([
+        vehicleService.getAvailable(),
+        clientService.getAll()
       ]);
       
-      setVehicles(vehiclesRes.data);
-      setClients(clientsRes.data);
+      setVehicles(vehiclesData);
+      setClients(clientsData);
     } catch (error) {
       console.error('Error fetching available data:', error);
     }
@@ -503,10 +502,10 @@ const RentalManagement = () => {
   const fetchRentals = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/alquileres`);
+      const rentalsData = await rentalService.getAll();
       
       // Enriquecer datos para mejor visualización
-      const enrichedRentals = response.data.map(rental => ({
+      const enrichedRentals = rentalsData.map(rental => ({
         ...rental,
         nombre_cliente: `Cliente #${rental.id_cliente}`, // En sistema real vendría del backend
         precio_flota: 25000 // Valor por defecto, en sistema real vendría del vehículo
@@ -552,7 +551,7 @@ const RentalManagement = () => {
 
   const handleCreateRental = async (rentalData) => {
     try {
-      await axios.post(`${API_BASE_URL}/alquileres`, rentalData);
+      await rentalService.create(rentalData);
       showNotification('Alquiler creado exitosamente', 'success');
       fetchRentals();
     } catch (error) {
@@ -568,7 +567,7 @@ const RentalManagement = () => {
 
   const handleStartRental = async (rental) => {
     try {
-      await axios.post(`${API_BASE_URL}/alquileres/${rental.id_alquiler}/comenzar`);
+      await rentalService.start(rental.id_alquiler);
       showNotification('Alquiler iniciado exitosamente', 'success');
       fetchRentals();
     } catch (error) {
@@ -579,7 +578,7 @@ const RentalManagement = () => {
 
   const handleCompleteRental = async (rental) => {
     try {
-      await axios.post(`${API_BASE_URL}/alquileres/${rental.id_alquiler}/finalizar`);
+      await rentalService.complete(rental.id_alquiler);
       showNotification('Alquiler finalizado exitosamente', 'success');
       fetchRentals();
     } catch (error) {
@@ -594,7 +593,7 @@ const RentalManagement = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/alquileres/${rental.id_alquiler}/cancelar`);
+      await rentalService.cancel(rental.id_alquiler);
       showNotification('Alquiler cancelado exitosamente', 'success');
       fetchRentals();
     } catch (error) {
@@ -609,7 +608,7 @@ const RentalManagement = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/alquileres/${rental.id_alquiler}`);
+      await rentalService.delete(rental.id_alquiler);
       showNotification('Alquiler eliminado exitosamente', 'success');
       fetchRentals();
     } catch (error) {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import axios from 'axios';
+import { maintenanceService } from '../../services/maintenanceService';
+import { vehicleService } from '../../services/vehicleService';
 import { 
   Wrench, 
   Plus, 
@@ -23,9 +24,6 @@ import {
   Upload,
   ArrowUpDown
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de Modal para Crear/Editar Mantenimiento
 const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
@@ -66,9 +64,9 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
 
   const fetchAvailableVehicles = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/vehiculos`);
+      const vehiclesData = await vehicleService.getAll();
       // Filtrar solo vehículos libres para mantenimiento
-      const availableVehicles = response.data.filter(vehicle => 
+      const availableVehicles = vehiclesData.filter(vehicle => 
         vehicle.estado === 'Libre' || vehicle.estado === 'En mantenimiento'
       );
       setVehicles(availableVehicles);
@@ -407,8 +405,8 @@ const MaintenanceManagement = () => {
   const fetchMaintenances = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/mantenimientos`);
-      setMaintenances(response.data);
+      const maintenancesData = await maintenanceService.getAll();
+      setMaintenances(maintenancesData);
     } catch (error) {
       console.error('Error fetching maintenances:', error);
       showNotification('Error al cargar los mantenimientos', 'error');
@@ -441,7 +439,7 @@ const MaintenanceManagement = () => {
 
   const handleCreateMaintenance = async (maintenanceData) => {
     try {
-      await axios.post(`${API_BASE_URL}/mantenimientos`, maintenanceData);
+      await maintenanceService.create(maintenanceData);
       showNotification('Mantenimiento programado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {
@@ -457,7 +455,7 @@ const MaintenanceManagement = () => {
 
   const handleUpdateMaintenance = async (maintenanceData) => {
     try {
-      await axios.put(`${API_BASE_URL}/mantenimientos/${selectedMaintenance.id_mantenimiento}`, maintenanceData);
+      await maintenanceService.update(selectedMaintenance.id_mantenimiento, maintenanceData);
       showNotification('Mantenimiento actualizado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {
@@ -469,7 +467,7 @@ const MaintenanceManagement = () => {
 
   const handleStartMaintenance = async (maintenance) => {
     try {
-      await axios.post(`${API_BASE_URL}/mantenimientos/${maintenance.id_mantenimiento}/iniciar`);
+      await maintenanceService.start(maintenance.id_mantenimiento);
       showNotification('Mantenimiento iniciado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {
@@ -480,7 +478,7 @@ const MaintenanceManagement = () => {
 
   const handleCompleteMaintenance = async (maintenance) => {
     try {
-      await axios.post(`${API_BASE_URL}/mantenimientos/${maintenance.id_mantenimiento}/finalizar`);
+      await maintenanceService.complete(maintenance.id_mantenimiento);
       showNotification('Mantenimiento finalizado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {
@@ -495,7 +493,7 @@ const MaintenanceManagement = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/mantenimientos/${maintenance.id_mantenimiento}/cancelar`);
+      await maintenanceService.cancel(maintenance.id_mantenimiento);
       showNotification('Mantenimiento cancelado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {
@@ -510,7 +508,7 @@ const MaintenanceManagement = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/mantenimientos/${maintenance.id_mantenimiento}`);
+      await maintenanceService.delete(maintenance.id_mantenimiento);
       showNotification('Mantenimiento eliminado exitosamente', 'success');
       fetchMaintenances();
     } catch (error) {

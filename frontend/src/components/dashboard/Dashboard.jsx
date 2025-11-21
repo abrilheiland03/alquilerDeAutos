@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import { vehicleService } from '../../services/vehicleService';
+import { rentalService } from '../../services/rentalService';
+import { maintenanceService } from '../../services/maintenanceService';
+import { clientService } from '../../services/clientService';
 import { 
   Car, 
   Users, 
@@ -16,9 +19,6 @@ import {
   Plus,
   ArrowRight
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de tarjeta de estadística
 const StatCard = ({ title, value, icon: Icon, color, change, changeType }) => (
@@ -104,24 +104,18 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // En un sistema real, tendrías endpoints específicos para el dashboard
-      // Por ahora simulamos datos basados en lo que sabemos de la API
-      
-      // Obtener vehículos
-      const vehiclesResponse = await axios.get(`${API_BASE_URL}/vehiculos`);
-      const vehicles = vehiclesResponse.data || [];
-      
-      // Obtener alquileres
-      const rentalsResponse = await axios.get(`${API_BASE_URL}/alquileres`);
-      const rentals = rentalsResponse.data || [];
-      
-      // Obtener mantenimientos
-      const maintenanceResponse = await axios.get(`${API_BASE_URL}/mantenimientos`);
-      const maintenance = maintenanceResponse.data || [];
-      
-      // Obtener clientes
-      const clientsResponse = await axios.get(`${API_BASE_URL}/clientes`);
-      const clients = clientsResponse.data || [];
+      // Obtener datos usando los services
+      const [vehiclesData, rentalsData, maintenanceData, clientsData] = await Promise.all([
+        vehicleService.getAll(),
+        rentalService.getAll(),
+        maintenanceService.getAll(),
+        clientService.getAll()
+      ]);
+
+      const vehicles = vehiclesData || [];
+      const rentals = rentalsData || [];
+      const maintenance = maintenanceData || [];
+      const clients = clientsData || [];
 
       // Calcular estadísticas
       const activeRentals = rentals.filter(rental => 

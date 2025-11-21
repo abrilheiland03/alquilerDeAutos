@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import axios from 'axios';
+import { clientService } from '../../services/clientService';
+import { catalogService } from '../../services/catalogService';
 import { 
   Users, 
   Plus, 
@@ -21,9 +22,6 @@ import {
   UserX,
   ArrowUpDown
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de Modal para Crear/Editar Cliente
 const ClientModal = ({ isOpen, onClose, client, onSave }) => {
@@ -71,8 +69,8 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
   const fetchTiposDocumento = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/tipos-documento`);
-      setTiposDocumento(response.data);
+      const tiposDoc = await catalogService.getDocumentTypes();
+      setTiposDocumento(tiposDoc);
     } catch (error) {
       console.error('Error fetching tipos documento:', error);
     }
@@ -430,8 +428,8 @@ const ClientManagement = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/clientes`);
-      setClients(response.data);
+      const clientsData = await clientService.getAll();
+      setClients(clientsData);
     } catch (error) {
       console.error('Error fetching clients:', error);
       showNotification('Error al cargar los clientes', 'error');
@@ -465,11 +463,10 @@ const ClientManagement = () => {
 
   const handleCreateClient = async (clientData) => {
     try {
-      // Para crear cliente desde mostrador (empleado/admin)
-      const response = await axios.post(`${API_BASE_URL}/clientes`, clientData);
+      const newClient = await clientService.create(clientData);
       showNotification('Cliente creado exitosamente', 'success');
       fetchClients();
-      return response.data.id_cliente;
+      return newClient.id_cliente;
     } catch (error) {
       console.error('Error creating client:', error);
       showNotification('Error al crear el cliente', 'error');
@@ -479,7 +476,7 @@ const ClientManagement = () => {
 
   const handleUpdateClient = async (clientData) => {
     try {
-      await axios.put(`${API_BASE_URL}/clientes/${selectedClient.id_cliente}`, clientData);
+      await clientService.update(selectedClient.id_cliente, clientData);
       showNotification('Cliente actualizado exitosamente', 'success');
       fetchClients();
     } catch (error) {
@@ -495,7 +492,7 @@ const ClientManagement = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/clientes/${client.id_cliente}`);
+      await clientService.delete(client.id_cliente);
       showNotification('Cliente eliminado exitosamente', 'success');
       fetchClients();
     } catch (error) {

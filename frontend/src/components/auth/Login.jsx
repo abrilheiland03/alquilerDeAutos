@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { LogIn, Car, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-
-// URL base de la API Flask
-const API_BASE_URL = 'http://localhost:5000/api';
+import { authService } from '../../services/authService';
 
 // Componente para mensajes de estado (éxito/error)
 const FormMessage = ({ type, text }) => {
@@ -52,12 +49,9 @@ const Login = () => {
         }
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/login`, {
-                email: loginData.email,
-                password: loginData.password
-            });
+            const response = await authService.login(loginData.email, loginData.password);
 
-            const { user_id, nombre, rol } = response.data;
+            const { user_id, nombre, rol } = response;
             
             // Usar el contexto de autenticación para hacer login
             await login({

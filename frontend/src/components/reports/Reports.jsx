@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import axios from 'axios';
+import { reportService } from '../../services/reportService';
 import { 
   BarChart3, 
   Download, 
@@ -19,9 +19,6 @@ import {
   LineChart,
   FileText
 } from 'lucide-react';
-
-// URL base de la API
-const API_BASE_URL = 'http://localhost:5000/api';
 
 // Componente de Tarjeta de Métrica
 const MetricCard = ({ title, value, change, changeType, icon: Icon, color }) => (
@@ -144,36 +141,21 @@ const Reports = () => {
     try {
       setLoading(true);
       
-      // Fetch todos los reportes en paralelo
-      const [rankingRes, evolutionRes, revenueRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/reportes/ranking-vehiculos`, {
-          params: {
-            fecha_desde: dateRange.start,
-            fecha_hasta: dateRange.end
-          }
-        }),
-        axios.get(`${API_BASE_URL}/reportes/evolucion-alquileres`, {
-          params: {
-            fecha_desde: dateRange.start,
-            fecha_hasta: dateRange.end
-          }
-        }),
-        axios.get(`${API_BASE_URL}/reportes/facturacion`, {
-          params: {
-            fecha_desde: dateRange.start,
-            fecha_hasta: dateRange.end
-          }
-        })
+      // Fetch todos los reportes en paralelo usando los services
+      const [rankingData, evolutionData, revenueData] = await Promise.all([
+        reportService.getVehicleRanking(dateRange.start, dateRange.end),
+        reportService.getRentalEvolution(dateRange.start, dateRange.end),
+        reportService.getMonthlyRevenue(dateRange.start, dateRange.end)
       ]);
 
       // Calcular métricas basadas en los datos
-      const metrics = calculateMetrics(rankingRes.data, evolutionRes.data, revenueRes.data);
+      const metrics = calculateMetrics(rankingData, evolutionData, revenueData);
 
       setReportData({
         metrics,
-        ranking: rankingRes.data || [],
-        evolution: evolutionRes.data || [],
-        revenue: revenueRes.data || []
+        ranking: rankingData || [],
+        evolution: evolutionData || [],
+        revenue: revenueData || []
       });
 
     } catch (error) {
