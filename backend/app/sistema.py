@@ -1,6 +1,6 @@
 from datetime import date
 from db_manager import DBManager
-import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class SistemaAlquiler:
     def __init__(self):
@@ -8,11 +8,13 @@ class SistemaAlquiler:
 
     @staticmethod
     def _hash_password(password):
-        return hashlib.sha256(password.encode('utf-8')).hexdigest()
+        # Use werkzeug's salted hashing so it matches how api.py registers users
+        return generate_password_hash(password)
 
     @staticmethod
     def _verify_password(input_password, stored_hash):
-        return SistemaAlquiler._hash_password(input_password) == stored_hash
+        # stored_hash is the value saved in DB (from generate_password_hash)
+        return check_password_hash(stored_hash, input_password)
 
     def registrar_usuario_cliente(self, data):
         try:

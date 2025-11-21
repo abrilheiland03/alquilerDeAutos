@@ -340,24 +340,40 @@ class DBManager:
                 id_persona, usuario_data['user_name'], 
                 usuario_data['password_hash'], usuario_data['id_permiso']
             ))
+            id_usuario = cursor.lastrowid
 
-            if role_type == 'cliente':
+            # Normalizar role_type y proteger accesos a keys de role_data
+            role_key = (role_type or '').lower()
+            if role_key == 'administrador':
+                role_key = 'admin'
+
+            # Valores por defecto seguros
+            fecha_alta_val = role_data.get('fecha_alta') if isinstance(role_data, dict) else None
+            if not fecha_alta_val:
+                fecha_alta_val = datetime.now().strftime('%Y-%m-%d')
+
+            if role_key == 'cliente':
                 sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
-                cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
-            
-            elif role_type == 'empleado':
+                cursor.execute(sql_role, (id_persona, fecha_alta_val))
+            elif role_key == 'empleado':
+                sueldo_val = role_data.get('sueldo') if isinstance(role_data, dict) else None
+                if sueldo_val is None:
+                    sueldo_val = 0
                 sql_role = "INSERT INTO Empleado (id_persona, fecha_alta, sueldo) VALUES (?, ?, ?)"
-                cursor.execute(sql_role, (id_persona, role_data['fecha_alta'], role_data['sueldo']))
-            
-            elif role_type == 'admin':
+                cursor.execute(sql_role, (id_persona, fecha_alta_val, sueldo_val))
+            elif role_key == 'admin':
+                descripcion_val = role_data.get('descripcion') if isinstance(role_data, dict) else ''
                 sql_role = "INSERT INTO Administrador (id_persona, descripcion) VALUES (?, ?)"
-                cursor.execute(sql_role, (id_persona, role_data['descripcion']))
-            
+                cursor.execute(sql_role, (id_persona, descripcion_val))
             else:
                 raise ValueError("Tipo de rol no válido.")
 
             conn.commit()
-            return id_persona
+            # Devolver ambos ids para mayor trazabilidad
+            try:
+                return {"id_persona": id_persona, "id_usuario": id_usuario}
+            except Exception:
+                return {"id_persona": id_persona}
 
         except (sqlite3.Error, ValueError) as e:
             print(f"Error durante el registro, revirtiendo cambios: {e}")

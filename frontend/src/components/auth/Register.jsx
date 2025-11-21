@@ -77,7 +77,10 @@ const Register = () => {
                 return;
             }
 
-            await authService.register(registroData);
+await authService.register({
+    rol: registroData.tipo,
+    ...registroData.datos
+});
 
             setMessage({ 
                 type: 'success', 
@@ -90,8 +93,10 @@ const Register = () => {
 
         } catch (error) {
             console.error("Error en registro:", error);
-            if (error.response && error.response.data && error.response.data.error) {
-                setMessage({ type: 'error', text: error.response.data.error });
+            const resp = error.response && error.response.data ? error.response.data : null;
+            if (resp) {
+                const texto = resp.detalle || resp.error || "Error en el registro. Intente nuevamente.";
+                setMessage({ type: 'error', text: texto });
             } else {
                 setMessage({ type: 'error', text: "Error en el registro. Intente nuevamente." });
             }
@@ -136,12 +141,12 @@ const Register = () => {
                             >
                                 <option value="cliente">Cliente</option>
                                 <option value="empleado">Empleado</option>
-                                <option value="admin">Administrador</option>
+                                <option value="administrador">Administrador</option>
                             </select>
                             <p className="text-xs text-gray-500 mt-1">
                                 {registroData.tipo === 'cliente' && "Los clientes pueden realizar alquileres y ver su historial."}
                                 {registroData.tipo === 'empleado' && "Los empleados pueden gestionar alquileres y clientes."}
-                                {registroData.tipo === 'admin' && "Los administradores tienen acceso completo al sistema."}
+                                {registroData.tipo === 'administrador' && "Los administradores tienen acceso completo al sistema."}
                             </p>
                         </div>
 
@@ -309,7 +314,7 @@ const Register = () => {
                             </div>
                         )}
 
-                        {registroData.tipo === 'admin' && (
+                        {registroData.tipo === 'administrador' && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                                 <input 

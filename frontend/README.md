@@ -8,3 +8,4 @@
 Notas:
 1. Si cambiaste de rama o descargaste el proyecto nuevamente, ejecuta npm install otra vez.
 2. Si npm run dev da error de puerto ocupado, revisa qué otro proceso está usando el puerto 5173 o cambia el puerto en vite.config.js.
+* puede estar desactualizado el react, usar: npm install lucide-react@latest

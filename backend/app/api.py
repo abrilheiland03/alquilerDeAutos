@@ -1,23 +1,28 @@
+from datetime import datetime
+from werkzeug.security import generate_password_hash
+import sqlite3
 from flask import Blueprint, Flask, jsonify, request
 from flask_cors import CORS
 from sistema import SistemaAlquiler
 
-app = Flask(__name__)
-
-CORS(app) 
-
+# Crear instancia del sistema
 sistema = SistemaAlquiler()
 
-api = Blueprint('api', __name__)
+app = Flask(__name__)
 
-# ---------------------------------------------------------
-# RUTAS (ENDPOINTS)
-# ---------------------------------------------------------
+# Configurar CORS para permitir el front en localhost:5173
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "http://localhost:5173"}})
 
-@api.route('/', methods=['GET'])
+# Definir el blueprint
+api = Blueprint("api", __name__)
+
+# Ruta base
+@api.route("/", methods=["GET"])
 def index():
-    """Ruta de prueba para ver si el servidor vive."""
-    return jsonify({"status": "API de Alquileres funcionando 🚀"})
+    return jsonify({"status": "API funcionando 🚀"})
+
+# (El registro del blueprint y la ejecución se realizan al final del archivo)
+
 
 
 #---------------------------------------------------------
@@ -125,50 +130,81 @@ def login():
         }), 200
     return jsonify({"error": "Credenciales invalidas"}), 401
 
-    
 @api.route('/registro', methods=['POST'])
-def registrar_usuario_unificado():
+def registrar_usuario():
     try:
         body = request.get_json()
-        
-        tipo_usuario = body.get('tipo', '').lower()
-        datos_usuario = body.get('datos')
 
-        if not tipo_usuario or not datos_usuario:
-            return jsonify({"error": "Faltan campos 'tipo' o 'datos'"}), 400
+        if not body:
+            return jsonify({"error": "No se enviaron datos"}), 400
 
-        if tipo_usuario == 'cliente':
-            exito = sistema.registrar_usuario_cliente(datos_usuario)
-            if exito:
-                return jsonify({"mensaje": "Cliente registrado exitosamente"}), 201
-            return jsonify({"error": "Error al registrar cliente"}), 400
+        rol = body.get("rol")
+        if rol not in ["Cliente", "Empleado", "Administrador", "cliente", "empleado", "administrador"]:
+            return jsonify({"error": "Rol inválido"}), 400
 
-        usuario_solicitante = obtener_usuario_actual()
-        
-        if not usuario_solicitante:
-            return jsonify({"error": "No autorizado. Se requiere login"}), 401
-            
-        es_admin = sistema.check_permission("Admin", usuario_solicitante)
-        if not es_admin:
-            return jsonify({"error": "Solo un Administrador puede crear empleados o administradores"}), 403
+        campos_obligatorios = [
+            "nombre", "apellido", "email", "telefono",
+            "fecha_nacimiento", "tipo_documento_id",
+            "nro_documento", "user_name", "password"
+        ]
 
-        if tipo_usuario == 'empleado':
-            exito = sistema.registrar_usuario_empleado(datos_usuario)
-            if exito:
-                return jsonify({"mensaje": "Empleado registrado exitosamente"}), 201
-            
-        elif tipo_usuario == 'admin':
-            exito = sistema.registrar_usuario_admin(datos_usuario)
-            if exito:
-                return jsonify({"mensaje": "Administrador registrado exitosamente"}), 201
-        
-        else:
-             return jsonify({"error": "Tipo de usuario no válido (cliente, empleado, admin)"}), 400
+        faltantes = [c for c in campos_obligatorios if not body.get(c)]
+        if faltantes:
+            return jsonify({"error": f"Faltan campos: {', '.join(faltantes)}"}), 400
 
-        return jsonify({"error": "Error al registrar usuario staff (Datos duplicados o inválidos)"}), 400
+        persona_data = {
+            "nombre": body["nombre"],
+            "apellido": body["apellido"],
+            "mail": body["email"],
+            "telefono": body["telefono"],
+            "fecha_nacimiento": body["fecha_nacimiento"],
+            "tipo_documento_id": body["tipo_documento_id"],
+            "nro_documento": body["nro_documento"],
+            "fecha_alta": datetime.now().strftime("%Y-%m-%d")
+        }
+
+        usuario_data = {
+            "user_name": body["user_name"],
+            "password_hash": generate_password_hash(body["password"])
+        }
+
+        permisos = {"administrador": 1,"empleado": 2,"cliente": 3}
+        usuario_data["id_permiso"] = permisos[rol.lower()]
+
+        result = sistema.db_manager.create_full_user(
+            persona_data=persona_data,
+            usuario_data=usuario_data,
+            role_data={},
+            role_type=rol
+        )
+
+        # Log para ayudar a depurar dónde se guarda la información
+        try:
+            print("DB PATH:", sistema.db_manager.db_path)
+        except Exception:
+            pass
+
+        if not result:
+            return jsonify({"error": "No se pudo crear el usuario"}), 500
+
+        # result puede ser dict con id_persona e id_usuario
+        id_persona = result.get('id_persona') if isinstance(result, dict) else result
+        id_usuario = result.get('id_usuario') if isinstance(result, dict) else None
+
+        print(f"Usuario creado: id_persona={id_persona}, id_usuario={id_usuario}")
+
+        resp = {"mensaje": "Usuario registrado correctamente", "id_persona": id_persona}
+        if id_usuario:
+            resp['id_usuario'] = id_usuario
+        return jsonify(resp), 201
+
+    except sqlite3.IntegrityError as e:
+        return jsonify({"error": f"Violación de integridad: {str(e)}"}), 409
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print("ERROR EN REGISTRO:", e)
+        return jsonify({"error": "Error interno", "detalle": str(e)}), 500
+
 
 # --- Endpoints ABMC Vehículos ---
 
@@ -852,8 +888,8 @@ def reporte_facturacion():
 # ---------------------------------------------------------
 # EJECUCIÓN
 # ---------------------------------------------------------
-app.register_blueprint(api, url_prefix='/api')
+# Registrar blueprint y ejecutar la app (al final, después de definir todas las rutas)
+app.register_blueprint(api, url_prefix="/api")
 
-if __name__ == '__main__':
-    print("Iniciando servidor Flask en http://localhost:5000")
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+    app.run(debug=True)
