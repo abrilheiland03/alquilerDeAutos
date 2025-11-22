@@ -315,16 +315,19 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Datos de ejemplo en caso de error
+      showNotification('Error al cargar los datos del dashboard', 'error');
       setStats({
-        totalVehicles: 12,
-        availableVehicles: isClient() ? 8 : 5,
-        activeRentals: isClient() ? 1 : 3,
-        pendingMaintenance: isClient() ? 0 : 2,
-        totalClients: isClient() ? 0 : 45,
-        userRentalCount: isClient() ? 3 : 0,
-        favoriteVehicle: isClient() ? 'Toyota Corolla' : null
+        totalVehicles: 0,
+        availableVehicles: 0,
+        activeRentals: 0,
+        pendingMaintenance: 0,
+        totalClients: 0,
+        userRentalCount: 0,
+        favoriteVehicle: null
       });
+      setUserRentals([]);
+      setRecentRentals([]);
+      setRecentMaintenance([]);
     } finally {
       setLoading(false);
     }

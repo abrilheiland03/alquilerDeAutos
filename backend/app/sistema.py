@@ -827,34 +827,87 @@ class SistemaAlquiler:
     def obtener_estadisticas_dashboard(self, usuario):
         """Obtiene estadísticas personalizadas para el dashboard según el rol del usuario"""
         try:
+            print(f"DEBUG: obtener_estadisticas_dashboard para usuario {usuario.user_name}, rol: {usuario.permiso.descripcion}")
+            
             if self.check_permission("Admin", usuario) or self.check_permission("Empleado", usuario):
-                return self._estadisticas_admin_empleado()
+                stats = self._estadisticas_admin_empleado()
+                print(f"DEBUG: Estadísticas para admin/empleado: {stats}")
+                return stats
             elif self.check_permission("Cliente", usuario):
-                return self._estadisticas_cliente(usuario)
+                stats = self._estadisticas_cliente(usuario)
+                print(f"DEBUG: Estadísticas para cliente: {stats}")
+                return stats
             else:
+                print("DEBUG: Usuario sin permisos reconocidos")
                 return {}
+                
         except Exception as e:
-            print(f"Error obteniendo estadísticas dashboard: {e}")
+            print(f"ERROR en obtener_estadisticas_dashboard: {e}")
+            import traceback
+            traceback.print_exc()
             return {}
 
     def _estadisticas_admin_empleado(self):
-        """Estadísticas para admin y empleado"""
-        vehiculos = self.db_manager.get_all_vehiculos()
-        alquileres = self.db_manager.get_all_alquileres()
-        clientes = self.db_manager.get_all_clients()
-        mantenimientos = self.db_manager.get_all_mantenimientos()
-        
-        vehiculos_libres = [v for v in vehiculos if v.estado.descripcion == 'Libre']
-        alquileres_activos = [a for a in alquileres if a.get('id_estado') in [2, 3]]  # Activo o Atrasado
-        mantenimientos_pendientes = [m for m in mantenimientos if m.get('id_estado') == 3]  # Pendiente
-        
-        return {
-            'total_vehiculos': len(vehiculos),
-            'vehiculos_disponibles': len(vehiculos_libres),
-            'alquileres_activos': len(alquileres_activos),
-            'mantenimientos_pendientes': len(mantenimientos_pendientes),
-            'total_clientes': len(clientes)
-        }
+        """Estadísticas para admin y empleado - VERSIÓN CORREGIDA"""
+        try:
+            print("DEBUG: Obteniendo datos para estadísticas admin/empleado...")
+            
+            vehiculos = self.db_manager.get_all_vehiculos()
+            alquileres = self.db_manager.get_all_alquileres()
+            clientes = self.db_manager.get_all_clients()
+            mantenimientos = self.db_manager.get_all_mantenimientos()
+            
+            print(f"DEBUG: {len(vehiculos)} vehículos, {len(alquileres)} alquileres, {len(clientes)} clientes, {len(mantenimientos)} mantenimientos")
+            
+            # CORRECCIÓN: Acceso seguro a propiedades
+            vehiculos_libres = []
+            for v in vehiculos:
+                try:
+                    # Verificar si el vehículo está libre
+                    if hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre':
+                        vehiculos_libres.append(v)
+                    elif hasattr(v, 'estado') and isinstance(v.estado, str) and v.estado == 'Libre':
+                        vehiculos_libres.append(v)
+                except Exception as e:
+                    print(f"DEBUG - Error procesando vehículo {v.patente}: {e}")
+                    continue
+            
+            # CORRECCIÓN: Filtrar alquileres activos (id_estado 2 = Activo, 3 = Atrasado)
+            alquileres_activos = []
+            for a in alquileres:
+                try:
+                    if a.get('id_estado') in [2, 3]:
+                        alquileres_activos.append(a)
+                except Exception as e:
+                    print(f"DEBUG - Error procesando alquiler {a.get('id_alquiler')}: {e}")
+                    continue
+            
+            # CORRECCIÓN: Filtrar mantenimientos pendientes (id_estado 3 = Pendiente)
+            mantenimientos_pendientes = []
+            for m in mantenimientos:
+                try:
+                    if m.get('id_estado') == 3:
+                        mantenimientos_pendientes.append(m)
+                except Exception as e:
+                    print(f"DEBUG - Error procesando mantenimiento {m.get('id_mantenimiento')}: {e}")
+                    continue
+            
+            stats = {
+                'total_vehiculos': len(vehiculos),
+                'vehiculos_disponibles': len(vehiculos_libres),
+                'alquileres_activos': len(alquileres_activos),
+                'mantenimientos_pendientes': len(mantenimientos_pendientes),
+                'total_clientes': len(clientes)
+            }
+            
+            print(f"DEBUG: Estadísticas calculadas: {stats}")
+            return stats
+            
+        except Exception as e:
+            print(f"ERROR en _estadisticas_admin_empleado: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
 
     def _estadisticas_cliente(self, usuario):
         try:

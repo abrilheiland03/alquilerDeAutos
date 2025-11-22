@@ -18,6 +18,46 @@ const RentalManagementEmployee = () => {
   const [selectedRental, setSelectedRental] = useState(null);
   const [view, setView] = useState('grid');
 
+  // AGREGAR ESTAS FUNCIONES QUE FALTAN:
+  useEffect(() => {
+    fetchRentals();
+  }, []);
+
+  useEffect(() => {
+    filterRentals();
+  }, [rentals, searchTerm, statusFilter]);
+
+  const fetchRentals = async () => {
+    try {
+      setLoading(true);
+      const rentalsData = await rentalService.getAll();
+      setRentals(rentalsData);
+    } catch (error) {
+      console.error('Error fetching rentals:', error);
+      showNotification('Error al cargar los alquileres', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterRentals = () => {
+    let filtered = rentals;
+
+    if (searchTerm) {
+      filtered = filtered.filter(rental =>
+        rental.patente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.id_alquiler?.toString().includes(searchTerm)
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(rental => rental.estado_desc === statusFilter);
+    }
+
+    setFilteredRentals(filtered);
+  };
+
   // Lógica similar pero solo con permisos de empleado
   const handleCreateRental = async (rentalData) => {
     try {
@@ -32,18 +72,51 @@ const RentalManagementEmployee = () => {
   };
 
   const handleStartRental = async (rental) => {
-    // Lógica específica de empleado
+    try {
+      await rentalService.start(rental.id_alquiler);
+      showNotification('Alquiler iniciado exitosamente', 'success');
+      fetchRentals();
+    } catch (error) {
+      console.error('Error starting rental:', error);
+      showNotification('Error al iniciar el alquiler', 'error');
+    }
   };
 
   const handleCompleteRental = async (rental) => {
-    // Lógica específica de empleado
+    try {
+      await rentalService.complete(rental.id_alquiler);
+      showNotification('Alquiler finalizado exitosamente', 'success');
+      fetchRentals();
+    } catch (error) {
+      console.error('Error completing rental:', error);
+      showNotification('Error al finalizar el alquiler', 'error');
+    }
   };
 
   const handleCancelRental = async (rental) => {
-    // Lógica específica de empleado
+    if (!window.confirm(`¿Estás seguro de cancelar el alquiler #${rental.id_alquiler}?`)) {
+      return;
+    }
+    try {
+      await rentalService.cancel(rental.id_alquiler);
+      showNotification('Alquiler cancelado exitosamente', 'success');
+      fetchRentals();
+    } catch (error) {
+      console.error('Error canceling rental:', error);
+      showNotification('Error al cancelar el alquiler', 'error');
+    }
   };
 
-  // ... resto de lógica similar pero sin opciones de eliminar
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando alquileres...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,17 +146,28 @@ const RentalManagementEmployee = () => {
       />
 
       {/* Lista de alquileres con acciones de empleado */}
-      {filteredRentals.map(rental => (
-        <RentalCard
-          key={rental.id_alquiler}
-          rental={rental}
-          onStart={handleStartRental}
-          onComplete={handleCompleteRental}
-          onCancel={handleCancelRental}
-          onView={() => setSelectedRental(rental)}
-          isEmployee={true}
-        />
-      ))}
+      {filteredRentals.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+          <p className="text-gray-600">No hay alquileres que coincidan con los filtros</p>
+        </div>
+      ) : (
+        <div className={view === 'grid' 
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+          : 'space-y-4'
+        }>
+          {filteredRentals.map(rental => (
+            <RentalCard
+              key={rental.id_alquiler}
+              rental={rental}
+              onStart={handleStartRental}
+              onComplete={handleCompleteRental}
+              onCancel={handleCancelRental}
+              onView={() => setSelectedRental(rental)}
+              isEmployee={true}
+            />
+          ))}
+        </div>
+      )}
 
       <RentalModal
         isOpen={modalOpen}

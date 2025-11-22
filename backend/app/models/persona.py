@@ -1,7 +1,7 @@
 import re
 from .documento import Documento
 from .usuario import Usuario
-from datetime import date
+from datetime import date, datetime
 
 class Persona:
     def __init__(self, id_persona: int, nombre: str, apellido: str, mail: str, 
@@ -66,10 +66,26 @@ class Persona:
     def fecha_nacimiento(self):
         return self._fecha_nacimiento
 
+    @property
+    def fecha_nacimiento(self):
+        return self._fecha_nacimiento
+
     @fecha_nacimiento.setter
     def fecha_nacimiento(self, value):
+        # CORRECCIÓN: Convertir datetime a date si es necesario
+        from datetime import datetime  # ← Agregar este import
+        
+        if isinstance(value, datetime):
+            value = value.date()  # ← Convertir datetime a date
+        elif isinstance(value, str):
+            # Si es string, convertir primero a datetime y luego a date
+            try:
+                value = datetime.fromisoformat(value).date()
+            except ValueError:
+                raise ValueError('Formato de fecha inválido')
+        
         if not isinstance(value, date):
-            raise ValueError('La fecha de nacimiento debe ser un objeto date')
+            raise ValueError('La fecha de nacimiento debe ser un objeto date o datetime')
         
         hoy = date.today()
         
