@@ -124,7 +124,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center pb-4 px-4 sm:px-6 lg:px-8 font-sans">
             
             {/* Header del Formulario */}
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">

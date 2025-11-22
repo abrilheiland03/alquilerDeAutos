@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 
 // Componentes de Autenticación
-import Home from './components/home/Home';
+import {Home, Navbar} from './components/home/home.jsx';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 
@@ -55,6 +55,7 @@ const AppContent = () => {
         
         {/* Contenido principal */}
         <main className="flex-1 p-6 overflow-auto">
+          <Navbar />
           <Routes>
             {!user ? (
               // Rutas para usuarios NO autenticados

@@ -9,35 +9,41 @@ const PRIMARY_BORDER = 'border-orange-500';
 
 // Componente Navbar simple para la página de inicio
 const Navbar = () => (
-    <nav className="fixed top-0 left-0 right-0 bg-white bg-opacity-95 shadow-md backdrop-blur-sm z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-                {/* Logo y Marca */}
-                <div className="flex-shrink-0 flex items-center">
-                    <Car className={`h-8 w-8 ${PRIMARY_COLOR}`} />
-                    <span className="ml-2 text-2xl font-bold tracking-tight text-gray-900">IngRide</span>
-                </div>
-                
-                {/* Botones de Autenticación */}
-                <div className="flex items-center space-x-4">
-                    <Link
-                        to="/login"
-                        className={`flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${PRIMARY_BG} hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out`}
-                    >
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Iniciar Sesión
+    <>
+        {/* Barra de Navegación Fija */}
+        <nav className="fixed top-0 left-0 right-0 bg-white bg-opacity-95 shadow-md backdrop-blur-sm z-50 h-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+                <div className="flex justify-between items-center h-full">
+                    {/* Logo y Marca con Link a Home */}
+                    <Link to="/" className="flex-shrink-0 flex items-center cursor-pointer transition-opacity">
+                        <Car className={`h-8 w-8 ${PRIMARY_COLOR}`} />
+                        <span className="ml-2 text-2xl font-bold tracking-tight text-gray-900">IngRide</span>
                     </Link>
-                    <Link
-                        to="/register"
-                        className={`flex items-center px-4 py-2 border ${PRIMARY_BORDER} text-sm font-medium rounded-lg ${PRIMARY_COLOR} bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out`}
-                    >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Registrarse
-                    </Link>
+                    
+                    {/* Botones de Autenticación */}
+                    <div className="flex items-center space-x-4">
+                        <Link
+                            to="/login"
+                            className={`flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white ${PRIMARY_BG} hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out`}
+                        >
+                            <LogIn className="h-4 w-4 mr-2" />
+                            Iniciar Sesión
+                        </Link>
+                        <Link
+                            to="/register"
+                            className={`flex items-center px-4 py-2 border ${PRIMARY_BORDER} text-sm font-medium rounded-lg ${PRIMARY_COLOR} bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out`}
+                        >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Registrarse
+                        </Link>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+
+        {/* Espaciador para evitar que el contenido quede oculto tras la barra fija */}
+        <div className="h-16"></div> 
+    </>
 );
 
 // Sección de características clave
@@ -55,9 +61,9 @@ const FeatureCard = ({ Icon, title, description }) => (
 const Home = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <Navbar />
+            
 
-            <main className="pt-20">
+            <main className="pt-4">
                 
                 {/* Hero Section - Bienvenida */}
                 <header className="py-24 bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl">
@@ -199,4 +205,4 @@ const Home = () => {
     );
 };
 
-export default Home;
+export {Home, Navbar};
