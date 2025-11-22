@@ -63,11 +63,13 @@ const AppContent = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="/vehicles" element={<VehicleManagement />} />
               </>
             ) : (
               // Rutas para usuarios autenticados
               <>
                 <Route path="/dashboard" element={<Dashboard />} />
+                
                 
                 {/* Gestión de Vehículos */}
                 <Route path="/vehicles" element={<VehicleManagement />} />

@@ -342,6 +342,9 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
     };
     return statusMap[estado] || 'status-free';
   };
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('empleado');
+  const canDelete = hasPermission('admin');
 
   const getTransmissionText = (cajaManual) => {
     return cajaManual ? 'Manual' : 'Automática';
@@ -365,19 +368,19 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
         <div className="space-y-3 mb-4">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Patente:</span>
-            <span className="font-medium">{vehicle.patente}</span>
+            <span className="font-medium text-gray-600">{vehicle.patente}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Año:</span>
-            <span className="font-medium">{vehicle.anio}</span>
+            <span className="font-medium text-gray-600">{vehicle.anio}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Color:</span>
-            <span className="font-medium">{vehicle.color}</span>
+            <span className="font-medium text-gray-600">{vehicle.color}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Transmisión:</span>
-            <span className="font-medium">{getTransmissionText(vehicle.caja_manual)}</span>
+            <span className="font-medium text-gray-600">{getTransmissionText(vehicle.caja_manual)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Precio/día:</span>
@@ -400,6 +403,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
         </div>
 
         {/* Acciones */}
+        {canEdit || canDelete ? 
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={() => onView(vehicle)}
@@ -424,7 +428,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        </div>: null}
       </div>
     </div>
   );
