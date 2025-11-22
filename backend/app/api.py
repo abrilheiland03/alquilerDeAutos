@@ -537,7 +537,8 @@ def listar_alquileres():
         if not usuario:
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
-        lista = sistema.consultar_todos_alquileres(usuario)
+        # Usar el nuevo método que filtra según el rol
+        lista = sistema.consultar_alquileres_usuario(usuario)
         return jsonify(lista), 200
 
     except Exception as e:
@@ -846,6 +847,68 @@ def reporte_facturacion():
             return jsonify({"error": "Permisos insuficientes"}), 403
             
         return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- NUEVOS ENDPOINTS PARA DASHBOARD ---
+
+@api.route('/dashboard/estadisticas', methods=['GET'])
+def obtener_estadisticas_dashboard():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        estadisticas = sistema.obtener_estadisticas_dashboard(usuario)
+        return jsonify(estadisticas), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/dashboard/ultimo-alquiler', methods=['GET'])
+def obtener_ultimo_alquiler():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        # Solo disponible para clientes
+        if not sistema.check_permission("Cliente", usuario):
+            return jsonify({"error": "Solo disponible para clientes"}), 403
+
+        ultimo_alquiler = sistema.obtener_ultimo_alquiler_cliente(usuario)
+        
+        if ultimo_alquiler:
+            return jsonify(ultimo_alquiler), 200
+        return jsonify({"mensaje": "No se encontraron alquileres"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/vehiculos/<patente>/disponible', methods=['GET'])
+def verificar_vehiculo_disponible(patente):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        disponible = sistema.verificar_disponibilidad_vehiculo(patente)
+        return jsonify({"disponible": disponible}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/usuarios/<id_usuario>', methods=['GET'])
+def obtener_usuario_por_id(id_usuario):
+    try:
+        usuario = sistema.db_manager.get_full_usuario_by_id(id_usuario)
+        if usuario:
+            return jsonify({
+                "id_usuario": usuario.id_usuario,
+                "user_name": usuario.user_name,
+                "permiso": usuario.permiso.descripcion
+            }), 200
+        return jsonify({"error": "Usuario no encontrado"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

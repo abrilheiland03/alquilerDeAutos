@@ -31,7 +31,7 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full min-h-screen flex items-center justify-center bg-gray-900"> {/* ← Cambiado */}
         <LoadingSpinner message="Verificando autenticación..." />
       </div>
     );

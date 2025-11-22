@@ -1643,3 +1643,53 @@ class DBManager:
             return []
         finally:
             if conn: conn.close()
+
+    # --- NUEVOS MÉTODOS PARA DASHBOARD ---
+
+    def get_alquileres_por_usuario(self, id_usuario):
+        sql = """
+            SELECT 
+                a.*, 
+                v.modelo, 
+                m.descripcion as marca, 
+                v.patente,
+                ea.descripcion as estado_desc,
+                p.nombre || ' ' || p.apellido as nombre_cliente,
+                v.precio_flota,
+                c.id_persona as id_persona_cliente
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+            JOIN Cliente c ON a.id_cliente = c.id_cliente
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Usuario u ON p.id_persona = u.id_persona
+            WHERE u.id_usuario = ?
+            ORDER BY a.fecha_inicio DESC
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (id_usuario,)).fetchall()
+            return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            print(f"Error al obtener alquileres por usuario: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_vehiculos_disponibles_count(self):
+        """Obtiene el conteo de vehículos disponibles (estado Libre)"""
+        sql = "SELECT COUNT(*) as count FROM Vehiculo WHERE id_estado = 1"
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return 0
+            row = conn.cursor().execute(sql).fetchone()
+            return row['count'] if row else 0
+        except sqlite3.Error as e:
+            print(f"Error al contar vehículos disponibles: {e}")
+            return 0
+        finally:
+            if conn: conn.close()

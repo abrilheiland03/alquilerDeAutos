@@ -3,37 +3,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos base personalizados */
+/* Estilos base personalizados - TEMA OSCURO */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-900 text-gray-100; /* ← Cambiado a gris oscuro */
   }
 }
 
-/* Componentes personalizados */
+/* Componentes personalizados - ADAPTADOS A OSCURO */
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200;
+    @apply px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-200; /* ← agregado focus:ring-offset-gray-900 */
   }
   
   .btn-secondary {
-    @apply px-4 py-2 border border-orange-500 text-orange-500 font-medium rounded-lg hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200;
+    @apply px-4 py-2 border border-orange-500 text-orange-500 font-medium rounded-lg hover:bg-orange-900 hover:bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-200;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply bg-gray-800 rounded-lg shadow-sm border border-gray-700; /* ← Cambiado */
   }
   
   .input-primary {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200;
+    @apply w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 bg-gray-700 text-white placeholder-gray-400; /* ← Cambiado */
   }
   
   .table-header {
-    @apply bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    @apply bg-gray-700 text-left text-xs font-medium text-gray-300 uppercase tracking-wider; /* ← Cambiado */
   }
   
   .status-badge {
@@ -41,19 +41,19 @@
   }
   
   .status-free {
-    @apply bg-green-100 text-green-800;
+    @apply bg-green-900 text-green-200; /* ← Adaptado a oscuro */
   }
   
   .status-occupied {
-    @apply bg-red-100 text-red-800;
+    @apply bg-red-900 text-red-200;
   }
   
   .status-maintenance {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-yellow-900 text-yellow-200;
   }
   
   .status-reserved {
-    @apply bg-blue-100 text-blue-800;
+    @apply bg-blue-900 text-blue-200;
   }
 }
 

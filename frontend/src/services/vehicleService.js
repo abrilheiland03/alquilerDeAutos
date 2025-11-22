@@ -35,5 +35,16 @@ export const vehicleService = {
   delete: async (patente) => {
     const response = await apiClient.delete(`/vehiculos/${patente}`);
     return response.data;
-  }
+  },
+
+
+  // Obtener conteo de vehículos disponibles
+  getAvailableCount: async () => {
+    const response = await apiClient.get('/vehiculos/libres');
+    // Si la respuesta es un array, contar elementos
+    if (Array.isArray(response.data)) {
+      return response.data.length;
+    }
+    return 0;
+  },
 };

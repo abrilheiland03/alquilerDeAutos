@@ -821,3 +821,146 @@ class SistemaAlquiler:
             return None
         
         return self.db_manager.get_report_facturacion_mensual(fecha_desde, fecha_hasta)
+    
+    # --- NUEVOS MÉTODOS PARA DASHBOARD ---
+
+    def obtener_estadisticas_dashboard(self, usuario):
+        """Obtiene estadísticas personalizadas para el dashboard según el rol del usuario"""
+        try:
+            if self.check_permission("Admin", usuario) or self.check_permission("Empleado", usuario):
+                return self._estadisticas_admin_empleado()
+            elif self.check_permission("Cliente", usuario):
+                return self._estadisticas_cliente(usuario)
+            else:
+                return {}
+        except Exception as e:
+            print(f"Error obteniendo estadísticas dashboard: {e}")
+            return {}
+
+    def _estadisticas_admin_empleado(self):
+        """Estadísticas para admin y empleado"""
+        vehiculos = self.db_manager.get_all_vehiculos()
+        alquileres = self.db_manager.get_all_alquileres()
+        clientes = self.db_manager.get_all_clients()
+        mantenimientos = self.db_manager.get_all_mantenimientos()
+        
+        vehiculos_libres = [v for v in vehiculos if v.estado.descripcion == 'Libre']
+        alquileres_activos = [a for a in alquileres if a.get('id_estado') in [2, 3]]  # Activo o Atrasado
+        mantenimientos_pendientes = [m for m in mantenimientos if m.get('id_estado') == 3]  # Pendiente
+        
+        return {
+            'total_vehiculos': len(vehiculos),
+            'vehiculos_disponibles': len(vehiculos_libres),
+            'alquileres_activos': len(alquileres_activos),
+            'mantenimientos_pendientes': len(mantenimientos_pendientes),
+            'total_clientes': len(clientes)
+        }
+
+    def _estadisticas_cliente(self, usuario):
+        try:
+            # Obtener el ID de persona del usuario
+            usuario_completo = self.db_manager.get_full_usuario_by_id(usuario.id_usuario)
+            if not usuario_completo:
+                return {}
+            
+            # Obtener todos los alquileres del cliente usando id_usuario
+            alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
+            vehiculos = self.db_manager.get_all_vehiculos()
+            
+            vehiculos_libres = [v for v in vehiculos if hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre']
+            alquileres_activos = [a for a in alquileres_cliente if a.get('id_estado') in [2, 3]]
+            
+            # Encontrar vehículo favorito (más alquilado)
+            vehiculo_favorito = self._obtener_vehiculo_favorito_cliente(usuario.id_usuario, alquileres_cliente, vehiculos)
+            
+            return {
+                'vehiculos_disponibles': len(vehiculos_libres),
+                'alquileres_activos': len(alquileres_activos),
+                'total_alquileres': len(alquileres_cliente),
+                'vehiculo_favorito': vehiculo_favorito,
+                'total_vehiculos': len(vehiculos)  # Agregado para mantener consistencia
+            }
+        except Exception as e:
+            print(f"Error en estadísticas cliente: {e}")
+            return {}
+
+    def _obtener_vehiculo_favorito_cliente(self, id_usuario, alquileres_cliente, vehiculos):
+        if not alquileres_cliente:
+            return None
+        
+        try:
+            # Contar frecuencia de alquiler por patente
+            contador_vehiculos = {}
+            for alquiler in alquileres_cliente:
+                patente = alquiler.get('patente')
+                if patente:
+                    contador_vehiculos[patente] = contador_vehiculos.get(patente, 0) + 1
+            
+            if not contador_vehiculos:
+                return None
+            
+            # Encontrar la patente más frecuente
+            patente_favorita = max(contador_vehiculos, key=contador_vehiculos.get)
+            
+            # Buscar información del vehículo
+            for vehiculo in vehiculos:
+                if vehiculo.patente == patente_favorita:
+                    return vehiculo.modelo
+            
+            return None
+        except Exception as e:
+            print(f"Error obteniendo vehículo favorito: {e}")
+            return None
+
+    def obtener_ultimo_alquiler_cliente(self, usuario):
+        try:
+            if not self.check_permission("Cliente", usuario):
+                return None
+                
+            # Obtener alquileres del usuario
+            alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
+            
+            if not alquileres_cliente:
+                return None
+            
+            # Ordenar por fecha de inicio (más reciente primero) y tomar el primero
+            alquileres_ordenados = sorted(
+                alquileres_cliente, 
+                key=lambda x: x.get('fecha_inicio', ''), 
+                reverse=True
+            )
+            
+            return alquileres_ordenados[0] if alquileres_ordenados else None
+            
+        except Exception as e:
+            print(f"Error obteniendo último alquiler: {e}")
+            return None
+
+    def verificar_disponibilidad_vehiculo(self, patente):
+        """Verifica si un vehículo está disponible para alquiler"""
+        try:
+            vehiculo = self.db_manager.get_vehiculo_by_patente(patente)
+            if vehiculo and vehiculo.estado.descripcion == 'Libre':
+                return True
+            return False
+        except Exception as e:
+            print(f"Error verificando disponibilidad: {e}")
+            return False
+    
+    def consultar_alquileres_usuario(self, usuario):
+        print(f"DEBUG: consultar_alquileres_usuario llamado con usuario: {usuario.user_name}, rol: {usuario.permiso.descripcion}")  # ← Agregar debug
+        
+        if not usuario:
+            return []
+        
+        if self.check_permission("Admin", usuario) or self.check_permission("Empleado", usuario):
+            # Admin y empleado ven todos los alquileres
+            print("DEBUG: Usuario es Admin/Empleado, devolviendo todos los alquileres")
+            return self.db_manager.get_all_alquileres()
+        elif self.check_permission("Cliente", usuario):
+            # Cliente solo ve sus propios alquileres
+            print(f"DEBUG: Usuario es Cliente (ID: {usuario.id_usuario}), devolviendo solo sus alquileres")
+            return self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
+        else:
+            print("DEBUG: Usuario sin permisos reconocidos")
+            return []
