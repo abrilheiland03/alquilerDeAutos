@@ -12,7 +12,7 @@ const RentalCard = ({
   isEmployee = false,
   isAdmin = false 
 }) => {
-  // Función para obtener configuración del estado
+  
   const getStatusConfig = (estado) => {
     const config = {
       'Reservado': { color: 'bg-blue-100 text-blue-800', icon: Clock },
@@ -24,7 +24,6 @@ const RentalCard = ({
     return config[estado] || { color: 'bg-gray-100 text-gray-800', icon: Clock };
   };
 
-  // Lógica de configuración de estado y acciones según el rol
   const getActions = () => {
     const baseActions = [];
     
@@ -52,14 +51,22 @@ const RentalCard = ({
   const StatusIcon = statusConfig.icon;
   const actions = getActions();
 
-  // Formatear fechas
+  // --- CORRECCIÓN AQUÍ ---
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+    if (!dateString) return '-';
+    
+    const fechaPura = dateString.split('T')[0];
+    
+    const [year, month, day] = fechaPura.split('-');
+    
+    const date = new Date(year, month - 1, day);
+    
+    return date.toLocaleDateString('es-ES');
   };
+  // -----------------------
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* Header de la tarjeta */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-full ${statusConfig.color}`}>
@@ -79,7 +86,6 @@ const RentalCard = ({
         </span>
       </div>
 
-      {/* Información del alquiler */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-sm text-gray-600">Cliente</p>
@@ -107,7 +113,6 @@ const RentalCard = ({
         </div>
       </div>
 
-      {/* Acciones */}
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
         <button 
           onClick={() => onView(rental)} 

@@ -96,8 +96,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <div className="flex items-center">
-            <Car className="h-8 w-8 text-orange-500" />
-            <span className="ml-2 text-xl font-bold text-gray-900">IngRide</span>
+            <span className="ml-2 text-xl font-bold text-gray-900">MENU</span>
           </div>
           
           {/* Close Button for Mobile */}

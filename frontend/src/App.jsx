@@ -55,7 +55,7 @@ const AppContent = () => {
         
         {/* Contenido principal */}
         <main className="flex-1 p-6 overflow-auto">
-          <Navbar />
+          {!user ? <Navbar /> : null}
           <Routes>
             {!user ? (
               // Rutas para usuarios NO autenticados

@@ -46,10 +46,54 @@ const RentalModal = ({ isOpen, onClose, rental, onSave }) => {
     }
   }, [isOpen, rental]);
 
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     calculatePrice();
     validateForm();
-  }, [formData.patente, formData.fecha_inicio, formData.fecha_fin]);
+  }, [formData]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAvailableData();
+      if (rental) {
+        setFormData({
+          patente: rental.patente || '',
+          id_cliente: rental.id_cliente || '',
+          fecha_inicio: rental.fecha_inicio?.split('T')[0] || '',
+          fecha_fin: rental.fecha_fin?.split('T')[0] || '',
+          estado: rental.estado || 'RESERVADO'
+        });
+      } else {
+        // Lógica para fechas por defecto: Inicio = Mañana, Fin = Pasado Mañana
+        const now = new Date();
+        
+        
+        const startDate = new Date(now);
+        startDate.setDate(startDate.getDate());
+        const startString = getLocalDateString(startDate);
+        
+
+        const endDate = new Date(now);
+        endDate.setDate(endDate.getDate()+1);
+        const endString = getLocalDateString(endDate);
+        
+        setFormData({
+          patente: '',
+          id_cliente: '',
+          fecha_inicio: startString,
+          fecha_fin: endString,
+          estado: 'RESERVADO'
+        });
+      }
+      setErrors({});
+    }
+  }, [isOpen, rental]);
 
   const fetchAvailableData = async () => {
     try {
@@ -112,8 +156,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave }) => {
       if (end <= start) {
         newErrors.fecha_fin = 'La fecha de fin debe ser posterior a la fecha de inicio';
       }
-
-      if (start < new Date()) {
+      if (start.getDate() + 1 < (new Date()).getDate()) {
         newErrors.fecha_inicio = 'La fecha de inicio no puede ser en el pasado';
       }
     }

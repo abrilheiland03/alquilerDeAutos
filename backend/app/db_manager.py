@@ -960,8 +960,8 @@ class DBManager:
             fecha_inicio = datetime.fromisoformat(data['fecha_inicio'])
             fecha_fin = datetime.fromisoformat(data['fecha_fin'])
             hoy = datetime.now()
-
-            if fecha_inicio < hoy:
+            
+            if fecha_inicio.date() < hoy.date():
                 raise ValueError("La fecha de inicio debe ser futura o igual a hoy.")
             
             if fecha_fin <= fecha_inicio:
@@ -1092,17 +1092,36 @@ class DBManager:
             if conn: conn.close()
 
     def delete_alquiler(self, id_alquiler):
-        sql = "DELETE FROM Alquiler WHERE id_alquiler = ?"
         conn = None
         try:
             conn = self._get_connection()
             if conn is None: return False
+            
             cursor = conn.cursor()
-            cursor.execute(sql, (id_alquiler,))
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT patente FROM Alquiler WHERE id_alquiler = ?", (id_alquiler,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return False 
+            
+            patente = row['patente']
+
+            cursor.execute("DELETE FROM Alquiler WHERE id_alquiler = ?", (id_alquiler,))
+
+            cursor.execute("UPDATE Vehiculo SET id_estado = 1 WHERE patente = ?", (patente,))
+
             conn.commit()
-            return cursor.rowcount > 0
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"No se puede eliminar el alquiler {id_alquiler} (Probablemente tiene multas o daños asociados).")
+            if conn: conn.rollback()
+            return False
         except sqlite3.Error as e:
             print(f"Error al eliminar alquiler: {e}")
+            if conn: conn.rollback()
             return False
         finally:
             if conn: conn.close()
