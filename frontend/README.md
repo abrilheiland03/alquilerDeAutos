@@ -8,3 +8,26 @@
 Notas:
 1. Si cambiaste de rama o descargaste el proyecto nuevamente, ejecuta npm install otra vez.
 2. Si npm run dev da error de puerto ocupado, revisa qué otro proceso está usando el puerto 5173 o cambia el puerto en vite.config.js.
+
+
+
+## SOLUCIÓN DE PROBLEMA DE COMPATIBILIDAD DE VERSIONES
+
+1. Ejecutá:
+
+```bash
+npm install lucide-react@latest
+```
+
+2. Después instalá Vite:
+
+```bash
+npm install vite --save-dev
+```
+
+3. Ahora sí, corré el programa:
+
+```bash
+npm run dev
+```
+
