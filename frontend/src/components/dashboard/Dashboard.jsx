@@ -404,14 +404,6 @@ const Dashboard = () => {
           // ESTADÍSTICAS PARA CLIENTE
           <>
             <StatCard
-              title="Vehículos Disponibles"
-              value={stats.availableVehicles}
-              icon={Car}
-              color="bg-green-500"
-              change={`${stats.availableVehicles} listos para alquilar`}
-              changeType="positive"
-            />
-            <StatCard
               title="Tus Alquileres Activos"
               value={stats.activeRentals}
               icon={Calendar}

@@ -14,8 +14,10 @@ import {
   Eye,
   X,
   Calendar,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react';
+import RentalDateSelector from '../rentals/RentalDateSelector';
 
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [formData, setFormData] = useState({
@@ -446,6 +448,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
 
 const VehicleManagement = () => {
   const { hasPermission, user } = useAuth();
+  const { isAdmin, isEmployee, isClient } = useAuth();
   const { showNotification } = useNotification();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
@@ -457,6 +460,9 @@ const VehicleManagement = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedVehicleForRental, setSelectedVehicleForRental] = useState(null);
   const [view, setView] = useState('grid');
+  const [rentalDates, setRentalDates] = useState(null);
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+  const [searchingVehicles, setSearchingVehicles] = useState(false);
 
   const canEdit = hasPermission('empleado');
   const canCreate = hasPermission('admin'); // Solo admin puede crear vehículos
@@ -680,33 +686,87 @@ const VehicleManagement = () => {
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{vehicles.length}</div>
-          <div className="text-sm text-gray-600">Total</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">
-            {vehicles.filter(v => v.estado === 'Libre').length}
-          </div>
-          <div className="text-sm text-gray-600">Disponibles</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-red-600">
-            {vehicles.filter(v => v.estado === 'Ocupado').length}
-          </div>
-          <div className="text-sm text-gray-600">Ocupados</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-orange-600">
-            {vehicles.filter(v => v.estado === 'En mantenimiento').length}
-          </div>
-          <div className="text-sm text-gray-600">Mantenimiento</div>
-        </div>
+      
+ {/* Mostrar estadísticas solo para administradores y empleados */}
+{(isAdmin() || isEmployee()) && (
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+      <div className="text-2xl font-bold text-gray-900">{vehicles.length}</div>
+      <div className="text-sm text-gray-600">Total</div>
+    </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+      <div className="text-2xl font-bold text-green-600">
+        {vehicles.filter(v => v.estado === 'Libre').length}
       </div>
+      <div className="text-sm text-gray-600">Disponibles</div>
+    </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+      <div className="text-2xl font-bold text-red-600">
+        {vehicles.filter(v => v.estado === 'Ocupado').length}
+      </div>
+      <div className="text-sm text-gray-600">Ocupados</div>
+    </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+      <div className="text-2xl font-bold text-orange-600">
+        {vehicles.filter(v => v.estado === 'En mantenimiento').length}
+      </div>
+      <div className="text-sm text-gray-600">Mantenimiento</div>
+    </div>
+  </div>
+)}
+      {!rentalDates ? (
+        <RentalDateSelector 
+          onSearch={searchAvailableVehicles} 
+          loading={searchingVehicles} 
+        />
+      ) : (
+        <div className="mb-6">
+          <button
+            onClick={resetRentalFlow}
+            className="flex items-center text-orange-500 hover:text-orange-600 mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Cambiar fechas
+          </button>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
+          </h2>
+        </div>
+      )}
 
-      {filteredVehicles.length === 0 ? (
+      {availableVehicles.length > 0 && rentalDates && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {availableVehicles.map(vehicle => (
+            <VehicleCard
+              key={vehicle.patente}
+              vehicle={vehicle}
+              onRent={openRentalModal}
+              showRentButton={true}
+            />
+          ))}
+        </div>
+      )}
+
+      {availableVehicles.length === 0 && rentalDates && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+          <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No hay vehículos disponibles
+          </h3>
+          <p className="text-gray-600 mb-4">
+            No encontramos vehículos disponibles para las fechas seleccionadas.
+          </p>
+          <button
+            onClick={resetRentalFlow}
+            className="btn-primary"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Seleccionar otras fechas
+          </button>
+        </div>
+      )}
+
+      {!rentalDates && filteredVehicles.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron vehículos</h3>

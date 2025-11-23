@@ -115,11 +115,6 @@ const RentalManagementClient = () => {
         </Link>
       </div>
 
-      {/* Estadísticas */}
-      {rentals.length > 0 && (
-        <RentalStats rentals={rentals} isClient={true} />
-      )}
-
       {/* Filtros */}
       <RentalFilters
         searchTerm={searchTerm}
