@@ -2,6 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Wrench, BarChart3, Users, LogIn, UserPlus, MapPin } from 'lucide-react';
 import {  Facebook, Instagram, Twitter } from 'lucide-react';
+import logo from '../../assets/logo.png';
+import logoNaranja from '../../assets/logo-sin-fondo.png';
+
 
 
 // Color principal - ahora usando clases de Tailwind directamente
@@ -18,8 +21,11 @@ const Navbar = () => (
                 <div className="flex justify-between items-center h-full">
                     {/* Logo y Marca con Link a Home */}
                     <Link to="/" className="flex-shrink-0 flex items-center cursor-pointer transition-opacity">
-                        <Car className={`h-8 w-8 ${PRIMARY_COLOR}`} />
-                        <span className="ml-2 text-2xl font-bold tracking-tight text-gray-900">IngRide</span>
+                        <img 
+                            src={logoNaranja} 
+                            alt="IngRide Logo" 
+                            className="max-h-20 w-auto mr-4 object-contain"
+                        />
                     </Link>
                     
                     {/* Botones de Autenticación */}
@@ -68,33 +74,38 @@ const Home = () => {
             <main className="pt-4">
                 
                 {/* Hero Section - Bienvenida */}
-                <header className="py-24 bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl">
+                <header className="py-20 bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                        
+                    <div className="flex flex-col items-center justify-center text-center max-w-3xl mx-auto">
                         <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl mb-6">
                             Bienvenido a IngRide
                         </h1>
-                        <p className="mt-4 text-xl text-orange-50 max-w-3xl mx-auto font-medium">
-                            Excelencia, innovación y enfoque centrado en las personas. <br/>
+
+                        <p className="mt-4 text-xl text-orange-50 font-medium">
+                            Excelencia, innovación y enfoque centrado en las personas. <br />
                             Más de 15 años liderando el alquiler y gestión de vehículos.
                         </p>
-                        <div className="mt-10 flex justify-center space-x-4">
-                            <Link
-                                to="/login"
-                                className="px-8 py-3 border border-transparent text-base font-bold rounded-lg shadow-lg text-orange-500 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
-                            >
-                                Empezar Ahora
-                            </Link>
-                            <Link
-                                to="/vehicles"
-                                className="px-8 py-3 border-2 border-white text-base font-bold rounded-lg text-white hover:bg-white hover:text-orange-500 transition duration-150 ease-in-out"
-                            >
-                                Ver Flota
-                            </Link>
-                        </div>
+
+                    <div className="mt-10 flex justify-center space-x-4">
+                        <Link
+                            to="/login"
+                            className="px-8 py-3 border border-transparent text-base font-bold rounded-lg shadow-lg text-orange-500 bg-white hover:bg-gray-50 transition duration-150 ease-in-out"
+                        >
+                            Empezar Ahora
+                        </Link>
+                        <Link
+                            to="/vehicles"
+                            className="px-8 py-3 border-2 border-white text-base font-bold rounded-lg text-white hover:bg-white hover:text-orange-500 transition duration-150 ease-in-out"
+                        >
+                            Ver Flota
+                        </Link>
                     </div>
-                </header>
+                </div>
+
+            </div>
+            </header>
+
 
                 {/* Sección 1: Historia/Acerca de */}
                 <section className="py-16 bg-white">
@@ -229,8 +240,11 @@ const Home = () => {
                         {/* Logo */}
                         <div className="flex flex-col items-center md:items-start">
                             <div className="flex items-center mb-3">
-                                <Car className="h-7 w-7 text-orange-500 mr-2" />
-                                <span className="text-2xl font-bold text-white">IngRide</span>
+                                <img 
+                                    src={logoNaranja} 
+                                    alt="IngRide Logo" 
+                                    className="max-h-20 w-auto mr-4 object-contain"
+                                />
                             </div>
                             <p className="text-gray-400 text-sm">
                                 &copy; {new Date().getFullYear()} IngRide. Todos los derechos reservados.
