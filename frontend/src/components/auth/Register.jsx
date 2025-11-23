@@ -16,6 +16,15 @@ const FormMessage = ({ type, text }) => {
     );
 };
 
+const fechaMayor = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear() - 18;
+    hoy.setFullYear(año);
+    hoy.setDate(hoy.getDate() - 1);
+    return hoy.toISOString().split('T')[0];
+}
+
+
 const Register = () => {
     const navigate = useNavigate();
     
@@ -25,7 +34,7 @@ const Register = () => {
         datos: {
             nombre: '', 
             apellido: '', 
-            email: '', 
+            mail: '', 
             telefono: '', 
             fecha_nacimiento: '', 
             tipo_documento_id: 1, 
@@ -116,16 +125,16 @@ const Register = () => {
             <div className="relative w-full max-w-2xl bg-white p-8 shadow-2xl rounded-xl">
                 <div className="registro-section">
                     <h2 className="text-3xl font-extrabold text-gray-900 flex items-center justify-center mb-2">
-                        <UserPlus className="w-6 h-6 mr-2 text-gray-500" />
+                        <UserPlus className="w-6 h-6 mr-2 text-gray-700" />
                         Crear Cuenta
                     </h2>
-                    <p className="text-gray-500 mb-6 text-center">Registro de nuevo usuario</p>
+                    <p className="text-gray-700 mb-6 text-center">Registro de nuevo usuario</p>
                     
                     <FormMessage type={message.type} text={message.text} />
 
                     <form onSubmit={handleRegistroSubmit} className="space-y-6">
                         {/* Tipo de Usuario */}
-                        <div>
+                        {/*<div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuario</label>
                             <select 
                                 name="tipo"
@@ -143,7 +152,7 @@ const Register = () => {
                                 {registroData.tipo === 'empleado' && "Los empleados pueden gestionar alquileres y clientes."}
                                 {registroData.tipo === 'admin' && "Los administradores tienen acceso completo al sistema."}
                             </p>
-                        </div>
+                        </div>*/}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nombre */}
@@ -152,8 +161,8 @@ const Register = () => {
                                 <input 
                                     type="text" 
                                     name="datos.nombre"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="Tu nombre" 
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    //placeholder="Tu nombre" 
                                     value={registroData.datos.nombre}
                                     onChange={handleRegistroChange}
                                     required
@@ -166,8 +175,8 @@ const Register = () => {
                                 <input 
                                     type="text" 
                                     name="datos.apellido"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="Tu apellido" 
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    //placeholder="Tu apellido" 
                                     value={registroData.datos.apellido}
                                     onChange={handleRegistroChange}
                                     required
@@ -180,10 +189,10 @@ const Register = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input 
                                 type="email" 
-                                name="datos.email"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                placeholder="tu.email@ejemplo.com" 
-                                value={registroData.datos.email}
+                                name="datos.mail"
+                                className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                //placeholder="tu.email@ejemplo.com" 
+                                value={registroData.datos.mail}
                                 onChange={handleRegistroChange}
                                 required
                             />
@@ -196,8 +205,8 @@ const Register = () => {
                                 <input 
                                     type="tel" 
                                     name="datos.telefono"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="351 123-4567" 
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    placeholder="ej: 351 123-4567" 
                                     value={registroData.datos.telefono}
                                     onChange={handleRegistroChange}
                                     required
@@ -210,9 +219,10 @@ const Register = () => {
                                 <input 
                                     type="date" 
                                     name="datos.fecha_nacimiento"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                     value={registroData.datos.fecha_nacimiento}
                                     onChange={handleRegistroChange}
+                                    max={fechaMayor()}
                                     required
                                 />
                             </div>
@@ -226,7 +236,7 @@ const Register = () => {
                                     name="datos.tipo_documento_id"
                                     value={registroData.datos.tipo_documento_id}
                                     onChange={handleRegistroChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                     required
                                 >
                                     <option value={1}>DNI</option>
@@ -240,8 +250,8 @@ const Register = () => {
                                 <input 
                                     type="text" 
                                     name="datos.nro_documento"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="12345678" 
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    //placeholder="12345678" 
                                     value={registroData.datos.nro_documento}
                                     onChange={handleRegistroChange}
                                     required
@@ -256,8 +266,8 @@ const Register = () => {
                                 <input 
                                     type="text" 
                                     name="datos.user_name"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    placeholder="usuario123" 
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    //placeholder="usuario123" 
                                     value={registroData.datos.user_name}
                                     onChange={handleRegistroChange}
                                     required
@@ -270,7 +280,7 @@ const Register = () => {
                                 <input 
                                     type="password" 
                                     name="datos.password"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                     placeholder="Mínimo 6 caracteres" 
                                     value={registroData.datos.password}
                                     onChange={handleRegistroChange}
@@ -288,7 +298,7 @@ const Register = () => {
                                     <input 
                                         type="date" 
                                         name="datos.fecha_alta"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                         value={registroData.datos.fecha_alta}
                                         onChange={handleRegistroChange}
                                         required
@@ -299,7 +309,7 @@ const Register = () => {
                                     <input 
                                         type="number" 
                                         name="datos.sueldo"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                         placeholder="850000.00" 
                                         value={registroData.datos.sueldo || ''}
                                         onChange={handleRegistroChange}
@@ -315,7 +325,7 @@ const Register = () => {
                                 <input 
                                     type="text" 
                                     name="datos.descripcion"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                                     placeholder="Descripción del administrador" 
                                     value={registroData.datos.descripcion || ''}
                                     onChange={handleRegistroChange}

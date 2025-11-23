@@ -72,13 +72,13 @@ class Persona:
 
     @fecha_nacimiento.setter
     def fecha_nacimiento(self, value):
-        # CORRECCIÓN: Convertir datetime a date si es necesario
-        from datetime import datetime  # ← Agregar este import
+        
+        from datetime import datetime  
         
         if isinstance(value, datetime):
-            value = value.date()  # ← Convertir datetime a date
+            value = value.date()  
         elif isinstance(value, str):
-            # Si es string, convertir primero a datetime y luego a date
+            
             try:
                 value = datetime.fromisoformat(value).date()
             except ValueError:
