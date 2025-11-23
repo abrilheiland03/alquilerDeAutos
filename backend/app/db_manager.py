@@ -657,7 +657,7 @@ class DBManager:
             if conn:
                 conn.close()
         return lista_clientes
-
+    
     def update_client_persona_data(self, id_cliente, persona_data):
         # AJUSTE: Se actualiza la columna 'fecha_nac'
         sql_update_persona = """
@@ -684,6 +684,33 @@ class DBManager:
             return cursor.rowcount > 0 
         except sqlite3.Error as e:
             print(f"Error al actualizar cliente: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
+    def update_client_data(self, id_cliente, client_data): #intento de actualizar las fechas altas del cliente
+        sql_update_cliente = """
+            UPDATE Cliente
+            SET fecha_alta = ?
+            WHERE id_cliente = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                return False
+
+            cursor = conn.cursor()
+            cursor.execute(sql_update_cliente, (
+                client_data['fecha_alta'],
+                id_cliente
+            ))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar fecha_alta: {e}")
             if conn:
                 conn.rollback()
             return False

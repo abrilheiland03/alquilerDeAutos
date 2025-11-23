@@ -403,12 +403,19 @@ try:
     # Chevrolet Cruze (Nuevo, sin uso)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AG333FV', 'Cruze', 3, 2024, 30000.0, 5, 4, 0, 1, 5)) # Estado 1 = Libre, Marca 3=Chevrolet, Color 5=Gris
+<<<<<<< HEAD
+=======
 
     #vehiculo ocupado para ver si solo lo pueden ver empleados y admin
     # Toyota Yaris (Usado para el alquiler en curso)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AD343RF', 'Yaris', 1, 2019, 23000.0, 5, 4, 0, 2, 3)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
+>>>>>>> bc1addd11792fd41c6fbd444ad22d8ed1086cd61
 
+    #vehiculo ocupado para ver si solo lo pueden ver empleados y admin
+    # Toyota Yaris (Usado para el alquiler en curso)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('AD343RF', 'Yaris', 1, 2019, 23000.0, 5, 4, 0, 2, 3)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
     # Obtener IDs necesarios para operaciones (suponiendo que se acaban de insertar o ya existían)
     # Necesitamos el ID de empleado de Ana. Si no se creó recién, lo buscamos.
     if 'id_empleado_ana' not in locals():
@@ -424,6 +431,25 @@ try:
             INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
             VALUES (?, ?, ?, ?, ?, ?)
         """, ('AA111AA', id_cliente_juan, id_empleado_ana, '2025-01-15T10:00:00', '2025-01-20T18:00:00', 4)) # 4 = Finalizado
+        
+        id_alquiler_juan = cursor.lastrowid
+
+    cursor.execute("SELECT id_alquiler FROM Alquiler WHERE patente = 'AF222BB' AND fecha_inicio = '2025-02-15T10:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('AF222BB', id_cliente_juan, id_empleado_ana, '2025-02-15T10:00:00', '2025-02-20T18:00:00', 4)) # 4 = Finalizado
+        
+        id_alquiler_juan = cursor.lastrowid
+
+    #alquiler en transcurso
+    cursor.execute("SELECT id_alquiler FROM Alquiler WHERE patente = 'AF222BB' AND fecha_inicio = '2025-11-15T10:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('AF222BB', id_cliente_juan, id_empleado_ana, '2025-11-15T10:00:00', '2025-11-30T18:00:00', 2)) # en alquiler 
         
         id_alquiler_juan = cursor.lastrowid
 

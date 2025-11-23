@@ -266,10 +266,15 @@ class SistemaAlquiler:
                 'tipo_documento_id': data['tipo_documento_id'],
                 'nro_documento': data['nro_documento']
             }
+            client_data = {
+            'fecha_alta': data['fecha_alta']
+        }
             
-            exito = self.db_manager.update_client_persona_data(id_cliente, persona_data)
+            exito_persona = self.db_manager.update_client_persona_data(id_cliente, persona_data)
+            exito_cliente = self.db_manager.update_client_data(id_cliente, client_data) #parte del cliente agregada
+
             
-            if exito:
+            if exito_persona and exito_cliente: #actualizo ahora si,la persona y el cliente para que cambie la fecha alta
                 print(f"Datos del cliente {id_cliente} actualizados.")
                 return True
             else:
