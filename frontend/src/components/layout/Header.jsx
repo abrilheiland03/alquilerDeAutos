@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Car, LogOut, User, Menu, Bell, Settings } from 'lucide-react';
+import logoNaranja from '../../assets/logo-sin-fondo.png';
 
 const Header = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
@@ -46,10 +47,11 @@ const Header = ({ onToggleSidebar }) => {
 
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center ml-2 lg:ml-0">
-            <Car className="h-8 w-8 text-orange-500" />
-            <span className="ml-2 text-xl font-bold text-gray-900 hidden sm:block">
-              IngRide
-            </span>
+             <img 
+                src={logoNaranja} 
+                alt="IngRide Logo" 
+                className="max-h-20 w-auto mr-4 object-contain"
+              />
           </Link>
         </div>
 
