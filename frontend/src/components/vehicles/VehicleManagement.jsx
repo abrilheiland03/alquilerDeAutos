@@ -3,26 +3,20 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { vehicleService } from '../../services/vehicleService';
 import { catalogService } from '../../services/catalogService';
+import RentalModal from '../rentals/shared/RentalModal';
+import {rentalService} from '../../services/rentalService';
 import { 
   Car, 
   Plus, 
   Search, 
-  Filter, 
   Edit, 
   Trash2, 
   Eye,
   X,
-  CheckCircle,
-  XCircle,
-  Wrench,
   Calendar,
-  Users,
-  ArrowUpDown,
-  Download,
-  Upload
+  Users
 } from 'lucide-react';
 
-// Componente de Modal para Crear/Editar Vehículo
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [formData, setFormData] = useState({
     patente: '',
@@ -131,7 +125,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Patente */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Patente *
@@ -144,11 +137,10 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 className="input-primary"
                 placeholder="AA123BB"
                 required
-                disabled={!!vehicle} // No se puede editar patente en edición
+                disabled={!!vehicle}
               />
             </div>
 
-            {/* Modelo */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Modelo *
@@ -164,7 +156,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               />
             </div>
 
-            {/* Marca */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Marca *
@@ -185,7 +176,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               </select>
             </div>
 
-            {/* Color */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Color *
@@ -206,7 +196,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               </select>
             </div>
 
-            {/* Año */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Año *
@@ -223,7 +212,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               />
             </div>
 
-            {/* Precio Flota */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Precio por Día ($) *
@@ -241,7 +229,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               />
             </div>
 
-            {/* Asientos */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Número de Asientos *
@@ -258,7 +245,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               />
             </div>
 
-            {/* Puertas */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Número de Puertas *
@@ -275,7 +261,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               />
             </div>
 
-            {/* Estado */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estado *
@@ -295,7 +280,6 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
               </select>
             </div>
 
-            {/* Caja Manual */}
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
@@ -332,8 +316,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   );
 };
 
-// Componente de Tarjeta de Vehículo
-const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
+const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
   const getStatusBadge = (estado) => {
     const statusMap = {
       'Libre': 'status-free',
@@ -353,7 +336,6 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
       <div className="p-6">
-        {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{vehicle.modelo}</h3>
@@ -364,7 +346,6 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
           </span>
         </div>
 
-        {/* Información del vehículo */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Patente:</span>
@@ -388,7 +369,6 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
           </div>
         </div>
 
-        {/* Especificaciones */}
         <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-200 pt-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
@@ -402,49 +382,61 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView }) => {
           </div>
         </div>
 
-        {/* Acciones */}
-        {canEdit || canDelete ? 
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={() => onView(vehicle)}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            Ver
-          </button>
-          <div className="flex items-center space-x-2">
+          {canEdit || canDelete ? (
+            <>
+              <button
+                onClick={() => onView(vehicle)}
+                className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Ver
+              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onEdit(vehicle)}
+                  className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                  title="Editar"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onDelete(vehicle)}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Eliminar"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </>
+          ) : (
             <button
-              onClick={() => onEdit(vehicle)}
-              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-              title="Editar"
+              onClick={() => onRent(vehicle)}
+              className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              <Edit className="h-4 w-4" />
+              <Calendar className="h-4 w-4 mr-1" />
+              Alquilar
             </button>
-            <button
-              onClick={() => onDelete(vehicle)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Eliminar"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>: null}
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
 const VehicleManagement = () => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const { showNotification } = useNotification();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [modalOpen, setModalOpen] = useState(false);
+  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [rentalModalOpen, setRentalModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [view, setView] = useState('grid'); // 'grid' or 'list'
+  const [selectedVehicleForRental, setSelectedVehicleForRental] = useState(null);
+  const [view, setView] = useState('grid');
 
   const canEdit = hasPermission('empleado');
   const canDelete = hasPermission('admin');
@@ -473,7 +465,6 @@ const VehicleManagement = () => {
   const filterVehicles = () => {
     let filtered = vehicles;
 
-    // Filtro por búsqueda
     if (searchTerm) {
       filtered = filtered.filter(vehicle =>
         vehicle.patente.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -482,7 +473,6 @@ const VehicleManagement = () => {
       );
     }
 
-    // Filtro por estado
     if (statusFilter !== 'all') {
       filtered = filtered.filter(vehicle => vehicle.estado === statusFilter);
     }
@@ -537,19 +527,51 @@ const VehicleManagement = () => {
     }
   };
 
-  const openModal = (vehicle = null) => {
+  const openVehicleModal = (vehicle = null) => {
     setSelectedVehicle(vehicle);
-    setModalOpen(true);
+    setVehicleModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeVehicleModal = () => {
     setSelectedVehicle(null);
-    setModalOpen(false);
+    setVehicleModalOpen(false);
   };
 
-  const getStatusOptions = () => {
-    const statuses = [...new Set(vehicles.map(v => v.estado))];
-    return ['all', ...statuses];
+  const openRentalModal = (vehicle) => {
+    if (!user || !user.userId) {
+      showNotification('Debe iniciar sesión para alquilar un vehículo', 'error');
+      return;
+    }
+
+    setSelectedVehicleForRental(vehicle);
+    setRentalModalOpen(true);
+  };
+
+  const closeRentalModal = () => {
+    setSelectedVehicleForRental(null);
+    setRentalModalOpen(false);
+  };
+
+  const handleSaveRental = async (rentalData) => {
+    try {
+      await rentalService.create(rentalData);
+      showNotification('Alquiler creado exitosamente', 'success');
+      closeRentalModal();
+      fetchVehicles();
+    } catch (error) {
+      console.error('Error creating rental:', error);
+      showNotification('Error al crear el alquiler', 'error');
+      throw error;
+    }
+  };
+
+  const getStatusBadge = (estado) => {
+    const statusMap = {
+      'Libre': 'status-free',
+      'Ocupado': 'status-occupied', 
+      'En mantenimiento': 'status-maintenance'
+    };
+    return statusMap[estado] || 'status-free';
   };
 
   if (loading) {
@@ -565,7 +587,6 @@ const VehicleManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Vehículos</h1>
@@ -575,7 +596,7 @@ const VehicleManagement = () => {
         </div>
         {canEdit && (
           <button
-            onClick={() => openModal()}
+            onClick={() => openVehicleModal()}
             className="mt-4 sm:mt-0 btn-primary"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -584,10 +605,8 @@ const VehicleManagement = () => {
         )}
       </div>
 
-      {/* Filtros y Búsqueda */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          {/* Búsqueda */}
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -601,9 +620,7 @@ const VehicleManagement = () => {
             </div>
           </div>
 
-          {/* Filtros y Vistas */}
           <div className="flex items-center space-x-4">
-            {/* Filtro por Estado */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -615,7 +632,6 @@ const VehicleManagement = () => {
               <option value="En mantenimiento">En mantenimiento</option>
             </select>
 
-            {/* Botones de Vista */}
             <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setView('grid')}
@@ -643,7 +659,6 @@ const VehicleManagement = () => {
         </div>
       </div>
 
-      {/* Estadísticas Rápidas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
           <div className="text-2xl font-bold text-gray-900">{vehicles.length}</div>
@@ -669,7 +684,6 @@ const VehicleManagement = () => {
         </div>
       </div>
 
-      {/* Lista de Vehículos */}
       {filteredVehicles.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -682,7 +696,7 @@ const VehicleManagement = () => {
           </p>
           {canEdit && !searchTerm && statusFilter === 'all' && (
             <button
-              onClick={() => openModal()}
+              onClick={() => openVehicleModal()}
               className="btn-primary"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -701,9 +715,10 @@ const VehicleManagement = () => {
               <VehicleCard
                 key={vehicle.patente}
                 vehicle={vehicle}
-                onEdit={canEdit ? openModal : null}
+                onEdit={canEdit ? openVehicleModal : null}
                 onDelete={canDelete ? handleDeleteVehicle : null}
-                onView={() => openModal(vehicle)}
+                onView={() => openVehicleModal(vehicle)}
+                onRent={openRentalModal}
               />
             ) : (
               <div key={vehicle.patente} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -723,27 +738,39 @@ const VehicleManagement = () => {
                       ${vehicle.precio_flota}/día
                     </span>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openModal(vehicle)}
-                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      {canEdit && (
+                      {!canEdit && !canDelete ? (
                         <button
-                          onClick={() => openModal(vehicle)}
-                          className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          onClick={() => openRentalModal(vehicle)}
+                          className="btn-primary text-sm"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Alquilar
                         </button>
-                      )}
-                      {canDelete && (
-                        <button
-                          onClick={() => handleDeleteVehicle(vehicle)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => openVehicleModal(vehicle)}
+                            className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          {canEdit && (
+                            <button
+                              onClick={() => openVehicleModal(vehicle)}
+                              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteVehicle(vehicle)}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -754,25 +781,22 @@ const VehicleManagement = () => {
         </div>
       )}
 
-      {/* Modal */}
       <VehicleModal
-        isOpen={modalOpen}
-        onClose={closeModal}
+        isOpen={vehicleModalOpen}
+        onClose={closeVehicleModal}
         vehicle={selectedVehicle}
         onSave={handleSaveVehicle}
       />
+
+      <RentalModal
+        isOpen={rentalModalOpen}
+        onClose={closeRentalModal}
+        vehicle={selectedVehicleForRental}
+        user={user}
+        onSave={handleSaveRental}
+      />
     </div>
   );
-};
-
-// Helper function para obtener clase de estado
-const getStatusBadge = (estado) => {
-  const statusMap = {
-    'Libre': 'status-free',
-    'Ocupado': 'status-occupied', 
-    'En mantenimiento': 'status-maintenance'
-  };
-  return statusMap[estado] || 'status-free';
 };
 
 export default VehicleManagement;

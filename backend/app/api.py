@@ -448,10 +448,22 @@ def crear_alquiler():
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
         data = request.get_json()
+        print(data)
+        # Si viene userId, buscar el id_cliente correspondiente
+        id_cliente = data.get('id_cliente')
+        if not id_cliente and data.get('userId'):
+            print("Hola")
+            id_cliente = sistema.get_cliente_por_usuario(data.get('userId'))
+            if not id_cliente:
+                return jsonify({"error": "No se encontró el cliente asociado al usuario"}), 400
+        
+        # Validar que tenemos un id_cliente
+        if not id_cliente:
+            return jsonify({"error": "Se requiere id_cliente o userId"}), 400
         
         exito = sistema.crear_nuevo_alquiler(
             data.get('patente'),
-            data.get('id_cliente'),
+            id_cliente,  # Usar el id_cliente obtenido
             data.get('id_empleado'),
             data.get('fecha_inicio'),
             data.get('fecha_fin'),

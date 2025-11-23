@@ -1017,3 +1017,7 @@ class SistemaAlquiler:
         else:
             print("DEBUG: Usuario sin permisos reconocidos")
             return []
+        
+    def get_cliente_por_usuario(self, id_usuario):
+    
+        return self.db_manager.get_cliente_por_usuario(id_usuario)

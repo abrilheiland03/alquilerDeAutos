@@ -1712,3 +1712,28 @@ class DBManager:
             return 0
         finally:
             if conn: conn.close()
+
+
+    def get_cliente_por_usuario(self, id_usuario):
+        sql = """
+            SELECT c.id_cliente 
+            FROM Cliente c
+            JOIN Usuario u ON c.id_persona = u.id_persona
+            WHERE u.id_usuario = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            cursor = conn.cursor()
+            cursor.execute(sql, (id_usuario,))
+            row = cursor.fetchone()
+            
+            return row[0] if row else None
+            
+        except sqlite3.Error as e:
+            print(f"Error al obtener cliente por usuario: {e}")
+            return None
+        finally:
+            if conn: conn.close()
