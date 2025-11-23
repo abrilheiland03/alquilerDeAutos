@@ -327,7 +327,7 @@ try:
         # Persona
         cursor.execute("""
             INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
-            VALUES ('Ana', 'Lopez', 'ana.empleado@rentcar.com', '351-111111', '1990-03-15', 1, 30111222)
+            VALUES ('Ana', 'Lopez', 'ana.empleado@rentcar.com', '351-1111111', '1990-03-15', 1, 30111222)
         """)
         id_persona_emp = cursor.lastrowid
         
@@ -352,7 +352,7 @@ try:
         # Persona
         cursor.execute("""
             INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
-            VALUES ('Juan', 'Perez', 'juan.cliente@gmail.com', '351-222222', '1995-08-20', 1, 40111222)
+            VALUES ('Juan', 'Perez', 'juan.cliente@gmail.com', '351-2222222', '1995-08-20', 1, 40111222)
         """)
         id_persona_juan = cursor.lastrowid
         
@@ -377,7 +377,7 @@ try:
         # Persona
         cursor.execute("""
             INSERT INTO Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
-            VALUES ('Sofia', 'Garcia', 'sofia.g@gmail.com', '351-333333', '1998-12-05', 1, 40333444)
+            VALUES ('Sofia', 'Garcia', 'sofia.g@gmail.com', '351-3333333', '1998-12-05', 1, 40333444)
         """)
         id_persona_sofia = cursor.lastrowid
         

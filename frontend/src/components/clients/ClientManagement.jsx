@@ -10,17 +10,13 @@ import {
   Filter, 
   Edit, 
   Trash2, 
-  Eye,
   X,
   Mail,
   Phone,
   Calendar,
   FileText,
-  Download,
-  Upload,
-  UserCheck,
-  UserX,
-  ArrowUpDown
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 
 // Componente de Modal para Crear/Editar Cliente
@@ -35,6 +31,9 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
     nro_documento: '',
     fecha_alta: new Date().toISOString().split('T')[0]
   });
+  
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [tiposDocumento, setTiposDocumento] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -42,15 +41,43 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
     if (isOpen) {
       fetchTiposDocumento();
       if (client) {
+        // CORRECCIÓN: Formatear correctamente las fechas para input type="date"
+        const formatDateForInput = (dateString) => {
+          if (!dateString) return '';
+          
+          // Si ya está en formato YYYY-MM-DD, devolverlo tal cual
+          if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dateString;
+          }
+          
+          // Si tiene formato con hora (2025-01-10 00:00:00), extraer solo la fecha
+          if (typeof dateString === 'string' && dateString.includes(' ')) {
+            return dateString.split(' ')[0];
+          }
+          
+          // Si es un objeto Date o string ISO
+          try {
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+              return date.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            console.error('Error formateando fecha:', e);
+          }
+          
+          return '';
+        };
+
         setFormData({
           nombre: client.nombre || '',
           apellido: client.apellido || '',
           mail: client.mail || '',
           telefono: client.telefono || '',
-          fecha_nacimiento: client.fecha_nacimiento?.split('T')[0] || '',
+          fecha_nacimiento: formatDateForInput(client.fecha_nacimiento),
           tipo_documento_id: client.id_tipo_documento || 1,
-          nro_documento: client.nro_documento || '',
-          fecha_alta: client.fecha_alta?.split('T')[0] || new Date().toISOString().split('T')[0]
+          nro_documento: client.nro_documento?.toString() || '',
+          // CORRECCIÓN: Usar la fecha de alta existente del cliente
+          fecha_alta: formatDateForInput(client.fecha_alta) || new Date().toISOString().split('T')[0]
         });
       } else {
         setFormData({
@@ -64,6 +91,8 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           fecha_alta: new Date().toISOString().split('T')[0]
         });
       }
+      setErrors({});
+      setTouched({});
     }
   }, [isOpen, client]);
 
@@ -76,26 +105,226 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // Validaciones
+  const validateField = (name, value, currentFormData = formData) => {
+    const newErrors = { ...errors };
 
-    try {
-      await onSave(formData);
-      onClose();
-    } catch (error) {
-      console.error('Error saving client:', error);
-    } finally {
-      setLoading(false);
+    switch (name) {
+      case 'mail':
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(value)) {
+          newErrors.mail = 'Formato de email inválido. Ejemplo: usuario@dominio.com';
+        } else {
+          delete newErrors.mail;
+        }
+        break;
+
+      case 'telefono':
+        const phoneNumber = value.replace(/\D/g, '');
+        if (phoneNumber.length !== 10) {
+          newErrors.telefono = 'El teléfono debe tener exactamente 10 dígitos';
+        } else {
+          delete newErrors.telefono;
+        }
+        break;
+
+      case 'fecha_nacimiento':
+        if (value) {
+          const birthDate = new Date(value);
+          const today = new Date();
+          const minDate = new Date();
+          minDate.setFullYear(today.getFullYear() - 18);
+          
+          if (birthDate > minDate) {
+            newErrors.fecha_nacimiento = 'Debe ser mayor de 18 años';
+          } else {
+            delete newErrors.fecha_nacimiento;
+          }
+        } else {
+          newErrors.fecha_nacimiento = 'Fecha de nacimiento requerida';
+        }
+        break;
+
+      case 'nro_documento':
+        const docValue = value.replace(/\D/g, '');
+        // Usar el tipo de documento actual del formulario
+        const tipoDoc = currentFormData.tipo_documento_id;
+        
+        // CORRECCIÓN: Validar siempre, no mantener estado anterior
+        if (tipoDoc === 1) { // DNI
+          if (docValue.length !== 7 && docValue.length !== 8) {
+            newErrors.nro_documento = 'El DNI debe tener 7 u 8 dígitos';
+          } else {
+            delete newErrors.nro_documento;
+          }
+        } else if (tipoDoc === 2) { // Pasaporte
+          // CORRECCIÓN: Pasaporte ahora también acepta 7 u 8 dígitos
+          if (docValue.length !== 7 && docValue.length !== 8) {
+            newErrors.nro_documento = 'El Pasaporte debe tener 7 u 8 dígitos';
+          } else {
+            delete newErrors.nro_documento;
+          }
+        } else {
+          // Para otros tipos de documento
+          const tipoSeleccionado = tiposDocumento.find(t => t.id_tipo === tipoDoc);
+          const nombreTipo = tipoSeleccionado?.descripcion || 'documento';
+          if (!docValue) {
+            newErrors.nro_documento = `El número de ${nombreTipo} es requerido`;
+          } else {
+            delete newErrors.nro_documento;
+          }
+        }
+        break;
+
+      case 'fecha_alta':
+        if (value) {
+          const altaDate = new Date(value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (altaDate > today) {
+            newErrors.fecha_alta = 'No puede ser una fecha futura';
+          } else {
+            delete newErrors.fecha_alta;
+          }
+        }
+        break;
+
+      case 'nombre':
+      case 'apellido':
+        if (!value.trim()) {
+          newErrors[name] = 'Este campo es requerido';
+        } else {
+          delete newErrors[name];
+        }
+        break;
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, value);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    
+    // Para teléfono, limitar a 10 dígitos
+    if (name === 'telefono') {
+      const phoneNumber = value.replace(/\D/g, '').slice(0, 10);
+      const formattedPhone = formatPhoneForInput(phoneNumber);
+      const newFormData = {
+        ...formData,
+        [name]: formattedPhone
+      };
+      
+      setFormData(newFormData);
+      
+      if (touched[name]) {
+        validateField(name, formattedPhone, newFormData);
+      }
+      return;
+    }
+    
+    // Para documento, solo números
+    if (name === 'nro_documento') {
+      const docNumber = value.replace(/\D/g, '');
+      // CORRECCIÓN: Mismo límite máximo para DNI y Pasaporte (8 dígitos)
+      const maxLength = 8;
+      const limitedDoc = docNumber.slice(0, maxLength);
+      
+      const newFormData = {
+        ...formData,
+        [name]: limitedDoc
+      };
+      
+      setFormData(newFormData);
+      
+      if (touched[name]) {
+        validateField(name, limitedDoc, newFormData);
+      }
+      return;
+    }
+    
+    // Para tipo de documento, validar también el número de documento
+    if (name === 'tipo_documento_id') {
+      const newFormData = {
+        ...formData,
+        [name]: parseInt(value)
+      };
+      
+      setFormData(newFormData);
+      
+      // Validar inmediatamente el número de documento con el nuevo tipo
+      if (touched.nro_documento || formData.nro_documento) {
+        setTimeout(() => {
+          validateField('nro_documento', newFormData.nro_documento, newFormData);
+        }, 0);
+      }
+      return;
+    }
+    
+    const newFormData = {
+      ...formData,
       [name]: value
-    }));
+    };
+    
+    setFormData(newFormData);
+
+    // Validar inmediatamente si el campo ya fue tocado
+    if (touched[name]) {
+      validateField(name, value, newFormData);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Marcar todos los campos como tocados
+    const allTouched = Object.keys(formData).reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+    setTouched(allTouched);
+
+    // Validar todos los campos
+    const allValid = Object.keys(formData).every(key => validateField(key, formData[key], formData));
+    
+    if (!allValid) {
+      showNotification('Por favor corrige los errores en el formulario', 'error');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // CORRECCIÓN: Preparar datos en el formato exacto que espera el backend
+      // Ahora el teléfono se envía con formato xxx-xxxxxxx
+      const submitData = {
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        mail: formData.mail.trim(),
+        // CORRECCIÓN: Enviar teléfono con formato xxx-xxxxxxx
+        telefono: formatPhoneForDatabase(formData.telefono),
+        fecha_nacimiento: formData.fecha_nacimiento,
+        tipo_documento_id: parseInt(formData.tipo_documento_id),
+        nro_documento: parseInt(formData.nro_documento.replace(/\D/g, '')),
+        fecha_alta: formData.fecha_alta
+      };
+      
+      console.log('Enviando datos al backend:', submitData);
+      await onSave(submitData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving client:', error);
+      // La notificación de error se maneja en el componente padre
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateAge = (fechaNacimiento) => {
@@ -110,6 +339,56 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
     }
     
     return age;
+  };
+
+  // Formatear teléfono para mostrar en el input (351 123 4567)
+  const formatPhoneForInput = (value) => {
+    if (!value) return value;
+    
+    const phoneNumber = value.replace(/\D/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) {
+      return `${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3)}`;
+    }
+    return `${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6, 10)}`;
+  };
+
+  // Formatear teléfono para enviar a la base de datos (351-1234567)
+  const formatPhoneForDatabase = (phoneValue) => {
+    if (!phoneValue) return '';
+    
+    const phoneNumber = phoneValue.replace(/\D/g, '');
+    if (phoneNumber.length !== 10) return phoneValue;
+    
+    // Formato: xxx-xxxxxxx
+    return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+  };
+
+  const getDocumentPlaceholder = () => {
+    const tipoDoc = formData.tipo_documento_id;
+    if (tipoDoc === 1) return "12345678"; // DNI
+    if (tipoDoc === 2) return "12345678"; // Pasaporte (ahora también 7-8 dígitos)
+    return "Número de documento";
+  };
+
+  const getDocumentValidationMessage = () => {
+    const tipoDoc = formData.tipo_documento_id;
+    if (tipoDoc === 1) return 'DNI válido';
+    if (tipoDoc === 2) return 'Pasaporte válido';
+    return 'Documento válido';
+  };
+
+  const getMaxBirthDate = () => {
+    const today = new Date();
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 18);
+    return minDate.toISOString().split('T')[0];
+  };
+
+  const getMaxAltaDate = () => {
+    return new Date().toISOString().split('T')[0];
   };
 
   if (!isOpen) return null;
@@ -141,10 +420,17 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
-                className="input-primary"
+                onBlur={handleBlur}
+                className={`input-primary ${errors.nombre && touched.nombre ? 'border-red-500' : ''}`}
                 placeholder="Juan"
                 required
               />
+              {errors.nombre && touched.nombre && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.nombre}
+                </p>
+              )}
             </div>
 
             {/* Apellido */}
@@ -157,10 +443,17 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="apellido"
                 value={formData.apellido}
                 onChange={handleChange}
-                className="input-primary"
+                onBlur={handleBlur}
+                className={`input-primary ${errors.apellido && touched.apellido ? 'border-red-500' : ''}`}
                 placeholder="Pérez"
                 required
               />
+              {errors.apellido && touched.apellido && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.apellido}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -173,10 +466,24 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="mail"
                 value={formData.mail}
                 onChange={handleChange}
-                className="input-primary"
+                onBlur={handleBlur}
+                className={`input-primary ${errors.mail && touched.mail ? 'border-red-500' : ''}`}
                 placeholder="cliente@ejemplo.com"
                 required
               />
+              {errors.mail && touched.mail ? (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.mail}
+                </p>
+              ) : (
+                formData.mail && !errors.mail && (
+                  <p className="text-green-500 text-xs mt-1 flex items-center">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Formato de email válido
+                  </p>
+                )
+              )}
             </div>
 
             {/* Teléfono */}
@@ -189,10 +496,25 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleChange}
-                className="input-primary"
-                placeholder="351 123-4567"
+                onBlur={handleBlur}
+                className={`input-primary ${errors.telefono && touched.telefono ? 'border-red-500' : ''}`}
+                placeholder="351 123 4567"
+                maxLength={14}
                 required
               />
+              {errors.telefono && touched.telefono ? (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.telefono}
+                </p>
+              ) : (
+                formData.telefono && !errors.telefono && (
+                  <p className="text-green-500 text-xs mt-1 flex items-center">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Teléfono válido (10 dígitos)
+                  </p>
+                )
+              )}
             </div>
 
             {/* Fecha de Nacimiento */}
@@ -205,11 +527,20 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="fecha_nacimiento"
                 value={formData.fecha_nacimiento}
                 onChange={handleChange}
-                className="input-primary"
+                onBlur={handleBlur}
+                max={getMaxBirthDate()}
+                className={`input-primary ${errors.fecha_nacimiento && touched.fecha_nacimiento ? 'border-red-500' : ''}`}
                 required
               />
-              {formData.fecha_nacimiento && (
-                <p className="text-sm text-gray-500 mt-1">
+              {errors.fecha_nacimiento && touched.fecha_nacimiento && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.fecha_nacimiento}
+                </p>
+              )}
+              {formData.fecha_nacimiento && !errors.fecha_nacimiento && (
+                <p className="text-green-500 text-xs mt-1 flex items-center">
+                  <CheckCircle className="h-3 w-3 mr-1" />
                   Edad: {calculateAge(formData.fecha_nacimiento)} años
                 </p>
               )}
@@ -245,10 +576,23 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="nro_documento"
                 value={formData.nro_documento}
                 onChange={handleChange}
-                className="input-primary"
-                placeholder="12345678"
+                onBlur={handleBlur}
+                className={`input-primary ${errors.nro_documento && touched.nro_documento ? 'border-red-500' : ''}`}
+                placeholder={getDocumentPlaceholder()}
                 required
               />
+              {errors.nro_documento && touched.nro_documento && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.nro_documento}
+                </p>
+              )}
+              {formData.nro_documento && !errors.nro_documento && (
+                <p className="text-green-500 text-xs mt-1 flex items-center">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  {getDocumentValidationMessage()}
+                </p>
+              )}
             </div>
 
             {/* Fecha de Alta */}
@@ -261,9 +605,17 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
                 name="fecha_alta"
                 value={formData.fecha_alta}
                 onChange={handleChange}
-                className="input-primary"
+                onBlur={handleBlur}
+                max={getMaxAltaDate()}
+                className={`input-primary ${errors.fecha_alta && touched.fecha_alta ? 'border-red-500' : ''}`}
                 required
               />
+              {errors.fecha_alta && touched.fecha_alta && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.fecha_alta}
+                </p>
+              )}
             </div>
           </div>
 
@@ -277,7 +629,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || Object.keys(errors).length > 0}
               className="btn-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Guardando...' : client ? 'Actualizar' : 'Crear'}
@@ -290,7 +642,11 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 };
 
 // Componente de Tarjeta de Cliente
-const ClientCard = ({ client, onEdit, onDelete, onView }) => {
+const ClientCard = ({ client, onEdit, onDelete }) => {
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('empleado');
+  const canDelete = hasPermission('admin');
+
   const calculateAge = (fechaNacimiento) => {
     if (!fechaNacimiento) return '';
     const today = new Date();
@@ -371,30 +727,28 @@ const ClientCard = ({ client, onEdit, onDelete, onView }) => {
           <span className="font-medium">{new Date(client.fecha_alta).toLocaleDateString()}</span>
         </div>
 
-        {/* Acciones */}
+        {/* Acciones - Iconos alineados a la derecha */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={() => onView(client)}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            Ver Detalles
-          </button>
+          <div className="flex-1"></div>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onEdit(client)}
-              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-              title="Editar"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => onDelete(client)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Eliminar"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => onEdit(client)}
+                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                title="Editar"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(client)}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Eliminar"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -402,8 +756,9 @@ const ClientCard = ({ client, onEdit, onDelete, onView }) => {
   );
 };
 
+// Componente principal ClientManagement
 const ClientManagement = () => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const { showNotification } = useNotification();
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
@@ -412,7 +767,7 @@ const ClientManagement = () => {
   const [documentFilter, setDocumentFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [view, setView] = useState('grid'); // 'grid' or 'list'
+  const [view, setView] = useState('grid');
 
   const canEdit = hasPermission('empleado');
   const canDelete = hasPermission('admin');
@@ -428,11 +783,25 @@ const ClientManagement = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
+      console.log('Fetching clients with user:', user);
       const clientsData = await clientService.getAll();
-      setClients(clientsData);
+      console.log('Clients data received:', clientsData);
+      
+      // CORRECCIÓN: Asegurar que los datos vengan formateados correctamente
+      const formattedClients = clientsData.map(client => ({
+        ...client,
+        // Asegurar que las fechas estén en formato correcto
+        fecha_nacimiento: client.fecha_nacimiento,
+        fecha_alta: client.fecha_alta,
+        // Asegurar que el número de documento sea string para display
+        nro_documento: client.nro_documento?.toString() || ''
+      }));
+      setClients(formattedClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
       showNotification('Error al cargar los clientes', 'error');
+      // En caso de error, establecer array vacío para evitar bucles
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -441,17 +810,15 @@ const ClientManagement = () => {
   const filterClients = () => {
     let filtered = clients;
 
-    // Filtro por búsqueda
     if (searchTerm) {
       filtered = filtered.filter(client =>
-        client.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.nro_documento.includes(searchTerm) ||
-        client.mail.toLowerCase().includes(searchTerm.toLowerCase())
+        client.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.nro_documento?.toString().includes(searchTerm) ||
+        client.mail?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filtro por tipo de documento
     if (documentFilter !== 'all') {
       filtered = filtered.filter(client => 
         client.tipo_documento === documentFilter
@@ -463,10 +830,12 @@ const ClientManagement = () => {
 
   const handleCreateClient = async (clientData) => {
     try {
-      const newClient = await clientService.create(clientData);
+      await clientService.create(clientData);
       showNotification('Cliente creado exitosamente', 'success');
-      fetchClients();
-      return newClient.id_cliente;
+      // Esperar un momento antes de recargar para dar tiempo al backend
+      setTimeout(() => {
+        fetchClients();
+      }, 500);
     } catch (error) {
       console.error('Error creating client:', error);
       showNotification('Error al crear el cliente', 'error');
@@ -523,14 +892,10 @@ const ClientManagement = () => {
     setModalOpen(false);
   };
 
-  const getDocumentTypes = () => {
-    const types = [...new Set(clients.map(c => c.tipo_documento))];
-    return ['all', ...types];
-  };
-
   const getClientStats = () => {
     const total = clients.length;
     const newThisMonth = clients.filter(client => {
+      if (!client.fecha_alta) return false;
       const clientDate = new Date(client.fecha_alta);
       const today = new Date();
       return clientDate.getMonth() === today.getMonth() && 
@@ -689,7 +1054,6 @@ const ClientManagement = () => {
                 client={client}
                 onEdit={canEdit ? openModal : null}
                 onDelete={canDelete ? handleDeleteClient : null}
-                onView={() => openModal(client)}
               />
             ) : (
               <div key={client.id_cliente} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -712,12 +1076,6 @@ const ClientManagement = () => {
                       Desde {new Date(client.fecha_alta).toLocaleDateString()}
                     </span>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openModal(client)}
-                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
                       {canEdit && (
                         <button
                           onClick={() => openModal(client)}
