@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Wrench, BarChart3, Users, LogIn, UserPlus, MapPin } from 'lucide-react';
+import {  Facebook, Instagram, Twitter } from 'lucide-react';
+
 
 // Color principal - ahora usando clases de Tailwind directamente
 const PRIMARY_COLOR = 'text-orange-500';
@@ -67,7 +69,9 @@ const Home = () => {
                 
                 {/* Hero Section - Bienvenida */}
                 <header className="py-24 bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl">
+                    
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        
                         <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl mb-6">
                             Bienvenido a IngRide
                         </h1>
@@ -119,36 +123,66 @@ const Home = () => {
                     </div>
                 </section>
 
-                {/* Sección 2: Características del Sistema (Dominio) */}
-                <section className="py-16 bg-orange-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-12">
-                            Soluciones Integrales de Gestión
+                {/* Sección 2: Beneficios  */}
+
+                <section className="py-20 bg-orange-600 text-white">
+                    <div className="max-w-7xl mx-auto px-6">
+
+                        <h2 className="text-4xl font-extrabold text-center mb-16">
+                            ¡Descubrí todos los beneficios de IngRide!
                         </h2>
-                        <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-                            <FeatureCard 
-                                Icon={Car}
-                                title="Gestión de Flota"
-                                description="Control total de vehículos, marcas, modelos y estados (Libre, Alquilado)."
-                            />
-                            <FeatureCard 
-                                Icon={Users}
-                                title="Perfiles de Usuario"
-                                description="Acceso diferenciado para Clientes, Empleados y Administradores."
-                            />
-                            <FeatureCard 
-                                Icon={Wrench}
-                                title="Mantenimiento"
-                                description="Seguimiento de mantenimientos preventivos y correctivos."
-                            />
-                            <FeatureCard 
-                                Icon={BarChart3}
-                                title="Estadísticas"
-                                description="Reportes de facturación mensual y vehículos más solicitados."
-                            />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+
+                            {/* Beneficio 1 */}
+                            <div className="text-center px-4">
+                                <div className="flex justify-center mb-4">
+                                    <Car className="w-16 h-16 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">Alquilá cuando lo necesites</h3>
+                                <p className="text-orange-50">
+                                    Elegí retirar un vehículo para el mismo día o reservá con anticipación para una fecha específica.
+                                </p>
+                            </div>
+
+                            {/* Beneficio 2 */}
+                            <div className="text-center px-4">
+                                <div className="flex justify-center mb-4">
+                                    <BarChart3 className="w-16 h-16 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">Mejores precios del mercado</h3>
+                                <p className="text-orange-50">
+                                    Ofrecemos tarifas competitivas y accesibles, garantizando siempre una excelente relación precio–calidad.
+                                </p>
+                            </div>
+
+                            {/* Beneficio 3 */}
+                            <div className="text-center px-4">
+                                <div className="flex justify-center mb-4">
+                                    <Wrench className="w-16 h-16 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">Personalizá tu búsqueda</h3>
+                                <p className="text-orange-50">
+                                    Filtrá por modelo, capacidad y precio para encontrar el vehículo ideal para tu viaje.
+                                </p>
+                            </div>
+
+                            {/* Beneficio 4 */}
+                            <div className="text-center px-4">
+                                <div className="flex justify-center mb-4">
+                                    <Users className="w-16 h-16 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">Seguinos en redes</h3>
+                                <p className="text-orange-50">
+                                    Si nos seguís en nuestras redes sociales, vas a poder ver ofertas, recomendaciones y novedades.
+                                </p>
+                            </div>
+
                         </div>
                     </div>
                 </section>
+
+
 
                 {/* Sección 3: Opiniones de Clientes */}
                 <section className="py-16 bg-white">
@@ -189,17 +223,71 @@ const Home = () => {
                 </section>
                 
                 {/* Footer */}
-                <footer className="bg-gray-900 py-8 border-t-4 border-orange-500">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-                        <div className="flex items-center mb-4 md:mb-0">
-                            <Car className={`h-6 w-6 ${PRIMARY_COLOR} mr-2`} />
-                            <span className="text-xl font-bold text-white">IngRide</span>
+                <footer className="bg-gray-900 py-10 border-t-4 border-orange-500">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10 text-center md:text-left">
+
+                        {/* Logo */}
+                        <div className="flex flex-col items-center md:items-start">
+                            <div className="flex items-center mb-3">
+                                <Car className="h-7 w-7 text-orange-500 mr-2" />
+                                <span className="text-2xl font-bold text-white">IngRide</span>
+                            </div>
+                            <p className="text-gray-400 text-sm">
+                                &copy; {new Date().getFullYear()} IngRide. Todos los derechos reservados.
+                            </p>
                         </div>
-                        <p className="text-gray-400 text-sm">
-                            &copy; {new Date().getFullYear()} IngRide - Trabajo Práctico Integrador.
-                        </p>
+
+                        {/* Seguinos */}
+                        <div className="flex justify-center md:justify-start space-x-4">
+                            {/* Facebook */}
+                            <a
+                                href="https://www.facebook.com/ingride"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-orange-400 hover:text-white transition"
+                            >
+                                <Facebook className="w-6 h-6" />
+                            </a>
+
+                            {/* Instagram */}
+                            <a
+                                href="https://www.instagram.com/ing.ride15/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-orange-400 hover:text-white transition"
+                            >
+                                <Instagram className="w-6 h-6" />
+                            </a>
+
+                            {/* Twitter / X */}
+                            <a
+                                href="https://twitter.com/ingride"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-orange-400 hover:text-white transition"
+                            >
+                                <Twitter className="w-6 h-6" />
+                            </a>
+
+                        </div>
+
+
+                        {/* Contacto */}
+                        <div>
+                            <h3 className="text-white font-bold text-lg mb-3">Contacto</h3>
+                            <div className="text-gray-400 text-sm space-y-2">
+                                <p>
+                                    <span className="font-semibold text-white">Teléfono:</span> +54 351 555-1234
+                                </p>
+                                <p>
+                                    <span className="font-semibold text-white">Email:</span> contacto.ingride@gmail.com
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
                 </footer>
+
             </main>
         </div>
     );
