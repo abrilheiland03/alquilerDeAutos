@@ -1737,3 +1737,47 @@ class DBManager:
             return None
         finally:
             if conn: conn.close()
+    
+    def get_empleado_por_usuario(self, id_usuario):
+        sql = """
+            SELECT e.id_empleado, e.id_persona
+            FROM Empleado e
+            JOIN Usuario u ON e.id_persona = u.id_persona
+            WHERE u.id_usuario = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            row = conn.cursor().execute(sql, (id_usuario,)).fetchone()
+            if row:
+                return {"id_empleado": row['id_empleado'], "id_persona": row['id_persona']}
+            return None
+        except sqlite3.Error as e:
+            print(f"Error obteniendo empleado por usuario: {e}")
+            return None
+        finally:
+            if conn: conn.close()
+
+    def get_alquileres_por_empleado(self, id_empleado, limite=10):
+        sql = """
+            SELECT a.*, v.modelo, m.descripcion as marca, ea.descripcion as estado_desc
+            FROM Alquiler a
+            JOIN Vehiculo v ON a.patente = v.patente
+            JOIN Marca m ON v.id_marca = m.id_marca
+            JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+            WHERE a.id_empleado = ?
+            ORDER BY a.fecha_inicio DESC
+            LIMIT ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, (id_empleado, limite)).fetchall()
+            return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            print(f"Error obteniendo alquileres por empleado: {e}")
+            return []
+        finally:
+            if conn: conn.close()

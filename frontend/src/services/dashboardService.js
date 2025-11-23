@@ -17,5 +17,11 @@ export const dashboardService = {
   checkVehicleAvailability: async (patente) => {
     const response = await apiClient.get(`/vehiculos/${patente}/disponible`);
     return response.data;
-  }
+  },
+
+  // Obtener alquileres del empleado para el dashboard
+  getEmployeeRentals: async () => {
+    const response = await apiClient.get('/dashboard/alquileres/empleado');
+    return response.data;
+  },
 };

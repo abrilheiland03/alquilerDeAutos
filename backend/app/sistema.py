@@ -1021,3 +1021,19 @@ class SistemaAlquiler:
     def get_cliente_por_usuario(self, id_usuario):
     
         return self.db_manager.get_cliente_por_usuario(id_usuario)
+    
+    def obtener_alquileres_empleado_dashboard(self, id_usuario, limite=10):
+        try:
+            # Primero obtener el ID del empleado desde el usuario
+            empleado = self.db_manager.get_empleado_por_usuario(id_usuario)
+            if not empleado:
+                print("Empleado no encontrado para el usuario")
+                return []
+            
+            # Obtener los alquileres de ese empleado
+            alquileres = self.db_manager.get_alquileres_por_empleado(empleado.id_empleado, limite)
+            return alquileres
+            
+        except Exception as e:
+            print(f"Error obteniendo alquileres del empleado: {e}")
+            return []

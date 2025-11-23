@@ -39,17 +39,21 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
     if (isOpen) {
       fetchCatalogos();
       if (vehicle) {
+        
         setFormData({
           patente: vehicle.patente || '',
           modelo: vehicle.modelo || '',
-          id_marca: vehicle.id_marca || '',
+          // Buscar el ID de la marca por su descripción
+          id_marca: findMarcaId(vehicle.marca) || '',
           anio: vehicle.anio || new Date().getFullYear(),
           precio_flota: vehicle.precio_flota || '',
           asientos: vehicle.asientos || 5,
           puertas: vehicle.puertas || 4,
           caja_manual: vehicle.caja_manual || false,
-          id_estado: vehicle.id_estado || 1,
-          id_color: vehicle.id_color || ''
+          // Buscar el ID del estado por su descripción
+          id_estado: findEstadoId(vehicle.estado) || 1,
+          // Buscar el ID del color por su descripción
+          id_color: findColorId(vehicle.color) || ''
         });
       } else {
         setFormData({
@@ -66,7 +70,22 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
         });
       }
     }
-  }, [isOpen, vehicle]);
+  }, [isOpen, vehicle, marcas, colores, estados]);
+
+  const findMarcaId = (marcaDescripcion) => {
+    const marca = marcas.find(m => m.descripcion === marcaDescripcion);
+    return marca ? marca.id_marca : '';
+  };
+
+  const findColorId = (colorDescripcion) => {
+    const color = colores.find(c => c.descripcion === colorDescripcion);
+    return color ? color.id_color : '';
+  };
+
+  const findEstadoId = (estadoDescripcion) => {
+    const estado = estados.find(e => e.descripcion === estadoDescripcion);
+    return estado ? estado.id_estado : 1;
+  };
 
   const fetchCatalogos = async () => {
     try {
@@ -317,6 +336,10 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
 };
 
 const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('empleado');
+  const canDelete = hasPermission('admin');
+
   const getStatusBadge = (estado) => {
     const statusMap = {
       'Libre': 'status-free',
@@ -325,9 +348,6 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
     };
     return statusMap[estado] || 'status-free';
   };
-  const { hasPermission } = useAuth();
-  const canEdit = hasPermission('empleado');
-  const canDelete = hasPermission('admin');
 
   const getTransmissionText = (cajaManual) => {
     return cajaManual ? 'Manual' : 'Automática';
@@ -369,6 +389,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
           </div>
         </div>
 
+        {/* SECCIÓN DE ASIENTOS Y PUERTAS - MANTENIDA */}
         <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-200 pt-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
@@ -385,13 +406,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
           {canEdit || canDelete ? (
             <>
-              <button
-                onClick={() => onView(vehicle)}
-                className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                Ver
-              </button>
+              <div className="flex-1"></div> {/* Espacio para empujar a la derecha */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onEdit(vehicle)}
@@ -400,23 +415,28 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
                 >
                   <Edit className="h-4 w-4" />
                 </button>
-                <button
-                  onClick={() => onDelete(vehicle)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Eliminar"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {canDelete && (
+                  <button
+                    onClick={() => onDelete(vehicle)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </>
           ) : (
-            <button
-              onClick={() => onRent(vehicle)}
-              className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              <Calendar className="h-4 w-4 mr-1" />
-              Alquilar
-            </button>
+            <>
+              <div className="flex-1"></div> {/* Mismo espacio para empujar a la derecha */}
+              <button
+                onClick={() => onRent(vehicle)}
+                className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Calendar className="h-4 w-4 mr-1" />
+                Alquilar
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -439,6 +459,7 @@ const VehicleManagement = () => {
   const [view, setView] = useState('grid');
 
   const canEdit = hasPermission('empleado');
+  const canCreate = hasPermission('admin'); // Solo admin puede crear vehículos
   const canDelete = hasPermission('admin');
 
   useEffect(() => {
@@ -594,7 +615,8 @@ const VehicleManagement = () => {
             Administra la flota de vehículos de IngRide
           </p>
         </div>
-        {canEdit && (
+        {/* SOLO ADMIN PUEDE CREAR VEHÍCULOS */}
+        {canCreate && (
           <button
             onClick={() => openVehicleModal()}
             className="mt-4 sm:mt-0 btn-primary"
@@ -694,7 +716,8 @@ const VehicleManagement = () => {
               : 'No hay vehículos registrados en el sistema'
             }
           </p>
-          {canEdit && !searchTerm && statusFilter === 'all' && (
+          {/* SOLO ADMIN PUEDE AGREGAR EL PRIMER VEHÍCULO */}
+          {canCreate && !searchTerm && statusFilter === 'all' && (
             <button
               onClick={() => openVehicleModal()}
               className="btn-primary"
@@ -748,12 +771,6 @@ const VehicleManagement = () => {
                         </button>
                       ) : (
                         <>
-                          <button
-                            onClick={() => openVehicleModal(vehicle)}
-                            className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
                           {canEdit && (
                             <button
                               onClick={() => openVehicleModal(vehicle)}
