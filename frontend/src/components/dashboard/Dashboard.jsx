@@ -231,12 +231,12 @@ const Dashboard = () => {
       setLoading(true);
       
       if (isClient()) {
-        // PARA CLIENTE: Usar el nuevo servicio de dashboard
+        // PARA CLIENTE: Usar el endpoint existente /api/alquileres que ya filtra por usuario
         const [statsData, vehiclesData, lastRentalData, userRentalsData] = await Promise.all([
           dashboardService.getStats(),
           vehicleService.getAll(),
           dashboardService.getLastRental(),
-          rentalService.getAll()  // Este ya debería devolver solo los del usuario
+          rentalService.getAll()  // Este ya devuelve solo los del usuario cliente
         ]);
 
         // Verificar disponibilidad del último vehículo alquilado
@@ -254,8 +254,8 @@ const Dashboard = () => {
           totalVehicles: statsData.total_vehiculos || 0,
           availableVehicles: statsData.vehiculos_disponibles || 0,
           activeRentals: statsData.alquileres_activos || 0,
-          pendingMaintenance: 0, // No mostrar para cliente
-          totalClients: 0, // No mostrar para cliente
+          pendingMaintenance: 0,
+          totalClients: 0,
           userRentalCount: statsData.total_alquileres || 0,
           favoriteVehicle: statsData.vehiculo_favorito || null
         });
@@ -267,14 +267,28 @@ const Dashboard = () => {
         setLastVehicleAvailable(isAvailable);
 
       } else {
-        // PARA ADMIN/EMPLEADO: Lógica original mejorada
-        const [vehiclesData, rentalsData, maintenanceData, clientsData, statsData] = await Promise.all([
+        // PARA ADMIN/EMPLEADO
+        const [vehiclesData, maintenanceData, clientsData, statsData] = await Promise.all([
           vehicleService.getAll(),
-          rentalService.getAll(),
           maintenanceService.getAll(),
           clientService.getAll(),
           dashboardService.getStats()
         ]);
+
+        // OBTENER ALQUILERES SEGÚN ROL
+        let rentalsData = [];
+        if (isAdmin()) {
+          // Admin: todos los alquileres
+          rentalsData = await rentalService.getAll();
+        } else if (isEmployee()) {
+          // Empleado: solo sus alquileres gestionados
+          try {
+            rentalsData = await dashboardService.getEmployeeRentals();
+          } catch (error) {
+            console.error('Error obteniendo alquileres del empleado:', error);
+            rentalsData = [];
+          }
+        }
 
         const vehiclesList = vehiclesData || [];
         const rentalsList = rentalsData || [];
@@ -300,11 +314,8 @@ const Dashboard = () => {
           favoriteVehicle: null
         });
 
-        // Alquileres recientes (últimos 5)
-        const sortedRentals = rentalsList
-          .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))
-          .slice(0, 5);
-        setRecentRentals(sortedRentals);
+        // Alquileres recientes - Ya vienen filtrados del backend
+        setRecentRentals(rentalsList.slice(0, 10));
 
         // Mantenimientos recientes (últimos 5)
         const sortedMaintenance = maintenanceList
@@ -315,7 +326,6 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      showNotification('Error al cargar los datos del dashboard', 'error');
       setStats({
         totalVehicles: 0,
         availableVehicles: 0,
@@ -335,7 +345,6 @@ const Dashboard = () => {
 
   const handleRepeatRental = () => {
     if (lastRental && lastVehicleAvailable) {
-      // Navegar a la página de nuevo alquiler con los datos pre-cargados
       window.location.href = `/rentals/new?vehicle=${lastRental.patente}`;
     }
   };
@@ -428,15 +437,13 @@ const Dashboard = () => {
             />
           </>
         ) : (
-          // ESTADÍSTICAS PARA ADMIN/EMPLEADO
+          // ESTADÍSTICAS PARA ADMIN/EMPLEADO - SIN DATOS MENSUALES
           <>
             <StatCard
               title="Total Vehículos"
               value={stats.totalVehicles}
               icon={Car}
               color="bg-blue-500"
-              change="+2 este mes"
-              changeType="positive"
             />
             <StatCard
               title="Vehículos Disponibles"
@@ -459,8 +466,6 @@ const Dashboard = () => {
               value={stats.totalClients}
               icon={Users}
               color="bg-purple-500"
-              change="+5 este mes"
-              changeType="positive"
             />
           </>
         )}
@@ -512,7 +517,7 @@ const Dashboard = () => {
               />
             </>
           ) : (
-            // Acciones para Admin/Empleado
+            // Acciones para Admin/Empleado - EMPLEADO SIN "VER REPORTES"
             <>
               <QuickActionCard
                 title="Nuevo Vehículo"
@@ -530,14 +535,17 @@ const Dashboard = () => {
                 buttonText="Registrar cliente"
                 color="bg-purple-100"
               />
-              <QuickActionCard
-                title="Ver Reportes"
-                description="Analizar estadísticas y reportes del sistema"
-                icon={BarChart3}
-                href="/reports"
-                buttonText="Ver reportes"
-                color="bg-green-100"
-              />
+              {/* Solo Admin puede ver reportes */}
+              {isAdmin() && (
+                <QuickActionCard
+                  title="Ver Reportes"
+                  description="Analizar estadísticas y reportes del sistema"
+                  icon={BarChart3}
+                  href="/reports"
+                  buttonText="Ver reportes"
+                  color="bg-green-100"
+                />
+              )}
               <QuickActionCard
                 title="Programar Mantenimiento"
                 description="Agendar mantenimiento para un vehículo"
@@ -558,7 +566,8 @@ const Dashboard = () => {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {isClient() ? 'Tus Alquileres Recientes' : 'Alquileres Recientes'}
+                  {isClient() ? 'Tus Alquileres Recientes' : 
+                   isEmployee() ? 'Tus Alquileres Gestionados' : 'Alquileres Recientes'}
                 </h2>
                 <Link
                   to="/rentals"
@@ -569,8 +578,8 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="divide-y divide-gray-200">
-              {userRentals.length > 0 ? (
-                userRentals.map((rental, index) => {
+              {recentRentals.length > 0 ? (
+                recentRentals.map((rental, index) => {
                   const status = getRentalStatus(rental.id_estado);
                   const StatusIcon = getStatusIcon(rental.id_estado, 'rental');
                   return (
@@ -588,7 +597,10 @@ const Dashboard = () => {
               ) : (
                 <div className="p-6 text-center text-gray-500">
                   <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  <p>{isClient() ? 'Aún no tienes alquileres' : 'No hay alquileres recientes'}</p>
+                  <p>
+                    {isClient() ? 'Aún no tienes alquileres' : 
+                     isEmployee() ? 'No has gestionado alquileres recientemente' : 'No hay alquileres recientes'}
+                  </p>
                   {isClient() && (
                     <Link
                       to="/vehicles"

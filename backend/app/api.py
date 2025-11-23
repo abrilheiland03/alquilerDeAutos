@@ -924,6 +924,21 @@ def obtener_usuario_por_id(id_usuario):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@api.route('/dashboard/alquileres/empleado', methods=['GET'])
+def obtener_alquileres_empleado_dashboard():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario or not sistema.check_permission("Empleado", usuario):
+            return jsonify({"error": "No autorizado"}), 401
+
+        # Obtener los últimos 10 alquileres gestionados por este empleado
+        alquileres = sistema.obtener_alquileres_empleado_dashboard(usuario.id_usuario, limite=10)
+        return jsonify(alquileres), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ---------------------------------------------------------
 # EJECUCIÓN
 # ---------------------------------------------------------
