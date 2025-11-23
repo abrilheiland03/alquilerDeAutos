@@ -426,6 +426,25 @@ try:
         
         id_alquiler_juan = cursor.lastrowid
 
+    cursor.execute("SELECT id_alquiler FROM Alquiler WHERE patente = 'AF222BB' AND fecha_inicio = '2025-02-15T10:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('AF222BB', id_cliente_juan, id_empleado_ana, '2025-02-15T10:00:00', '2025-02-20T18:00:00', 4)) # 4 = Finalizado
+        
+        id_alquiler_juan = cursor.lastrowid
+
+    #alquiler en transcurso
+    cursor.execute("SELECT id_alquiler FROM Alquiler WHERE patente = 'AF222BB' AND fecha_inicio = '2025-11-15T10:00:00'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO Alquiler (patente, id_cliente, id_empleado, fecha_inicio, fecha_fin, id_estado)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ('AF222BB', id_cliente_juan, id_empleado_ana, '2025-11-15T10:00:00', '2025-11-30T18:00:00', 2)) # en alquiler 
+        
+        id_alquiler_juan = cursor.lastrowid
+
         # --- 6. AGREGAR MULTA Y DAÑO A ESE ALQUILER ---
         
         # Daño

@@ -43,30 +43,27 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
       if (client) {
         // CORRECCIÓN: Formatear correctamente las fechas para input type="date"
         const formatDateForInput = (dateString) => {
-          if (!dateString) return '';
-          
-          // Si ya está en formato YYYY-MM-DD, devolverlo tal cual
-          if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return dateString;
-          }
-          
-          // Si tiene formato con hora (2025-01-10 00:00:00), extraer solo la fecha
-          if (typeof dateString === 'string' && dateString.includes(' ')) {
-            return dateString.split(' ')[0];
-          }
-          
-          // Si es un objeto Date o string ISO
-          try {
-            const date = new Date(dateString);
-            if (!isNaN(date.getTime())) {
-              return date.toISOString().split('T')[0];
-            }
-          } catch (e) {
-            console.error('Error formateando fecha:', e);
-          }
-          
-          return '';
-        };
+  if (!dateString) return '';
+
+  // Si viene tipo "2025-01-10T03:00:00.000Z"
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+
+  // Si viene tipo "2025-01-10 00:00:00"
+  if (dateString.includes(' ')) {
+    return dateString.split(' ')[0];
+  }
+
+  // Si ya viene como YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  return dateString;
+};
+
+
 
         setFormData({
           nombre: client.nombre || '',
@@ -716,7 +713,8 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="h-4 w-4 mr-2" />
             <span>
-              {calculateAge(client.fecha_nacimiento)} años • {new Date(client.fecha_nacimiento).toLocaleDateString()}
+              {calculateAge(client.fecha_nacimiento)} años • {client.fecha_nacimiento?.split('-').reverse().join('/')}
+
             </span>
           </div>
         </div>
