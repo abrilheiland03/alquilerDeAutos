@@ -24,11 +24,4 @@ export const dashboardService = {
     const response = await apiClient.get('/dashboard/alquileres/empleado');
     return response.data;
   },
-
-  // Obtener estadísticas mensuales
-  getMonthlyStats: async () => {
-    const response = await apiClient.get('/dashboard/stats/monthly');
-    return response.data;
-  }
-
 };
