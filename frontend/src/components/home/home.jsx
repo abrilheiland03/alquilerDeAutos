@@ -55,7 +55,7 @@ const Navbar = () => (
 );
 
 // Sección de características clave
-const FeatureCard = ({ Icon, title, description }) => (
+const FeatureCard = ({ title, description }) => (
     <div className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-[1.02] border-t-2 border-transparent hover:border-orange-500">
         <div className={`flex justify-center items-center w-12 h-12 rounded-full bg-orange-100 ${PRIMARY_COLOR} mb-4`}>
             <Icon className="w-6 h-6" />
