@@ -394,16 +394,20 @@ try:
     # --- 4. CREAR VEHICULOS (Todos Libres) ---
     # Toyota Corolla (Usado para el alquiler finalizado)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                   ('AA111AA', 'Corolla', 1, 2023, 25000.0, 5, 4, 0, 1, 2)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
+                   ('AA111AA', 'Corolla', 1, 2017, 25000.0, 5, 4, 0, 1, 2)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
 
     # Ford Focus (Usado para el mantenimiento finalizado)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                   ('BB222BB', 'Focus', 2, 2022, 18000.0, 5, 5, 1, 1, 4)) # Estado 1 = Libre, Marca 2=Ford, Color 4=Azul
+                   ('AF222BB', 'Focus', 2, 2022, 18000.0, 5, 5, 1, 1, 4)) # Estado 1 = Libre, Marca 2=Ford, Color 4=Azul
 
     # Chevrolet Cruze (Nuevo, sin uso)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                   ('CC333CC', 'Cruze', 3, 2024, 30000.0, 5, 4, 0, 1, 5)) # Estado 1 = Libre, Marca 3=Chevrolet, Color 5=Gris
+                   ('AG333FV', 'Cruze', 3, 2024, 30000.0, 5, 4, 0, 1, 5)) # Estado 1 = Libre, Marca 3=Chevrolet, Color 5=Gris
 
+    #vehiculo ocupado para ver si solo lo pueden ver empleados y admin
+    # Toyota Yaris (Usado para el alquiler en curso)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('AD343RF', 'Yaris', 1, 2019, 23000.0, 5, 4, 0, 2, 3)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
     # Obtener IDs necesarios para operaciones (suponiendo que se acaban de insertar o ya existían)
     # Necesitamos el ID de empleado de Ana. Si no se creó recién, lo buscamos.
     if 'id_empleado_ana' not in locals():
