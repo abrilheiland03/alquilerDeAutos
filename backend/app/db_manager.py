@@ -1047,22 +1047,44 @@ class DBManager:
                 conn.close()
 
     def get_all_alquileres(self, id_persona_filtro=None):
+        # CORRECCIÓN: Incluir todos los datos del cliente
         base_sql = """
-            SELECT a.*, m.descripcion, v.modelo, ea.descripcion as estado_desc
+            SELECT 
+                a.*, 
+                v.modelo, 
+                m.descripcion as marca, 
+                v.patente,
+                v.precio_flota,
+                ea.descripcion as estado_desc,
+                -- Datos del cliente
+                c.id_cliente,
+                p.nombre as nombre_cliente,
+                p.apellido as apellido_cliente,
+                p.telefono as telefono_cliente,
+                p.mail as mail_cliente,
+                p.nro_documento as nro_documento,
+                doc.descripcion as tipo_documento,
+                -- ID de persona del cliente para permisos
+                c.id_persona as id_persona_cliente
             FROM Alquiler a
             JOIN Vehiculo v ON a.patente = v.patente
-            JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
             JOIN Marca m ON v.id_marca = m.id_marca
-            JOIN Color c ON v.id_color = c.id_color
+            JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+            JOIN Cliente c ON a.id_cliente = c.id_cliente
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
         """
         
         if id_persona_filtro:
-            base_sql += """ JOIN Cliente c ON a.id_cliente = c.id_cliente 
-                            JOIN Usuario u ON c.id_persona = u.id_persona 
-                            WHERE u.id_usuario = ?"""
+            base_sql += """ 
+                JOIN Usuario u ON c.id_persona = u.id_persona 
+                WHERE u.id_usuario = ?
+            """
             params = (id_persona_filtro,)
         else:
             params = ()
+
+        base_sql += " ORDER BY a.fecha_inicio DESC"
 
         conn = None
         lista = []

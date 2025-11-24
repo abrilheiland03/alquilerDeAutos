@@ -5,7 +5,7 @@ import RentalModal from './shared/RentalModal';
 import RentalCard from './shared/RentalCard';
 import RentalFilters from './shared/RentalFilters';
 import RentalStats from './shared/RentalStats';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 
 const RentalManagementEmployee = () => {
   const { showNotification } = useNotification();
@@ -18,7 +18,6 @@ const RentalManagementEmployee = () => {
   const [selectedRental, setSelectedRental] = useState(null);
   const [view, setView] = useState('grid');
 
-  // AGREGAR ESTAS FUNCIONES QUE FALTAN:
   useEffect(() => {
     fetchRentals();
   }, []);
@@ -31,7 +30,27 @@ const RentalManagementEmployee = () => {
     try {
       setLoading(true);
       const rentalsData = await rentalService.getAll();
-      setRentals(rentalsData);
+      
+      console.log('DEBUG - Datos recibidos para empleado:', rentalsData);
+      if (rentalsData.length > 0) {
+        console.log('DEBUG - Primer alquiler empleado:', rentalsData[0]);
+        console.log('DEBUG - precio_flota disponible?:', 'precio_flota' in rentalsData[0]);
+      }
+      
+      // CORRECCIÓN: NO eliminar precio_flota para empleados
+      const enrichedRentals = rentalsData.map(rental => ({
+        ...rental,
+        nombre_cliente: rental.nombre_cliente || `Cliente #${rental.id_cliente}`,
+        apellido_cliente: rental.apellido_cliente || '',
+        telefono_cliente: rental.telefono_cliente || '',
+        mail_cliente: rental.mail_cliente || '',
+        tipo_documento: rental.tipo_documento || 'DNI',
+        nro_documento: rental.nro_documento || '',
+        // CORRECCIÓN: Mantener precio_flota para empleados
+        // precio_flota se mantiene como viene del backend
+      }));
+      
+      setRentals(enrichedRentals);
     } catch (error) {
       console.error('Error fetching rentals:', error);
       showNotification('Error al cargar los alquileres', 'error');
@@ -47,7 +66,10 @@ const RentalManagementEmployee = () => {
       filtered = filtered.filter(rental =>
         rental.patente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rental.id_alquiler?.toString().includes(searchTerm)
+        rental.id_alquiler?.toString().includes(searchTerm) ||
+        rental.nombre_cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.apellido_cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.nro_documento?.toString().includes(searchTerm)
       );
     }
 
@@ -58,7 +80,6 @@ const RentalManagementEmployee = () => {
     setFilteredRentals(filtered);
   };
 
-  // Lógica similar pero solo con permisos de empleado
   const handleCreateRental = async (rentalData) => {
     try {
       await rentalService.create(rentalData);
@@ -107,6 +128,20 @@ const RentalManagementEmployee = () => {
     }
   };
 
+  const handleSaveRental = async (rentalData) => {
+    await handleCreateRental(rentalData);
+  };
+
+  const openModal = (rental = null) => {
+    setSelectedRental(rental);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedRental(null);
+    setModalOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -126,7 +161,7 @@ const RentalManagementEmployee = () => {
           <p className="text-gray-600 mt-1">Administra los alquileres de la flota</p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => openModal()}
           className="mt-4 sm:mt-0 btn-primary"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -148,7 +183,25 @@ const RentalManagementEmployee = () => {
       {/* Lista de alquileres con acciones de empleado */}
       {filteredRentals.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-600">No hay alquileres que coincidan con los filtros</p>
+          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No se encontraron alquileres
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {searchTerm || statusFilter !== 'all' 
+              ? 'Intenta ajustar los filtros de búsqueda' 
+              : 'No hay alquileres registrados en el sistema'
+            }
+          </p>
+          {!searchTerm && statusFilter === 'all' && (
+            <button
+              onClick={() => openModal()}
+              className="btn-primary"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Primer Alquiler
+            </button>
+          )}
         </div>
       ) : (
         <div className={view === 'grid' 
@@ -162,7 +215,7 @@ const RentalManagementEmployee = () => {
               onStart={handleStartRental}
               onComplete={handleCompleteRental}
               onCancel={handleCancelRental}
-              onView={() => setSelectedRental(rental)}
+              onView={() => openModal(rental)}
               isEmployee={true}
             />
           ))}
@@ -171,9 +224,9 @@ const RentalManagementEmployee = () => {
 
       <RentalModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         rental={selectedRental}
-        onSave={handleCreateRental}
+        onSave={handleSaveRental}
       />
     </div>
   );

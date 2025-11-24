@@ -1006,15 +1006,13 @@ class SistemaAlquiler:
             return False
     
     def consultar_alquileres_usuario(self, usuario):
-        print(f"DEBUG: consultar_alquileres_usuario llamado con usuario: {usuario.user_name}, rol: {usuario.permiso.descripcion}")  # ← Agregar debug
-        
         if not usuario:
             return []
         
         if self.check_permission("Admin", usuario) or self.check_permission("Empleado", usuario):
-            # Admin y empleado ven todos los alquileres
-            print("DEBUG: Usuario es Admin/Empleado, devolviendo todos los alquileres")
-            return self.db_manager.get_all_alquileres()
+            alquileres = self.db_manager.get_all_alquileres()
+            return alquileres
+        
         elif self.check_permission("Cliente", usuario):
             # Cliente solo ve sus propios alquileres
             print(f"DEBUG: Usuario es Cliente (ID: {usuario.id_usuario}), devolviendo solo sus alquileres")

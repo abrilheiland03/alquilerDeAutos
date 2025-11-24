@@ -5,7 +5,7 @@ import RentalModal from './shared/RentalModal';
 import RentalCard from './shared/RentalCard';
 import RentalFilters from './shared/RentalFilters';
 import RentalStats from './shared/RentalStats';
-import { Plus, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 
 const RentalManagementAdmin = () => {
   const { showNotification } = useNotification();
@@ -31,9 +31,15 @@ const RentalManagementAdmin = () => {
       setLoading(true);
       const rentalsData = await rentalService.getAll();
       
+      // CORRECCIÓN 4: Enriquecer datos con información completa del cliente
       const enrichedRentals = rentalsData.map(rental => ({
         ...rental,
         nombre_cliente: rental.nombre_cliente || `Cliente #${rental.id_cliente}`,
+        apellido_cliente: rental.apellido_cliente || '',
+        telefono_cliente: rental.telefono_cliente || '',
+        mail_cliente: rental.mail_cliente || '',
+        tipo_documento: rental.tipo_documento || 'DNI',
+        nro_documento: rental.nro_documento || '',
         precio_flota: rental.precio_flota || 25000
       }));
       
@@ -54,7 +60,9 @@ const RentalManagementAdmin = () => {
         rental.patente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         rental.id_alquiler?.toString().includes(searchTerm) ||
-        rental.nombre_cliente?.toLowerCase().includes(searchTerm.toLowerCase())
+        rental.nombre_cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.apellido_cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rental.nro_documento?.toString().includes(searchTerm)
       );
     }
 

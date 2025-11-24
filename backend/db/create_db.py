@@ -403,14 +403,11 @@ try:
     # Chevrolet Cruze (Nuevo, sin uso)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AG333FV', 'Cruze', 3, 2024, 30000.0, 5, 4, 0, 1, 5)) # Estado 1 = Libre, Marca 3=Chevrolet, Color 5=Gris
-<<<<<<< HEAD
-=======
 
     #vehiculo ocupado para ver si solo lo pueden ver empleados y admin
     # Toyota Yaris (Usado para el alquiler en curso)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AD343RF', 'Yaris', 1, 2019, 23000.0, 5, 4, 0, 2, 3)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
->>>>>>> bc1addd11792fd41c6fbd444ad22d8ed1086cd61
 
     #vehiculo ocupado para ver si solo lo pueden ver empleados y admin
     # Toyota Yaris (Usado para el alquiler en curso)

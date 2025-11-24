@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, CheckCircle, XCircle, Eye, Clock, AlertTriangle, Trash2 } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, AlertTriangle, Trash2 } from 'lucide-react';
 
 const RentalCard = ({ 
   rental, 
@@ -36,7 +36,9 @@ const RentalCard = ({
       }
     }
     
-    if ((isClient && rental.estado_desc === 'Reservado') || isEmployee || isAdmin) {
+    // CORRECCIÓN 1: No mostrar cancelar para estados Activo o Finalizado
+    if ((isClient && rental.estado_desc === 'Reservado') || 
+        ((isEmployee || isAdmin) && !['Activo', 'Finalizado'].includes(rental.estado_desc))) {
       baseActions.push({ action: 'cancel', handler: onCancel, icon: XCircle, color: 'red' });
     }
     
@@ -51,7 +53,6 @@ const RentalCard = ({
   const StatusIcon = statusConfig.icon;
   const actions = getActions();
 
-  // --- CORRECCIÓN AQUÍ ---
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     
@@ -63,7 +64,60 @@ const RentalCard = ({
     
     return date.toLocaleDateString('es-ES');
   };
-  // -----------------------
+
+  // Calcular días y total
+  const calculateDaysAndTotal = () => {
+    if (!rental.fecha_inicio || !rental.fecha_fin || !rental.precio_flota) {
+      return { days: 0, total: 0 };
+    }
+    
+    try {
+      const start = new Date(rental.fecha_inicio.split('T')[0]);
+      const end = new Date(rental.fecha_fin.split('T')[0]);
+      const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+      const total = days * rental.precio_flota;
+      
+      return { days, total };
+    } catch (error) {
+      console.error('Error calculando días y total:', error);
+      return { days: 0, total: 0 };
+    }
+  };
+
+  const { days, total } = calculateDaysAndTotal();
+
+  // CORRECCIÓN 4: Mostrar información completa del cliente para admin y empleado
+  const renderClientInfo = () => {
+    if (isClient) {
+      return <p className="font-medium text-gray-900">Tú</p>;
+    }
+    
+    // Para empleados y administradores, mostrar información completa
+    if (isEmployee || isAdmin) {
+      return (
+        <div>
+          <p className="font-medium text-gray-900">
+            {rental.nombre_cliente || 'N/A'} {rental.apellido_cliente || ''}
+          </p>
+          <p className="text-xs text-gray-600">
+            {rental.tipo_documento || 'DNI'}: {rental.nro_documento || 'N/A'}
+          </p>
+          {rental.telefono_cliente && (
+            <p className="text-xs text-gray-600">
+              Tel: {rental.telefono_cliente}
+            </p>
+          )}
+          {rental.mail_cliente && (
+            <p className="text-xs text-gray-600">
+              Mail: {rental.mail_cliente}
+            </p>
+          )}
+        </div>
+      );
+    }
+    
+    return rental.nombre_cliente || `Cliente #${rental.id_cliente}`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -86,41 +140,61 @@ const RentalCard = ({
         </span>
       </div>
 
+      {/* Información del cliente */}
+      <div className="mb-4">
+        <div className={isEmployee || isAdmin ? 'mb-4' : ''}>
+          <p className="text-sm text-gray-600 mb-2">Cliente</p>
+          {renderClientInfo()}
+        </div>
+      </div>
+
+      {/* Grid reorganizado - Fechas y precios en la misma fila */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <p className="text-sm text-gray-600">Cliente</p>
-          <p className="font-medium text-gray-900">
-            {isClient ? 'Tú' : rental.nombre_cliente}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-600">Precio/día</p>
-          <p className="font-medium text-gray-900">
-            ${rental.precio_flota?.toLocaleString()}
-          </p>
-        </div>
+        {/* Fecha inicio */}
         <div>
           <p className="text-sm text-gray-600">Fecha inicio</p>
           <p className="font-medium text-gray-900">
             {formatDate(rental.fecha_inicio)}
           </p>
         </div>
+        
+        {/* Fecha fin */}
         <div>
           <p className="text-sm text-gray-600">Fecha fin</p>
           <p className="font-medium text-gray-900">
             {formatDate(rental.fecha_fin)}
           </p>
         </div>
+        
+        {/* Precio/día */}
+        <div>
+          <p className="text-sm text-gray-600">Precio/día</p>
+          <p className="font-medium text-gray-900">
+            ${rental.precio_flota?.toLocaleString() || 'N/A'}
+          </p>
+        </div>
+        
+        {/* Días */}
+        <div>
+          <p className="text-sm text-gray-600">Días</p>
+          <p className="font-medium text-gray-900">
+            {days}
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-        <button 
-          onClick={() => onView(rental)} 
-          className="flex items-center text-sm text-blue-600 hover:text-blue-700"
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          Ver Detalles
-        </button>
+      {/* Total - Ocupa toda la fila */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex justify-between items-center">
+          <p className="text-sm font-medium text-gray-700">Total estimado</p>
+          <p className="text-lg font-bold text-orange-600">
+            ${total.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* CORRECCIÓN 1: Acciones alineadas a la derecha */}
+      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-center space-x-2">
           {actions.map(({ action, handler, icon: Icon, color }) => (
             <button

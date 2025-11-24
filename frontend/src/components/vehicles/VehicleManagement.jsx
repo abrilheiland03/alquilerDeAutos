@@ -17,7 +17,7 @@ import {
   Users,
   ArrowLeft
 } from 'lucide-react';
-import RentalDateSelector from '../rentals/RentalDateSelector';
+//import RentalDateSelector from '../rentals/RentalDateSelector';
 
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [formData, setFormData] = useState({
