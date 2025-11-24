@@ -1712,6 +1712,97 @@ class DBManager:
         finally:
             if conn: conn.close()
 
+    # Funciones específicas para PDF
+
+    def get_detailed_rentals_by_client_report(self, fecha_desde=None, fecha_hasta=None):
+        """Reporte detallado de alquileres por cliente para PDF - AGRUPADO POR CLIENTE"""
+        sql = """
+            SELECT 
+                p.nombre || ' ' || p.apellido as cliente,
+                p.nro_documento,
+                p.mail,
+                p.telefono,
+                COUNT(a.id_alquiler) as total_alquileres,
+                SUM(
+                    v.precio_flota * 
+                    (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio))
+                ) as total_facturado,
+                AVG(JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) as duracion_promedio,
+                MAX(a.fecha_inicio) as ultimo_alquiler
+            FROM Alquiler a
+            JOIN Cliente c ON a.id_cliente = c.id_cliente
+            JOIN Persona p ON c.id_persona = p.id_persona
+            JOIN Vehiculo v ON a.patente = v.patente
+            WHERE a.id_estado = 4  -- Solo alquileres finalizados
+        """
+        
+        params = []
+        if fecha_desde and fecha_hasta:
+            sql += " AND a.fecha_inicio BETWEEN ? AND ?"
+            params.extend([fecha_desde, fecha_hasta])
+        
+        sql += """
+            GROUP BY c.id_cliente
+            ORDER BY total_facturado DESC
+        """
+        
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, params).fetchall()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"Error en reporte detallado por cliente: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
+    def get_rentals_by_period_report(self, periodo_tipo='mensual', fecha_desde=None, fecha_hasta=None):
+        """Reporte de alquileres por período (mensual, trimestral, anual)"""
+        
+        # Definir formato según el tipo de período
+        format_map = {
+            'semanal': "strftime('%Y-%W', fecha_inicio)",
+            'mensual': "strftime('%Y-%m', fecha_inicio)", 
+            'trimestral': "strftime('%Y-') || ((strftime('%m', fecha_inicio) - 1) / 3 + 1)",
+            'anual': "strftime('%Y', fecha_inicio)"
+        }
+        
+        periodo_format = format_map.get(periodo_tipo.lower(), format_map['mensual'])
+        
+        sql = f"""
+            SELECT 
+                {periodo_format} as periodo,
+                COUNT(id_alquiler) as total_alquileres,
+                SUM(
+                    (SELECT precio_flota FROM Vehiculo WHERE patente = a.patente) * 
+                    (JULIANDAY(fecha_fin) - JULIANDAY(fecha_inicio))
+                ) as ingresos_totales,
+                AVG(JULIANDAY(fecha_fin) - JULIANDAY(fecha_inicio)) as duracion_promedio
+            FROM Alquiler a
+            WHERE id_estado = 4
+        """
+        
+        params = []
+        if fecha_desde and fecha_hasta:
+            sql += " AND fecha_inicio BETWEEN ? AND ?"
+            params.extend([fecha_desde, fecha_hasta])
+        
+        sql += f" GROUP BY {periodo_format} ORDER BY periodo"
+        
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return []
+            rows = conn.cursor().execute(sql, params).fetchall()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"Error en reporte por período: {e}")
+            return []
+        finally:
+            if conn: conn.close()
+
     # --- NUEVOS MÉTODOS PARA DASHBOARD ---
 
     def get_alquileres_por_usuario(self, id_usuario):

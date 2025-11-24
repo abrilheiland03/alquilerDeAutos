@@ -826,6 +826,32 @@ class SistemaAlquiler:
             return None
         
         return self.db_manager.get_report_facturacion_mensual(fecha_desde, fecha_hasta)
+
+    def reporte_detalle_clientes_pdf(self, fecha_desde, fecha_hasta, usuario):
+        """Reporte para PDF: Detalle de alquileres agrupado por cliente"""
+        if not usuario:
+            return []
+
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return []
+        
+        return self.db_manager.get_detailed_rentals_by_client_report(fecha_desde, fecha_hasta)
+
+    def reporte_alquileres_periodo_pdf(self, periodo, fecha_desde, fecha_hasta, usuario):
+        """Reporte para PDF: Alquileres por período específico"""
+        if not usuario:
+            return []
+
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return None
+        
+        return self.db_manager.get_rentals_by_period_report(periodo, fecha_desde, fecha_hasta)
     
     # --- NUEVOS MÉTODOS PARA DASHBOARD ---
 

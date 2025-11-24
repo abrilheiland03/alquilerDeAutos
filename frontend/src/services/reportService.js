@@ -1,4 +1,4 @@
-import apiClient from './api/client';
+import apiClient from './api/client'; // Ajusta la ruta según tu estructura
 
 export const reportService = {
   // Reporte de alquileres por cliente
@@ -28,6 +28,27 @@ export const reportService = {
     const response = await apiClient.get('/reportes/facturacion', {
       params: { fecha_desde: startDate, fecha_hasta: endDate }
     });
+    return response.data;
+  },
+
+  // Funciones para PDF - CORREGIDAS
+  getClientRentalsPDF: async (fechaDesde, fechaHasta) => {
+    const response = await apiClient.get(`/reportes/pdf/detalle-clientes?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
+    return response.data;
+  },
+  
+  getRentalsByPeriodPDF: async (fechaDesde, fechaHasta, periodo) => {
+    const response = await apiClient.get(`/reportes/pdf/alquileres-periodo?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}&periodo=${periodo}`);
+    return response.data;
+  },
+  
+  getVehicleRankingPDF: async (fechaDesde, fechaHasta) => {
+    const response = await apiClient.get(`/reportes/pdf/ranking-vehiculos?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
+    return response.data;
+  },
+  
+  getMonthlyRevenuePDF: async (fechaDesde, fechaHasta) => {
+    const response = await apiClient.get(`/reportes/pdf/facturacion-mensual?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
     return response.data;
   }
 };

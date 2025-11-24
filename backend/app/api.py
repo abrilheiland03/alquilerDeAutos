@@ -861,6 +861,80 @@ def reporte_facturacion():
         return jsonify(data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    # En api.py - agregar estos endpoints específicos para PDF
+
+@api.route('/reportes/pdf/detalle-clientes', methods=['GET'])
+def generar_pdf_detalle_clientes():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
+        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        data = sistema.reporte_detalle_clientes_pdf(fecha_desde, fecha_hasta, usuario)
+        return jsonify(data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/reportes/pdf/alquileres-periodo', methods=['GET'])
+def generar_pdf_alquileres_periodo():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
+        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
+        periodo = request.args.get('periodo', 'mensual')  # mensual, trimestral, anual, semanal
+
+        data = sistema.reporte_alquileres_periodo_pdf(periodo, fecha_desde, fecha_hasta, usuario)
+        return jsonify(data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# REUTILIZAMOS los endpoints existentes para los otros reportes
+@api.route('/reportes/pdf/ranking-vehiculos', methods=['GET'])
+def generar_pdf_ranking_vehiculos():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
+        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        # Reutilizamos la función existente
+        data = sistema.reporte_ranking_vehiculos(fecha_desde, fecha_hasta)
+        return jsonify(data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/reportes/pdf/facturacion-mensual', methods=['GET'])
+def generar_pdf_facturacion_mensual():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
+        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        # Reutilizamos la función existente
+        data = sistema.reporte_facturacion_mensual(fecha_desde, fecha_hasta, usuario)
+        
+        if data is None:
+            return jsonify({"error": "Permisos insuficientes"}), 403
+            
+        return jsonify(data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # --- NUEVOS ENDPOINTS PARA DASHBOARD ---
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { reportService } from '../../services/reportService';
+import { pdfService } from '../../services/pdfService';
 import { 
   BarChart3, 
   Download, 
@@ -118,10 +119,12 @@ const Reports = () => {
   const { hasPermission } = useAuth();
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });
+  const [selectedPeriod, setSelectedPeriod] = useState('mensual');
   const [reportData, setReportData] = useState({
     metrics: {},
     ranking: [],
@@ -141,7 +144,6 @@ const Reports = () => {
     try {
       setLoading(true);
       
-      // Fetch todos los reportes en paralelo usando los services
       const [rankingData, evolutionData, revenueData] = await Promise.all([
         reportService.getVehicleRanking(dateRange.start, dateRange.end),
         reportService.getRentalEvolution(dateRange.start, dateRange.end),
@@ -228,11 +230,49 @@ const Reports = () => {
     }));
   };
 
-  const handleExport = (type) => {
-    // Simulación de exportación
-    showNotification(`Exportando reporte ${type}...`, 'info');
+  const handleExportPDF = async (type = 'completo') => {
+    try {
+      setExporting(true);
+      showNotification(`Generando PDF ${type}...`, 'info');
+      
+      if (type === 'completo') {
+        await pdfService.generateClientRentalsPDF(dateRange, selectedPeriod);
+      } else {
+        // Obtener datos específicos para el tipo seleccionado
+        let data;
+        switch (type) {
+          case 'clientes':
+            data = await reportService.getClientRentalsPDF(dateRange.start, dateRange.end);
+            break;
+          case 'ranking':
+            data = await reportService.getVehicleRankingPDF(dateRange.start, dateRange.end);
+            break;
+          case 'periodo':
+            data = await reportService.getRentalsByPeriodPDF(dateRange.start, dateRange.end, selectedPeriod);
+            break;
+          case 'facturacion':
+            data = await reportService.getMonthlyRevenuePDF(dateRange.start, dateRange.end);
+            break;
+          default:
+            throw new Error('Tipo de reporte no válido');
+        }
+        await pdfService.generateIndividualPDF(type, data, dateRange, selectedPeriod);
+      }
+      
+      showNotification(`PDF ${type} generado exitosamente`, 'success');
+    } catch (error) {
+      console.error('Error exportando PDF:', error);
+      showNotification('Error al generar el PDF', 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = () => {
+    // Simulación de exportación Excel
+    showNotification(`Exportando reporte Excel...`, 'info');
     setTimeout(() => {
-      showNotification(`Reporte ${type} exportado exitosamente`, 'success');
+      showNotification(`Reporte Excel exportado exitosamente`, 'success');
     }, 1500);
   };
 
@@ -296,21 +336,90 @@ const Reports = () => {
             Métricas y estadísticas del sistema de alquileres
           </p>
         </div>
-        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-          <button
-            onClick={() => handleExport('PDF')}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
+          {/* Selector de período para PDF */}
+          <select 
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="input-primary text-sm"
+            disabled={exporting}
           >
-            <FileText className="h-4 w-4 mr-2" />
-            PDF
-          </button>
-          <button
-            onClick={() => handleExport('Excel')}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Excel
-          </button>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="anual">Anual</option>
+          </select>
+          
+          {/* Botones de exportación */}
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <button
+                onClick={() => handleExportPDF('completo')}
+                disabled={exporting}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-600 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exporting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                {exporting ? 'Generando...' : 'PDF Completo'}
+              </button>
+            </div>
+            
+            <div className="relative group">
+              <button
+                disabled={exporting}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF Individual
+              </button>
+              
+              {/* Menú desplegable para PDFs individuales */}
+              <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleExportPDF('clientes')}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Clientes
+                  </button>
+                  <button
+                    onClick={() => handleExportPDF('ranking')}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Car className="h-4 w-4 mr-2" />
+                    Ranking Vehículos
+                  </button>
+                  <button
+                    onClick={() => handleExportPDF('periodo')}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Por Período
+                  </button>
+                  <button
+                    onClick={() => handleExportPDF('facturacion')}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Facturación
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleExportExcel}
+              disabled={exporting}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Excel
+            </button>
+          </div>
         </div>
       </div>
 
