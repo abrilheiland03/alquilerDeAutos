@@ -437,7 +437,170 @@ def eliminar_cliente(id_cliente):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# ============================
+#   EMPLEADOS - CRUD
+# ============================
+
+@api.route('/empleados', methods=['POST'])
+def crear_empleado():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        id_creado = sistema.crear_empleado(data, usuario)
+
+        if id_creado:
+            return jsonify({
+                "mensaje": "Empleado creado exitosamente",
+                "id_empleado": id_creado
+            }), 201
+
+        return jsonify({"error": "No se pudo crear el empleado"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route('/empleados', methods=['GET'])
+def listar_empleados():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        lista = sistema.listar_todos_los_empleados(usuario)
+        respuesta = []
+
+        for e in lista:
+            respuesta.append({
+                "id_empleado": e.id_empleado,
+                "id_persona": e.id_persona,
+                "nombre": e.nombre,
+                "apellido": e.apellido,
+                "mail": e.mail,
+                "telefono": e.telefono,
+                "nro_documento": e.nro_documento,
+                "fecha_nacimiento": str(e.fecha_nacimiento),
+                "fecha_alta": str(e.fecha_alta),
+                "sueldo": e.sueldo,
+                "tipo_documento": e.tipo_documento.descripcion if e.tipo_documento else None,
+                "id_tipo_documento": e.tipo_documento.id_tipo if e.tipo_documento else None
+            })
+
+        return jsonify(respuesta), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route('/empleados/<id_empleado>', methods=['GET'])
+def obtener_empleado_por_id(id_empleado):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        e = sistema.buscar_empleado_por_id(id_empleado, usuario)
+
+        if e:
+            respuesta = {
+                "id_empleado": e.id_empleado,
+                "id_persona": e.id_persona,
+                "nombre": e.nombre,
+                "apellido": e.apellido,
+                "mail": e.mail,
+                "telefono": e.telefono,
+                "nro_documento": e.nro_documento,
+                "fecha_nacimiento": str(e.fecha_nacimiento),
+                "fecha_alta": str(e.fecha_alta),
+                "sueldo": e.sueldo,
+                "tipo_documento": e.tipo_documento.descripcion if e.tipo_documento else None,
+                "id_tipo_documento": e.tipo_documento.id_tipo if e.tipo_documento else None
+            }
+            return jsonify(respuesta), 200
+
+        return jsonify({"error": "Empleado no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route('/empleados/buscar', methods=['GET'])
+def buscar_empleado_por_documento():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        tipo = request.args.get('tipo')
+        nro = request.args.get('nro')
+
+        if not tipo or not nro:
+            return jsonify({"error": "Faltan parámetros 'tipo' y 'nro'"}), 400
+
+        e = sistema.buscar_empleado_por_documento(tipo, nro, usuario)
+
+        if e:
+            respuesta = {
+                "id_empleado": e.id_empleado,
+                "id_persona": e.id_persona,
+                "nombre": e.nombre,
+                "apellido": e.apellido,
+                "mail": e.mail,
+                "telefono": e.telefono,
+                "nro_documento": e.nro_documento,
+                "fecha_nacimiento": str(e.fecha_nacimiento),
+                "fecha_alta": str(e.fecha_alta),
+                "sueldo": e.sueldo,
+                "tipo_documento": e.tipo_documento.descripcion if e.tipo_documento else None
+            }
+            return jsonify(respuesta), 200
+
+        return jsonify({"error": "Empleado no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route('/empleados/<id_empleado>', methods=['PUT'])
+def actualizar_empleado(id_empleado):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        exito = sistema.actualizar_datos_empleado(id_empleado, data, usuario)
+
+        if exito:
+            return jsonify({"mensaje": "Datos del empleado actualizados"}), 200
+
+        return jsonify({"error": "No se pudo actualizar (Permisos o empleado no encontrado)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route('/empleados/<id_empleado>', methods=['DELETE'])
+def eliminar_empleado(id_empleado):
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        exito = sistema.eliminar_empleado(id_empleado, usuario)
+
+        if exito:
+            return jsonify({"mensaje": "Empleado eliminado exitosamente"}), 200
+
+        return jsonify({"error": "No se pudo eliminar (Permisos o tiene alquileres asociados)"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # --- Endpoints Gestión Alquileres ---
 
 @api.route('/alquileres', methods=['POST'])
