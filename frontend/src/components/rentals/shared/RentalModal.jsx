@@ -19,7 +19,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [errors, setErrors] = useState({});
   const { hasPermission } = useAuth();
-  const propio = hasPermission('cliente');
+  const propio = hasPermission('cliente') && !hasPermission('empleado') && !hasPermission('admin');
   const { showNotification } = useNotification();
 
   const getLocalDateString = (date) => {
