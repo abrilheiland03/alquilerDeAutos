@@ -1,8 +1,35 @@
-//import { reportService } from './reportService';
-
 // services/pdfService.js
+import { reportService } from './reportService';
+import { chartService } from './chartService';
+import { logoService } from './logoService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+// ✅ FUNCIÓN AUXILIAR PARA AGREGAR HEADER A TODOS LOS PDFs
+async function addHeaderToPDF(doc, dateRange) {
+  try {
+    // Cargar logo
+    const logoImage = await logoService.loadLogoAsBase64();
+    
+    if (logoImage) {
+      // Agregar logo (ajusta el tamaño según necesites)
+      doc.addImage(logoImage, 'PNG', 14, 10, 30, 15);
+    }
+    
+    // Agregar fecha de emisión (arriba a la derecha)
+    const currentDate = logoService.getCurrentDateFormatted();
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Fecha de emisión: ${currentDate}`, 180, 15, { align: 'right' });
+    
+    // Línea separadora
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 28, 196, 28);
+    
+  } catch (error) {
+    console.warn('No se pudo cargar el logo, continuando sin él:', error);
+  }
+}
 
 export const pdfService = {
   // Generar PDF de detalle de alquileres por cliente
@@ -19,21 +46,24 @@ export const pdfService = {
       // Crear PDF
       const doc = new jsPDF();
       
+      // ✅ AGREGAR LOGO Y FECHA EN EL HEADER
+      await addHeaderToPDF(doc, dateRange);
+      
       // Configuración inicial
       doc.setFont('helvetica');
       doc.setFontSize(20);
       doc.setTextColor(44, 62, 80);
       
-      // Título principal
-      doc.text('REPORTE COMPLETO DE ALQUILERES', 105, 20, { align: 'center' });
+      // Título principal (ajustado por el header)
+      doc.text('REPORTE COMPLETO DE ALQUILERES', 105, 45, { align: 'center' });
       
       // Información del período
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Período: ${dateRange.start} a ${dateRange.end}`, 105, 30, { align: 'center' });
-      doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, 105, 35, { align: 'center' });
+      doc.text(`Período: ${dateRange.start} a ${dateRange.end}`, 105, 55, { align: 'center' });
+      doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, 105, 60, { align: 'center' });
       
-      let yPosition = 45;
+      let yPosition = 70;
 
       // 1. RESUMEN EJECUTIVO
       doc.setFontSize(16);
@@ -73,7 +103,6 @@ export const pdfService = {
         cliente.ultimo_alquiler ? new Date(cliente.ultimo_alquiler).toLocaleDateString('es-AR') : 'N/A'
       ]);
 
-      // ✅ USAR autoTable como función separada
       autoTable(doc, {
         startY: yPosition,
         head: [['Cliente', 'Documento', 'Total Alq.', 'Ingresos', 'Duración Prom.', 'Último Alq.']],
@@ -85,24 +114,25 @@ export const pdfService = {
 
       yPosition = doc.lastAutoTable.finalY + 10;
 
-      // 3. RANKING DE VEHÍCULOS (Tabla)
+      // 3. RANKING DE VEHÍCULOS (Tabla) - MODIFICADO
       doc.setFontSize(16);
       doc.setTextColor(44, 62, 80);
       doc.text('3. RANKING DE VEHÍCULOS', 14, yPosition);
       yPosition += 10;
 
+      // ✅ ELIMINAR COLUMNA "INGRESOS" - Solo 5 columnas ahora
       const rankingTableData = rankingData.slice(0, 10).map((vehiculo, index) => [
         `#${index + 1}`,
         vehiculo.modelo,
         vehiculo.marca,
         vehiculo.patente,
-        vehiculo.cantidad_alquileres,
-        `$${(vehiculo.ingresos_generados || 0).toLocaleString('es-AR')}`
+        vehiculo.cantidad_alquileres
+        // ❌ Se eliminó: `$${(vehiculo.ingresos_generados || 0).toLocaleString('es-AR')}`
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Pos.', 'Modelo', 'Marca', 'Patente', 'Alquileres', 'Ingresos']],
+        head: [['Pos.', 'Modelo', 'Marca', 'Patente', 'Alquileres']], // Solo 5 headers
         body: rankingTableData,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [39, 174, 96] },
@@ -174,89 +204,163 @@ export const pdfService = {
       
       return true;
     } catch (error) {
-      console.error('Error generando PDF:', error);
+      console.error('Error generando PDF completo:', error);
       throw error;
     }
   },
 
   // Generar PDF individual para cada tipo de reporte
   generateIndividualPDF: async (type, data, dateRange, periodo = 'mensual') => {
-    const doc = new jsPDF();
-    
-    doc.setFont('helvetica');
-    doc.setFontSize(16);
-    doc.setTextColor(44, 62, 80);
-    
-    const titles = {
-      clientes: 'DETALLE DE ALQUILERES POR CLIENTE',
-      ranking: 'RANKING DE VEHÍCULOS MÁS ALQUILADOS',
-      periodo: `ALQUILERES POR ${periodo.toUpperCase()}`,
-      facturacion: 'FACTURACIÓN MENSUAL'
-    };
-    
-    doc.text(titles[type], 105, 20, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Período: ${dateRange.start} a ${dateRange.end}`, 105, 30, { align: 'center' });
-    
-    let tableData = [];
-    let headers = [];
-    
-    switch (type) {
-      case 'clientes':
-        headers = ['Cliente', 'Documento', 'Total Alq.', 'Ingresos', 'Duración Prom.', 'Último Alq.'];
-        tableData = data.map(cliente => [
-          cliente.cliente,
-          cliente.nro_documento || 'N/A',
-          cliente.total_alquileres,
-          `$${(cliente.total_facturado || 0).toLocaleString('es-AR')}`,
-          `${(cliente.duracion_promedio || 0).toFixed(1)} días`,
-          cliente.ultimo_alquiler ? new Date(cliente.ultimo_alquiler).toLocaleDateString('es-AR') : 'N/A'
-        ]);
-        break;
-        
-      case 'ranking':
-        headers = ['Pos.', 'Modelo', 'Marca', 'Patente', 'Alquileres', 'Ingresos'];
-        tableData = data.map((vehiculo, index) => [
-          `#${index + 1}`,
-          vehiculo.modelo,
-          vehiculo.marca,
-          vehiculo.patente,
-          vehiculo.cantidad_alquileres,
-          `$${(vehiculo.ingresos_generados || 0).toLocaleString('es-AR')}`
-        ]);
-        break;
-        
-      case 'periodo':
-        headers = ['Período', 'Total Alq.', 'Ingresos', 'Duración Prom.'];
-        tableData = data.map(periodo => [
-          periodo.periodo,
-          periodo.total_alquileres,
-          `$${(periodo.ingresos_totales || 0).toLocaleString('es-AR')}`,
-          `${(periodo.duracion_promedio || 0).toFixed(1)} días`
-        ]);
-        break;
-        
-      case 'facturacion':
-        headers = ['Mes', 'Facturación'];
-        tableData = data.map(item => [
-          item.periodo,
-          `$${(item.total_facturado || 0).toLocaleString('es-AR')}`
-        ]);
-        break;
+    try {
+      const doc = new jsPDF();
+      
+      // ✅ AGREGAR LOGO Y FECHA EN EL HEADER
+      await addHeaderToPDF(doc, dateRange);
+      
+      doc.setFont('helvetica');
+      doc.setFontSize(16);
+      doc.setTextColor(44, 62, 80);
+      
+      const titles = {
+        clientes: 'DETALLE DE ALQUILERES POR CLIENTE',
+        ranking: 'RANKING DE VEHÍCULOS MÁS ALQUILADOS',
+        periodo: `ALQUILERES POR ${periodo.toUpperCase()}`,
+        facturacion: 'FACTURACIÓN MENSUAL'
+      };
+      
+      // Título centrado (ajustado por el header)
+      doc.text(titles[type], 105, 40, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Período: ${dateRange.start} a ${dateRange.end}`, 105, 47, { align: 'center' });
+      
+      let yPosition = 55;
+
+      // CASO ESPECIAL: RANKING - Agregar gráfico de torta
+      if (type === 'ranking' && data && data.length > 0) {
+        try {
+          const chartURL = chartService.generatePieChartURL(
+            data, 
+            `TOP 8 vehículos más alquilados en el periodo`
+          );
+          
+          if (chartURL) {
+            const chartImage = await chartService.loadImageAsBase64(chartURL);
+            if (chartImage) {
+              doc.addImage(chartImage, 'PNG', 30, yPosition, 150, 90);
+              yPosition += 100;
+            }
+          }
+        } catch (chartError) {
+          console.warn('No se pudo cargar el gráfico de torta:', chartError);
+          // Continuar sin el gráfico
+        }
+      }
+
+      // CASO ESPECIAL: FACTURACIÓN - Agregar gráfico de barras
+      if (type === 'facturacion' && data && data.length > 0) {
+        try {
+          const chartURL = chartService.generateBarChartURL(
+            data,
+            `Facturación Mensual (${dateRange.start} a ${dateRange.end})`
+          );
+          
+          if (chartURL) {
+            const chartImage = await chartService.loadImageAsBase64(chartURL);
+            if (chartImage) {
+              doc.addImage(chartImage, 'PNG', 10, yPosition, 190, 90);
+              yPosition += 100;
+            }
+          }
+        } catch (chartError) {
+          console.warn('No se pudo cargar el gráfico de barras:', chartError);
+          // Continuar sin el gráfico
+        }
+      }
+
+      let tableData = [];
+      let headers = [];
+      
+      switch (type) {
+        case 'clientes':
+          headers = ['Cliente', 'Documento', 'Total Alq.', 'Ingresos', 'Duración Prom.', 'Último Alq.'];
+          tableData = (data || []).map(cliente => [
+            cliente.cliente || 'N/A',
+            cliente.nro_documento || 'N/A',
+            cliente.total_alquileres || 0,
+            `$${((cliente.total_facturado || 0)).toLocaleString('es-AR')}`,
+            `${((cliente.duracion_promedio || 0)).toFixed(1)} días`,
+            cliente.ultimo_alquiler ? new Date(cliente.ultimo_alquiler).toLocaleDateString('es-AR') : 'N/A'
+          ]);
+          break;
+          
+        case 'ranking':
+          // ✅ ELIMINAR COLUMNA "INGRESOS"
+          headers = ['Pos.', 'Modelo', 'Marca', 'Patente', 'Alquileres'];
+          tableData = (data || []).map((vehiculo, index) => [
+            `#${index + 1}`,
+            vehiculo.modelo || 'N/A',
+            vehiculo.marca || 'N/A',
+            vehiculo.patente || 'N/A',
+            vehiculo.cantidad_alquileres || 0
+          ]);
+          break;
+          
+        case 'periodo':
+          headers = ['Período', 'Total Alq.', 'Ingresos', 'Duración Prom.'];
+          tableData = (data || []).map(periodo => [
+            periodo.periodo || 'N/A',
+            periodo.total_alquileres || 0,
+            `$${((periodo.ingresos_totales || 0)).toLocaleString('es-AR')}`,
+            `${((periodo.duracion_promedio || 0)).toFixed(1)} días`
+          ]);
+          break;
+          
+        case 'facturacion':
+          headers = ['Mes', 'Facturación'];
+          tableData = (data || []).map(item => [
+            item.periodo || 'N/A',
+            `$${((item.total_facturado || 0)).toLocaleString('es-AR')}`
+          ]);
+          break;
+      }
+      
+      // Solo agregar tabla si hay datos
+      if (tableData.length > 0) {
+        autoTable(doc, {
+          startY: yPosition,
+          head: [headers],
+          body: tableData,
+          styles: { fontSize: 8 },
+          headStyles: { 
+            fillColor: type === 'ranking' ? [39, 174, 96] : [41, 128, 185] 
+          },
+          margin: { left: 14, right: 14 }
+        });
+      } else {
+        doc.text('No hay datos disponibles', 105, yPosition + 10, { align: 'center' });
+      }
+      
+      // Pie de página
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          `Página ${i} de ${pageCount} - Sistema de Alquiler de Vehículos`,
+          105,
+          doc.internal.pageSize.height - 10,
+          { align: 'center' }
+        );
+      }
+      
+      doc.save(`reporte-${type}-${dateRange.start}-a-${dateRange.end}.pdf`);
+      
+    } catch (error) {
+      console.error('Error generando PDF individual:', error);
+      throw error;
     }
-    
-    // ✅ USAR autoTable como función separada
-    autoTable(doc, {
-      startY: 40,
-      head: [headers],
-      body: tableData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [41, 128, 185] },
-      margin: { left: 14, right: 14 }
-    });
-    
-    doc.save(`reporte-${type}-${dateRange.start}-a-${dateRange.end}.pdf`);
   }
 };

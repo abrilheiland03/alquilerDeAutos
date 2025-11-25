@@ -608,14 +608,21 @@ const Reports = () => {
                   const prevRevenue = index > 0 ? revenue[index - 1].total_facturado : item.total_facturado;
                   const growth = ((item.total_facturado - prevRevenue) / prevRevenue) * 100;
                   
+                  // ✅ CORRECCIÓN: Formatear correctamente el período
+                  const formatPeriodo = (periodo) => {
+                    const [year, month] = periodo.split('-');
+                    const monthNames = [
+                      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                    ];
+                    return `${monthNames[parseInt(month) - 1]} ${year}`;
+                  };
+                  
                   return (
                     <tr key={item.periodo} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {new Date(item.periodo + '-01').toLocaleDateString('es-AR', { 
-                            year: 'numeric', 
-                            month: 'long' 
-                          })}
+                          {formatPeriodo(item.periodo)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
