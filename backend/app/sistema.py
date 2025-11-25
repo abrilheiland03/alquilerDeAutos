@@ -167,7 +167,7 @@ class SistemaAlquiler:
         if usuario.permiso.descripcion.upper() == required_permission_desc.upper():
             return True
         else:
-            print(f"Acción fallida: Se requiere permiso de '{required_permission_desc}'.")
+            
             return False
     
     def eliminar_usuario(self, id_usuario_eliminar, usuario_solicitante):
@@ -568,9 +568,8 @@ class SistemaAlquiler:
 
         es_admin = self.check_permission("Admin", usuario)
         es_empleado = self.check_permission("Empleado", usuario)
-
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != usuario.id_persona:
+            if alquiler['id_usuario'] != usuario.id_usuario:
                 print("No tiene permisos para ver daños de este alquiler.")
                 return []
 
@@ -637,7 +636,7 @@ class SistemaAlquiler:
         es_empleado = self.check_permission("Empleado", usuario)
 
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != usuario.id_persona:
+            if alquiler['id_usuario'] != usuario.id_usuario:
                 print("No tiene permisos para ver multas de este alquiler.")
                 return []
 

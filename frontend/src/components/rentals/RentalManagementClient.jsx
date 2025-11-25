@@ -7,6 +7,8 @@ import RentalCard from './shared/RentalCard';
 import RentalFilters from './shared/RentalFilters';
 import RentalStats from './shared/RentalStats';
 import { Calendar, Plus, Search, Car, XCircle } from 'lucide-react';
+import RentalInfo from './shared/RentalInfo';
+import EventoModal from './shared/EventoModal';
 
 const RentalManagementClient = () => {
   const { user } = useAuth();
@@ -17,6 +19,8 @@ const RentalManagementClient = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [view, setView] = useState('grid');
+  const [rentalInfoOpen, setRentalInfoOpen] = useState(false);
+  const [selectedRentalForInfo, setSelectedRentalForInfo] = useState(null);
 
   useEffect(() => {
     fetchRentals();
@@ -79,6 +83,27 @@ const RentalManagementClient = () => {
       console.error('Error canceling rental:', error);
       showNotification('Error al cancelar el alquiler', 'error');
     }
+  };
+
+  const handleViewRental = (rental) => {
+    setSelectedRentalForInfo(rental);
+    setRentalInfoOpen(true);
+  };
+
+  const handleEditMulta = (multa) => {
+    alert(`Editar multa #${multa.id_multa}\nDetalle: ${multa.detalle}\nCosto: $${multa.costo}`);
+  };
+
+  const handleDeleteMulta = (multa) => {
+    alert(`Eliminar multa #${multa.id_multa}\nDetalle: ${multa.detalle}`);
+  };
+
+  const handleEditDanio = (danio) => {
+    alert(`Editar daño #${danio.id_danio}\nDetalle: ${danio.detalle}\nCosto: $${danio.costo}`);
+  };
+
+  const handleDeleteDanio = (danio) => {
+    alert(`Eliminar daño #${danio.id_danio}\nDetalle: ${danio.detalle}`);
   };
 
   const canClientCancel = (rental) => {
@@ -159,7 +184,7 @@ const RentalManagementClient = () => {
                 key={rental.id_alquiler}
                 rental={rental}
                 onCancel={canClientCancel(rental) ? handleCancelRental : null}
-                onView={() => {/* Lógica para ver detalles */}}
+                onDetails={() => handleViewRental(rental)} // ✅ CORREGIDO: Pasando el handler correcto
                 isClient={true}
               />
             ) : (
@@ -192,6 +217,13 @@ const RentalManagementClient = () => {
                         <XCircle className="h-4 w-4" />
                       </button>
                     )}
+                    {/* Botón para ver detalles en vista lista */}
+                    <button
+                      onClick={() => handleViewRental(rental)}
+                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -199,6 +231,17 @@ const RentalManagementClient = () => {
           ))}
         </div>
       )}
+
+      {/* Modal de Información del Alquiler */}
+      <RentalInfo
+        isOpen={rentalInfoOpen}
+        onClose={() => setRentalInfoOpen(false)}
+        rental={selectedRentalForInfo}
+        onEditMulta={handleEditMulta}
+        onDeleteMulta={handleDeleteMulta}
+        onEditDanio={handleEditDanio}
+        onDeleteDanio={handleDeleteDanio}
+      />
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { Plus, Calendar } from 'lucide-react';
 import EventoModal from './shared/EventoModal';
 import multaService from '../../services/multaService';
 import danioService from '../../services/danioService';
+import RentalInfo from './shared/RentalInfo';
 
 const RentalManagementEmployee = () => {
   const { showNotification } = useNotification();
@@ -23,6 +24,8 @@ const RentalManagementEmployee = () => {
   const [eventoModalOpen, setEventoModalOpen] = useState(false);
   const [selectedRentalForEvent, setSelectedRentalForEvent] = useState(null);
   const [eventoTipo, setEventoTipo] = useState('multa');
+  const [rentalInfoOpen, setRentalInfoOpen] = useState(false);
+  const [selectedRentalForInfo, setSelectedRentalForInfo] = useState(null);
 
   useEffect(() => {
     fetchRentals();
@@ -167,6 +170,28 @@ const RentalManagementEmployee = () => {
     }
   };
 
+  const handleViewRental = (rental) => {
+      setSelectedRentalForInfo(rental);
+      setRentalInfoOpen(true);
+    };
+
+    const handleEditMulta = (multa) => {
+      alert(`Editar multa #${multa.id_multa}\nDetalle: ${multa.detalle}\nCosto: $${multa.costo}`);
+    };
+
+    const handleDeleteMulta = (multa) => {
+      alert(`Eliminar multa #${multa.id_multa}\nDetalle: ${multa.detalle}`);
+    };
+
+    const handleEditDanio = (danio) => {
+      alert(`Editar daño #${danio.id_danio}\nDetalle: ${danio.detalle}\nCosto: $${danio.costo}`);
+    };
+
+    const handleDeleteDanio = (danio) => {
+      alert(`Eliminar daño #${danio.id_danio}\nDetalle: ${danio.detalle}`);
+    };
+
+
   const openModal = (rental = null) => {
     setSelectedRental(rental);
     setModalOpen(true);
@@ -254,6 +279,7 @@ const RentalManagementEmployee = () => {
               isEmployee={true}
               onMulta={handleMulta}
               onDanio={handleDanio}
+              onDetails={() => handleViewRental(rental)}
             />
           ))}
         </div>
@@ -272,6 +298,17 @@ const RentalManagementEmployee = () => {
         rental={selectedRentalForEvent}
         onSave={handleSaveEvento}
         tipo={eventoTipo}
+        onDetails={handleViewRental}
+      />
+
+      <RentalInfo
+        isOpen={rentalInfoOpen}
+        onClose={() => setRentalInfoOpen(false)}
+        rental={selectedRentalForInfo}
+        onEditMulta={handleEditMulta}
+        onDeleteMulta={handleDeleteMulta}
+        onEditDanio={handleEditDanio}
+        onDeleteDanio={handleDeleteDanio}
       />
     </div>
   );

@@ -1106,9 +1106,10 @@ class DBManager:
 
     def get_alquiler_by_id(self, id_alquiler):
         sql = """
-            SELECT a.*, c.id_persona as id_persona_cliente
+            SELECT a.*, u.id_usuario
             FROM Alquiler a
             JOIN Cliente c ON a.id_cliente = c.id_cliente
+            JOIN Usuario u ON c.id_persona = u.id_persona
             WHERE a.id_alquiler = ?
         """
         conn = None

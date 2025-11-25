@@ -763,6 +763,7 @@ def crear_danio(id_alquiler):
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
         data = request.get_json()
+        print(data)
         costo = data.get('costo')
         detalle = data.get('detalle')
 

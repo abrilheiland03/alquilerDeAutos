@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, CheckCircle, XCircle, Clock, AlertTriangle, Trash2, DollarSign, Shield, Wrench, Receipt, ReceiptCent, ReceiptCentIcon } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, AlertTriangle, Trash2, DollarSign, Shield, Wrench, Receipt, ReceiptCent, ReceiptCentIcon, Eye } from 'lucide-react';
 
 const RentalCard = ({ 
   rental, 
@@ -12,7 +12,8 @@ const RentalCard = ({
   onDanio,
   isClient = false,
   isEmployee = false,
-  isAdmin = false 
+  isAdmin = false,
+  onDetails
 }) => {
   
   const getStatusConfig = (estado) => {
@@ -28,6 +29,8 @@ const RentalCard = ({
 
   const getActions = () => {
     const baseActions = [];
+
+    baseActions.push({ action: 'view', handler: onDetails, icon: Eye, color: 'blue' });
     
     if (isEmployee || isAdmin) {
       if (rental.estado_desc === 'Reservado') {
@@ -217,6 +220,7 @@ const RentalCard = ({
               onClick={() => handler(rental)}
               className={`p-2 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 rounded-lg transition-colors`}
               title={
+                action === 'view' ? 'Ver información detallada' :
                 action === 'start' ? 'Iniciar alquiler' : 
                 action === 'complete' ? 'Finalizar alquiler' : 
                 action === 'cancel' ? 'Cancelar alquiler' : 
