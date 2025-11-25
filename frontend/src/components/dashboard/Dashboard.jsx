@@ -527,6 +527,14 @@ const Dashboard = () => {
                 buttonText="Registrar cliente"
                 color="bg-purple-100"
               />
+              <QuickActionCard
+                title="Crear Empleado"
+                description="Registrar un nuevo empleado en el sistema"
+                icon={Users}
+                href="/employees/new"
+                buttonText="Registrar empleado"
+                color="bg-purple-100"
+              />
               {/* Solo Admin puede ver reportes */}
               {isAdmin() && (
                 <QuickActionCard

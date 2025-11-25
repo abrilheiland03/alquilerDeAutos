@@ -13,6 +13,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import VehicleManagement from './components/vehicles/VehicleManagement';
 import RentalManagement from './components/rentals/RentalManagement';
 import ClientManagement from './components/clients/ClientManagement';
+import EmployeeManagement from './components/employees/EmployeeManagement';
 import MaintenanceManagement from './components/maintenance/MaintenanceManagement';
 import Reports from './components/reports/Reports';
 
@@ -27,6 +28,14 @@ import './styles/globals.css';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+  const handleSaveEmployee = async (employeeData) => {
+  try {
+    console.log("Empleado guardado:", employeeData);
+    // Aquí más adelante podrás hacer POST o PUT al backend
+  } catch (error) {
+    console.error("Error guardando empleado:", error);
+  }
+};
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
@@ -86,6 +95,23 @@ const AppContent = () => {
                 <Route path="/clients" element={<ClientManagement />} />
                 <Route path="/clients/new" element={<ClientManagement />} />
                 <Route path="/clients/edit/:id" element={<ClientManagement />} />
+
+                {/* Gestión de Empleados */}
+                <Route
+                  path="/employees"
+                  element={<EmployeeManagement onSave={handleSaveEmployee} />}
+                />
+
+                <Route
+                  path="/employees/new"
+                  element={<EmployeeManagement onSave={handleSaveEmployee} />}
+                />
+
+                <Route
+                  path="/employees/edit/:id"
+                  element={<EmployeeManagement onSave={handleSaveEmployee} />}
+                />
+
                 
                 {/* Gestión de Mantenimientos */}
                 <Route path="/maintenance" element={<MaintenanceManagement />} />
