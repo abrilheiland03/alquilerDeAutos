@@ -1227,15 +1227,29 @@ class DBManager:
     # --- FUNCIONES DE DANIO ---
 
     def create_danio(self, data):
-        sql = "INSERT INTO Danio (id_alquiler, costo, detalle) VALUES (?, ?, ?)"
         conn = None
         try:
             conn = self._get_connection()
             if conn is None: return False
+            
             cursor = conn.cursor()
+            
+            cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['id_alquiler'],))
+            alquiler = cursor.fetchone()
+            
+            if not alquiler:
+                print(f"Error: No se encontró el alquiler con ID {data['id_alquiler']}")
+                return False
+                
+            if alquiler[0] == 1:
+                print(f"Error: No se pueden registrar daños para alquileres en estado 'Reservado'")
+                return False
+            
+            sql = "INSERT INTO Danio (id_alquiler, costo, detalle) VALUES (?, ?, ?)"
             cursor.execute(sql, (data['id_alquiler'], data['costo'], data['detalle']))
             conn.commit()
             return True
+            
         except sqlite3.Error as e:
             print(f"Error al crear daño: {e}")
             return False
@@ -1291,12 +1305,25 @@ class DBManager:
     # --- FUNCIONES DE MULTA ---
 
     def create_multa(self, data):
-        sql = "INSERT INTO Multa (alquiler_id, costo, detalle, fecha_multa) VALUES (?, ?, ?, ?)"
         conn = None
         try:
             conn = self._get_connection()
             if conn is None: return False
+            
             cursor = conn.cursor()
+            
+            cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['alquiler_id'],))
+            alquiler = cursor.fetchone()
+            
+            if not alquiler:
+                print(f"Error: No se encontró el alquiler con ID {data['alquiler_id']}")
+                return False
+                
+            if alquiler[0] == 1:  
+                print(f"Error: No se pueden registrar multas para alquileres en estado 'Reservado'")
+                return False
+
+            sql = "INSERT INTO Multa (alquiler_id, costo, detalle, fecha_multa) VALUES (?, ?, ?, ?)"
             cursor.execute(sql, (
                 data['alquiler_id'], 
                 data['costo'], 
@@ -1305,6 +1332,7 @@ class DBManager:
             ))
             conn.commit()
             return True
+            
         except sqlite3.Error as e:
             print(f"Error al crear multa: {e}")
             return False

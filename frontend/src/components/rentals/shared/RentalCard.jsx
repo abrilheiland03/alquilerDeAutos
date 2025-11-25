@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, CheckCircle, XCircle, Clock, AlertTriangle, Trash2 } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, AlertTriangle, Trash2, DollarSign, Shield, Wrench, Receipt, ReceiptCent, ReceiptCentIcon } from 'lucide-react';
 
 const RentalCard = ({ 
   rental, 
@@ -8,6 +8,8 @@ const RentalCard = ({
   onCancel, 
   onDelete, 
   onView, 
+  onMulta,
+  onDanio,
   isClient = false,
   isEmployee = false,
   isAdmin = false 
@@ -40,6 +42,19 @@ const RentalCard = ({
     if ((isClient && rental.estado_desc === 'Reservado') || 
         ((isEmployee || isAdmin) && !['Activo', 'Finalizado'].includes(rental.estado_desc))) {
       baseActions.push({ action: 'cancel', handler: onCancel, icon: XCircle, color: 'red' });
+    }
+    
+    // Nuevas acciones para multas y daños (solo empleados y admin)
+    if (isEmployee || isAdmin) {
+      // Multas - disponible para alquileres activos, atrasados o finalizados
+      if (['Activo', 'Atrasado', 'Finalizado'].includes(rental.estado_desc)) {
+        baseActions.push({ action: 'multa', handler: onMulta, icon: ReceiptCent, color: 'orange' });
+      }
+      
+      // Daños - disponible para alquileres activos, atrasados o finalizados
+      if (['Activo', 'Atrasado', 'Finalizado'].includes(rental.estado_desc)) {
+        baseActions.push({ action: 'danio', handler: onDanio, icon: Wrench, color: 'purple' });
+      }
     }
     
     if (isAdmin) {
@@ -201,10 +216,14 @@ const RentalCard = ({
               key={action}
               onClick={() => handler(rental)}
               className={`p-2 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 rounded-lg transition-colors`}
-              title={action === 'start' ? 'Iniciar alquiler' : 
-                     action === 'complete' ? 'Finalizar alquiler' : 
-                     action === 'cancel' ? 'Cancelar alquiler' : 
-                     'Eliminar alquiler'}
+              title={
+                action === 'start' ? 'Iniciar alquiler' : 
+                action === 'complete' ? 'Finalizar alquiler' : 
+                action === 'cancel' ? 'Cancelar alquiler' : 
+                action === 'multa' ? 'Registrar multa' :
+                action === 'danio' ? 'Registrar daño' :
+                'Eliminar alquiler'
+              }
             >
               <Icon className="h-4 w-4" />
             </button>

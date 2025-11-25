@@ -6,6 +6,9 @@ import RentalCard from './shared/RentalCard';
 import RentalFilters from './shared/RentalFilters';
 import RentalStats from './shared/RentalStats';
 import { Plus, Calendar } from 'lucide-react';
+import EventoModal from './shared/EventoModal';
+import multaService from '../../services/multaService';
+import danioService from '../../services/danioService';
 
 const RentalManagementEmployee = () => {
   const { showNotification } = useNotification();
@@ -17,6 +20,9 @@ const RentalManagementEmployee = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [view, setView] = useState('grid');
+  const [eventoModalOpen, setEventoModalOpen] = useState(false);
+  const [selectedRentalForEvent, setSelectedRentalForEvent] = useState(null);
+  const [eventoTipo, setEventoTipo] = useState('multa');
 
   useEffect(() => {
     fetchRentals();
@@ -132,6 +138,35 @@ const RentalManagementEmployee = () => {
     await handleCreateRental(rentalData);
   };
 
+  const handleMulta = (rental) => {
+    setSelectedRentalForEvent(rental);
+    setEventoTipo('multa');
+    setEventoModalOpen(true);
+  };
+
+  const handleDanio = (rental) => {
+    setSelectedRentalForEvent(rental);
+    setEventoTipo('danio');
+    setEventoModalOpen(true);
+  };
+
+  const handleSaveEvento = async (eventData) => {
+    try {
+      if (eventoTipo === 'multa') {
+        await multaService.create(eventData);
+        showNotification('Multa registrada exitosamente', 'success');
+      } else {
+        await danioService.create(eventData);
+        showNotification('Daño registrado exitosamente', 'success');
+      }
+      fetchRentals(); // Recargar la lista
+    } catch (error) {
+      console.error('Error saving event:', error);
+      showNotification('Error al registrar', 'error');
+      throw error;
+    }
+  };
+
   const openModal = (rental = null) => {
     setSelectedRental(rental);
     setModalOpen(true);
@@ -217,6 +252,8 @@ const RentalManagementEmployee = () => {
               onCancel={handleCancelRental}
               onView={() => openModal(rental)}
               isEmployee={true}
+              onMulta={handleMulta}
+              onDanio={handleDanio}
             />
           ))}
         </div>
@@ -227,6 +264,14 @@ const RentalManagementEmployee = () => {
         onClose={closeModal}
         rental={selectedRental}
         onSave={handleSaveRental}
+      />
+
+      <EventoModal
+        isOpen={eventoModalOpen}
+        onClose={() => setEventoModalOpen(false)}
+        rental={selectedRentalForEvent}
+        onSave={handleSaveEvento}
+        tipo={eventoTipo}
       />
     </div>
   );
