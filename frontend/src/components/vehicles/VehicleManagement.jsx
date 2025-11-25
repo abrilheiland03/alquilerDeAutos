@@ -5,6 +5,7 @@ import { vehicleService } from '../../services/vehicleService';
 import { catalogService } from '../../services/catalogService';
 import RentalModal from '../rentals/shared/RentalModal';
 import {rentalService} from '../../services/rentalService';
+import RentalDateSelector from '../rentals/RentalDateSelector';
 import { 
   Car, 
   Plus, 
@@ -17,7 +18,6 @@ import {
   Users,
   ArrowLeft
 } from 'lucide-react';
-//import RentalDateSelector from '../rentals/RentalDateSelector';
 
 const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [formData, setFormData] = useState({
@@ -591,6 +591,27 @@ const VehicleManagement = () => {
       throw error;
     }
   };
+ 
+  const searchAvailableVehicles = async (fechaInicio, fechaFin) => {
+  try {
+    setSearchingVehicles(true);
+    setRentalDates({ fecha_inicio: fechaInicio, fecha_fin: fechaFin });
+    
+    const available = await vehicleService.getAvailable(fechaInicio, fechaFin);
+    setAvailableVehicles(available);
+  } catch (error) {
+    console.error('Error searching available vehicles:', error);
+    showNotification('Error al buscar vehículos disponibles', 'error');
+    setAvailableVehicles([]);
+  } finally {
+    setSearchingVehicles(false);
+  }
+};
+
+const resetRentalFlow = () => {
+  setRentalDates(null);
+  setAvailableVehicles([]);
+};
 
   const getStatusBadge = (estado) => {
     const statusMap = {
@@ -632,7 +653,9 @@ const VehicleManagement = () => {
           </button>
         )}
       </div>
-
+      
+      {/* Filtros y busquedas */}
+      {(isAdmin() || isEmployee()) && (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex-1 max-w-md">
@@ -647,6 +670,7 @@ const VehicleManagement = () => {
               />
             </div>
           </div>
+        
 
           <div className="flex items-center space-x-4">
             <select
@@ -686,7 +710,7 @@ const VehicleManagement = () => {
           </div>
         </div>
       </div>
-      
+      )}
  {/* Mostrar estadísticas solo para administradores y empleados */}
 {(isAdmin() || isEmployee()) && (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -714,27 +738,31 @@ const VehicleManagement = () => {
     </div>
   </div>
 )}
-      {!rentalDates ? (
-        <RentalDateSelector 
-          onSearch={searchAvailableVehicles} 
-          loading={searchingVehicles} 
-        />
-      ) : (
-        <div className="mb-6">
-          <button
-            onClick={resetRentalFlow}
-            className="flex items-center text-orange-500 hover:text-orange-600 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Cambiar fechas
-          </button>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
-          </h2>
-        </div>
-      )}
 
-      {availableVehicles.length > 0 && rentalDates && (
+      {/* Selector de fechas para clientes */}
+      {isClient() && (
+        <>
+          {!rentalDates ? (
+            <RentalDateSelector 
+              onSearch={searchAvailableVehicles} 
+              loading={searchingVehicles} 
+            />
+          ) : (
+            <div className="mb-6">
+              <button
+                onClick={resetRentalFlow}
+                className="flex items-center text-orange-500 hover:text-orange-600 mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Cambiar fechas
+              </button>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
+              </h2>
+            </div>
+          )}
+
+          {availableVehicles.length > 0 && rentalDates && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {availableVehicles.map(vehicle => (
             <VehicleCard
@@ -766,6 +794,10 @@ const VehicleManagement = () => {
         </div>
       )}
 
+      
+        </>
+      )}
+
       {!rentalDates && filteredVehicles.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -793,6 +825,10 @@ const VehicleManagement = () => {
             ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
             : 'space-y-4'
         }>
+
+          {/* SOLO para admin y empleado*/}
+          {(isAdmin() || isEmployee()) && (
+            <>
           {filteredVehicles.map(vehicle => (
             view === 'grid' ? (
               <VehicleCard
@@ -855,6 +891,7 @@ const VehicleManagement = () => {
               </div>
             )
           ))}
+          </>)}
         </div>
       )}
 

@@ -76,6 +76,7 @@ const AppContent = () => {
                 <Route path="/vehicles" element={<VehicleManagement />} />
                 <Route path="/vehicles/new" element={<VehicleManagement />} />
                 <Route path="/vehicles/edit/:id" element={<VehicleManagement />} />
+                <Route path='vehicles/libres' element={<VehicleManagement />} />
                 
                 {/* Gestión de Alquileres */}
                 <Route path="/rentals" element={<RentalManagement />} />
