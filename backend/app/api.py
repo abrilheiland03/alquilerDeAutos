@@ -538,19 +538,20 @@ def listar_empleados():
 
         for e in lista:
             respuesta.append({
-                "id_empleado": e.id_empleado,
-                "id_persona": e.id_persona,
-                "nombre": e.nombre,
-                "apellido": e.apellido,
-                "mail": e.mail,
-                "telefono": e.telefono,
-                "nro_documento": e.nro_documento,
-                "fecha_nacimiento": str(e.fecha_nacimiento),
-                "fecha_alta": str(e.fecha_alta),
-                "sueldo": e.sueldo,
-                "tipo_documento": e.tipo_documento.descripcion if e.tipo_documento else None,
-                "id_tipo_documento": e.tipo_documento.id_tipo if e.tipo_documento else None
+                "id_empleado": e["id_empleado"],
+                "id_persona": e["id_persona"],
+                "nombre": e["nombre"],
+                "apellido": e["apellido"],
+                "mail": e["mail"],
+                "telefono": e["telefono"],
+                "nro_documento": e["nro_documento"],
+                "fecha_nacimiento": e["fecha_nacimiento"],
+                "fecha_alta": e["fecha_alta"],
+                "sueldo": e["sueldo"],
+                "tipo_documento": e["tipo_documento"],
+                "id_tipo_documento": None  # Si no tienes esa info
             })
+
 
         return jsonify(respuesta), 200
 
