@@ -469,7 +469,51 @@ class DBManager:
             return False
         finally:
             if conn: conn.close()
-    
+
+    #--modificar usuario--
+    def actualizar_usuario(self, user_id, update_fields):
+        """
+        Actualiza los campos de un usuario en la base de datos.
+        
+        Args:
+            user_id: ID del usuario a actualizar
+            update_fields: Diccionario con los campos a actualizar
+        
+        Returns:
+            bool: True si la actualización fue exitosa, False en caso contrario
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+            
+            cursor = conn.cursor()
+            
+            # Mapear password_hash a password si existe
+            if 'password_hash' in update_fields:
+                update_fields['password'] = update_fields.pop('password_hash')
+            
+            # Construir la consulta dinámicamente
+            set_clause = ", ".join([f"{field} = ?" for field in update_fields.keys()])
+            values = list(update_fields.values())
+            values.append(user_id)
+            
+            query = f"UPDATE Usuario SET {set_clause} WHERE id_usuario = ?"
+            
+            cursor.execute(query, values)
+            conn.commit()
+            
+            return cursor.rowcount > 0
+            
+        except sqlite3.Error as e:
+            print(f"Error al actualizar usuario en la base de datos: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
     # --- ABMC de CLIENTE ---
 
     def create_client_only(self, persona_data, role_data):

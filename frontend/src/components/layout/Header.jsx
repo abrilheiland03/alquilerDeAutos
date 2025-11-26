@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Car, LogOut, User, Menu, Bell, Settings, Sun, Moon } from 'lucide-react';
 import logoNaranja from '../../assets/logo-sin-fondo.png';
+import { useState, useRef, useEffect } from 'react';
+
 
 const Header = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
@@ -12,6 +14,7 @@ const Header = ({ onToggleSidebar }) => {
 
   const handleLogout = async () => {
     await logout();
+    setIsProfileOpen(false);
     navigate('/');
   };
 
@@ -32,6 +35,28 @@ const Header = ({ onToggleSidebar }) => {
     };
     return colors[role?.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   };
+
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsProfileOpen(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+    // Toggle profile dropdown
+    const toggleProfile = () => {
+      setIsProfileOpen(!isProfileOpen);
+    };
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 z-30 transition-colors duration-200">
@@ -93,30 +118,58 @@ const Header = ({ onToggleSidebar }) => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-3 border-l border-gray-200 dark:border-gray-600 pl-3">
-            
-            {/* User Info */}
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.userName || 'Usuario'}
-              </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor(user?.userRole)}`}>
-                {getUserRoleDisplay(user?.userRole)}
-              </span>
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={toggleProfile}
+                className="flex items-center space-x-2 focus:outline-none"
+                aria-expanded={isProfileOpen}
+                aria-haspopup="true"
+              >
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user?.userName || 'Usuario'}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {getUserRoleDisplay(user?.userRole)}
+                  </span>
+                </div>
+                
+                {/* User Avatar */}
+                <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-300 font-medium">
+                  {user?.userName?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+              </button>
+              
+              {/* Dropdown Menu - Show/hide based on isProfileOpen state */}
+              {isProfileOpen && (
+                <div 
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link 
+                    to="/mi-perfil"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsProfileOpen(false);
+                      navigate('/mi-perfil');
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      <span>Mi Perfil</span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* User Avatar */}
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 font-semibold text-sm">
-              <User className="h-4 w-4" />
-            </div>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
-              title="Cerrar Sesión"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>

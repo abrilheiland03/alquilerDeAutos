@@ -14,5 +14,10 @@ export const authService = {
   getCurrentUser: async (userId) => {
     const response = await apiClient.get(`/usuarios/${userId}`);
     return response.data;
+  },
+
+  updateProfile: async (userId, userData) => {
+    const response = await apiClient.put(`/usuarios/${userId}`, userData);
+    return response.data;
   }
 };

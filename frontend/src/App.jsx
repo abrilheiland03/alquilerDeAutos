@@ -7,6 +7,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import {Home, Navbar} from './components/home/home.jsx';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import ProfileSettings from './components/auth/ProfileSettings';
 
 // Componentes del Dashboard y Módulos
 import Dashboard from './components/dashboard/Dashboard';
@@ -96,6 +97,7 @@ const AppContent = () => {
                 <Route path="/clients" element={<ClientManagement />} />
                 <Route path="/clients/new" element={<ClientManagement />} />
                 <Route path="/clients/edit/:id" element={<ClientManagement />} />
+                <Route path="/mi-perfil" element={<ProfileSettings />} />
 
                 {/* Gestión de Empleados */}
                 <Route

@@ -110,6 +110,62 @@ def eliminar_usuario_sistema(id_usuario):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# modificar datos del usuario
+@api.route('/usuarios/<int:user_id>', methods=['PUT'])
+def actualizar_usuario(user_id):
+    """
+    Endpoint para actualizar la información de un usuario.
+    Permite actualizar el nombre de usuario y/o la contraseña.
+    """
+    try:
+        # Obtener el usuario que realiza la solicitud
+        usuario_actual = obtener_usuario_actual()
+        if not usuario_actual:
+            return jsonify({"error": "No autorizado. Se requiere autenticación"}), 401
+        
+        # Verificar que el usuario está actualizando su propio perfil o es admin
+        if usuario_actual.id_usuario != user_id and usuario_actual.permiso.descripcion.lower() != 'admin':
+            return jsonify({"error": "No autorizado para actualizar este perfil"}), 403
+        
+        # Obtener los datos de la solicitud
+        data = request.get_json()
+        
+        # Validar datos de entrada
+        if not data:
+            return jsonify({"error": "No se proporcionaron datos para actualizar"}), 400
+        
+        # Verificar que al menos un campo válido esté presente
+        valid_fields = ['user_name', 'current_password', 'new_password']
+        if not any(field in data for field in valid_fields):
+            return jsonify({
+                "error": "Debe proporcionar al menos un campo válido para actualizar (user_name, current_password con new_password)"
+            }), 400
+        
+        # Si se está intentando actualizar la contraseña, verificar que se proporcionen ambos campos
+        if 'current_password' in data or 'new_password' in data:
+            if 'current_password' not in data or 'new_password' not in data:
+                return jsonify({
+                    "error": "Para actualizar la contraseña, debe proporcionar tanto la contraseña actual como la nueva"
+                }), 400
+        
+        # Actualizar el usuario
+        exito = sistema.actualizar_usuario(user_id, data, usuario_actual)
+        
+        if exito:
+            # Si se actualizó el nombre de usuario, devolver el nuevo nombre
+            if 'user_name' in data:
+                return jsonify({
+                    "mensaje": "Perfil actualizado correctamente",
+                    "nuevo_nombre": data['user_name']
+                }), 200
+            return jsonify({"mensaje": "Perfil actualizado correctamente"}), 200
+        
+        return jsonify({"error": "No se pudo actualizar el perfil. Verifique los datos e intente nuevamente."}), 400
+    
+    except Exception as e:
+        return jsonify({"error": f"Error al actualizar el perfil: {str(e)}"}), 500
+
+
 # --- Endpoint LOGIN ---
 @api.route('/login', methods=['POST'])
 def login():

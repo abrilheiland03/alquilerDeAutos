@@ -185,6 +185,61 @@ class SistemaAlquiler:
         
         return False
 
+    #--modificar usuario--
+    # In sistema.py, add this method to the SistemaAlquiler class
+    def actualizar_usuario(self, user_id, update_data, usuario_actual=None):
+        """
+        Actualiza la información de un usuario.
+        
+        Args:
+            user_id: ID del usuario a actualizar
+            update_data: Diccionario con los campos a actualizar (puede incluir 'user_name' y/o 'password')
+            usuario_actual: Usuario que realiza la operación (opcional para verificación de permisos)
+        
+        Returns:
+            bool: True si la actualización fue exitosa, False en caso contrario
+        """
+        try:
+            # Verificar que el usuario existe
+            usuario = self.db_manager.get_full_usuario_by_id(user_id)
+            if not usuario:
+                print(f"Usuario con ID {user_id} no encontrado")
+                return False
+            
+            # Si se proporciona un usuario_actual, verificar permisos
+            if usuario_actual:
+                # El usuario solo puede actualizar su propio perfil o ser admin
+                if usuario_actual.id_usuario != user_id and not self.check_permission("Admin", usuario_actual):
+                    print("No tiene permisos para actualizar este usuario")
+                    return False
+            
+            # Preparar los datos para actualizar
+            update_fields = {}
+            
+            # Actualizar nombre de usuario si se proporciona
+            if 'user_name' in update_data and update_data['user_name']:
+                update_fields['user_name'] = update_data['user_name']
+            
+            # Actualizar contraseña si se proporciona la actual y la nueva
+            if 'current_password' in update_data and 'new_password' in update_data:
+                # Verificar que la contraseña actual sea correcta
+                if not self._verify_password(update_data['current_password'], usuario.password):
+                    print("La contraseña actual no es correcta")
+                    return False
+                
+                # Actualizar la contraseña (usando 'password' en lugar de 'password_hash')
+                update_fields['password'] = self._hash_password(update_data['new_password'])
+            
+            # Si no hay nada que actualizar, retornar True
+            if not update_fields:
+                return True
+            
+            # Actualizar en la base de datos
+            return self.db_manager.actualizar_usuario(user_id, update_fields)
+        
+        except Exception as e:
+            print(f"Error al actualizar usuario: {e}")
+            return False
     def obtener_estado_auto_por_id(self, id_estado: int):
         return self.db_manager.get_estado_auto_by_id(id_estado)
     

@@ -89,6 +89,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Función para actualizar los datos del usuario
+  const updateUser = (updatedUser) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      ...updatedUser
+    }));
+  };
+
   // Función de logout
   const logout = async () => {
     try {
@@ -144,22 +152,6 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
-  // Actualizar información del usuario
-  const updateUser = (updatedUserData) => {
-    setUser(prevUser => ({
-      ...prevUser,
-      ...updatedUserData
-    }));
-
-    // Actualizar localStorage si es necesario
-    if (updatedUserData.userName) {
-      localStorage.setItem('userName', updatedUserData.userName);
-    }
-    if (updatedUserData.userRole) {
-      localStorage.setItem('userRole', updatedUserData.userRole);
-    }
-  };
-
   // Valor del contexto
   const value = {
     user,
@@ -176,7 +168,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
