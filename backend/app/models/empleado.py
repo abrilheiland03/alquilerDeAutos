@@ -4,7 +4,7 @@ from .documento import Documento
 from .usuario import Usuario
 
 class Empleado(Persona):
-    def __init__(self, id_empleado: int, fecha_alta: date, sueldo: float,
+    def __init__(self, id_empleado: int, fecha_alta: date, sueldo: float, horario: str,
                  id_persona: int, nombre: str, apellido: str, mail: str, 
                  telefono: str, fecha_nacimiento: date, tipo_documento: Documento, 
                  nro_documento: int, usuario: 'Usuario' = None):
@@ -15,6 +15,7 @@ class Empleado(Persona):
         self.id_empleado = id_empleado
         self.fecha_alta = fecha_alta
         self.sueldo = sueldo
+        self.horario = horario
 
     @property
     def id_empleado(self):
@@ -45,3 +46,13 @@ class Empleado(Persona):
         if not isinstance(value, (int, float)) or value < 0:
             raise ValueError('El sueldo no puede ser negativo')
         self._sueldo = value
+    
+    @property
+    def horario(self):
+        return self._horario
+
+    @horario.setter
+    def horario(self, value):
+        if not isinstance(value, (int, float)) or value < 0:
+            raise ValueError('El horario no puede ser negativo')
+        self._horario = value

@@ -147,6 +147,7 @@ cursor.execute("""
         id_empleado INTEGER PRIMARY KEY,
         fecha_alta DATE NOT NULL,
         sueldo REAL NOT NULL,
+        horario TEXT NOT NULL,
         id_persona INTEGER NOT NULL UNIQUE,
         FOREIGN KEY (id_persona) REFERENCES Persona(id_persona)
     );
@@ -340,8 +341,8 @@ try:
 
         # Rol Empleado
         cursor.execute("""
-            INSERT INTO Empleado (id_persona, fecha_alta, sueldo)
-            VALUES (?, '2024-01-01', 850000.00)
+            INSERT INTO Empleado (id_persona, fecha_alta, sueldo, horario)
+            VALUES (?, '2024-01-01', 850000.00, '9:00-18:00')
         """, (id_persona_emp,))
         id_empleado_ana = cursor.lastrowid # Guardamos ID para usar en alquileres/mantenimientos
 

@@ -14,6 +14,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import VehicleManagement from './components/vehicles/VehicleManagement';
 import RentalManagement from './components/rentals/RentalManagement';
 import ClientManagement from './components/clients/ClientManagement';
+import { employeeService } from './services/employeeService.js';
 import EmployeeManagement from './components/employees/EmployeeManagement';
 import MaintenanceManagement from './components/maintenance/MaintenanceManagement';
 import Reports from './components/reports/Reports';
@@ -30,14 +31,20 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+
   const handleSaveEmployee = async (employeeData) => {
     try {
-      console.log("Empleado guardado:", employeeData);
-      // Aquí más adelante podrás hacer POST o PUT al backend
+      if (employeeData.id) {
+        const response = await employeeService.update(employeeData.id, employeeData);
+      } else {
+        const response = await employeeService.create(employeeData); // ← PASA EL FORM CRUDITO
+      }
     } catch (error) {
       console.error("Error guardando empleado:", error);
     }
   };
+
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {

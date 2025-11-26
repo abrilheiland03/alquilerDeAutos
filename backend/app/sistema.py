@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from db_manager import DBManager
 import hashlib
 
@@ -95,42 +95,36 @@ class SistemaAlquiler:
     def registrar_usuario_empleado(self, data):
         try:
             persona_data = {
-                'nombre': data['nombre'], 'apellido': data['apellido'],
-                'mail': data['mail'], 'telefono': data['telefono'],
+                'nombre': data['nombre'],
+                'apellido': data['apellido'],
+                'mail': data['mail'],
+                'telefono': data['telefono'],
                 'fecha_nacimiento': data['fecha_nacimiento'],
                 'tipo_documento_id': data['tipo_documento_id'],
                 'nro_documento': data['nro_documento']
             }
-            
-            permiso_id_empleado = 2 
+
             usuario_data = {
                 'user_name': data['user_name'],
                 'password_hash': self._hash_password(data['password']),
-                'id_permiso': permiso_id_empleado
+                'id_permiso': 2
             }
 
             role_data = {
-                'fecha_alta': data.get('fecha_alta'),
+                'fecha_alta': data['fecha_alta'],
                 'sueldo': data['sueldo']
             }
 
-            id_persona_creada = self.db_manager.create_full_user(
-                persona_data, usuario_data, role_data, 'empleado'
+            id_empleado = self.db_manager.create_empleado(
+                persona_data, usuario_data, role_data
             )
 
-            if id_persona_creada:
-                print(f"Usuario empleado creado con ID de persona: {id_persona_creada}")
-                return True
-            else:
-                print("El registro falló.")
-                return False
-                
-        except KeyError as e:
-            print(f"Error en los datos de registro: falta la clave {e}")
-            return False
+            return id_empleado  # API devolverá el ID
+
         except Exception as e:
-            print(f"Error inesperado durante el registro: {e}")
-            return False
+            print("Error registrando empleado:", e)
+            return None
+
 
     def login(self, mail, password):
         user_login_data = self.db_manager.get_user_data_for_login_by_mail(mail)
@@ -1150,3 +1144,42 @@ class SistemaAlquiler:
         
         # Actualizar los datos de la persona
         return self.db_manager.update_persona_por_id(persona_actual['id_persona'], persona_data)
+    
+    # --------------------------------------------------
+    def crear_empleado_mostrador(self, data, usuario_actual):
+        try:
+            persona = data["persona"]
+            usuario = data["usuario"]
+            role = data["role"]
+
+            # Datos para Persona
+            persona_data = {
+                "nombre": persona["nombre"],
+                "apellido": persona["apellido"],
+                "mail": persona["mail"],
+                "telefono": persona["telefono"],
+                "fecha_nac": persona["fecha_nac"],
+                "tipo_documento": persona["tipo_documento"],
+                "nro_documento": persona["nro_documento"]
+            }
+
+            # Usuario
+            usuario_data = {
+                "user_name": usuario["user_name"],
+                "password": usuario["password"],
+                "id_permiso": usuario["id_permiso"]
+            }
+
+            # Rol específico de empleado
+            role_data = {
+                "sueldo": role.get("sueldo"),
+                "horario": role["horario"],
+                "fecha_alta": role["fecha_alta"]
+            }
+
+            id_empleado = self.db_manager.create_empleado(persona_data, usuario_data, role_data)
+            return id_empleado
+
+        except Exception as e:
+            print("Error en crear_empleado_mostrador:", e)
+            return None

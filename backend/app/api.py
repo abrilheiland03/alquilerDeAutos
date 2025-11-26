@@ -502,11 +502,17 @@ def eliminar_cliente(id_cliente):
 def crear_empleado():
     try:
         usuario = obtener_usuario_actual()
+
+        data = request.get_json()
+        print("### JSON RECIBIDO DEL FRONT ###")
+        print(data)
+
+
         if not usuario:
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
         data = request.get_json()
-        id_creado = sistema.crear_empleado(data, usuario)
+        id_creado = sistema.crear_empleado_mostrador(data, usuario)
 
         if id_creado:
             return jsonify({

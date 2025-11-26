@@ -2131,3 +2131,56 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
+    def create_empleado(self, persona_data, usuario_data, role_data):
+        conn = self._get_connection()
+        if conn is None:
+            print("Error: no se pudo abrir conexión a la BD.")
+            return None
+
+        try:
+            cursor = conn.cursor()
+
+            # Insert Persona
+            cursor.execute("""
+                INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                persona_data["nombre"], persona_data["apellido"], persona_data["mail"],
+                persona_data["telefono"], persona_data["fecha_nac"],
+                persona_data["tipo_documento"], persona_data["nro_documento"]
+            ))
+            id_persona = cursor.lastrowid
+
+            # Insert Usuario
+            cursor.execute("""
+                INSERT INTO Usuario(id_persona, user_name, password, id_permiso)
+                VALUES (?, ?, ?, ?)
+            """, (
+                id_persona,
+                usuario_data["user_name"],
+                usuario_data["password"],
+                usuario_data["id_permiso"]
+            ))
+
+            # Insert Empleado
+            cursor.execute("""
+                INSERT INTO Empleado(id_persona, fecha_alta, horario, sueldo)
+                VALUES (?, ?, ?, ?)
+            """, (
+                id_persona,
+                role_data["fecha_alta"],
+                role_data["horario"],
+                role_data["sueldo"]
+            ))
+
+            conn.commit()
+            return cursor.lastrowid
+
+        except Exception as e:
+            print("Error insertando empleado:", e)
+            conn.rollback()
+            return None
+
+        finally:
+            conn.close()

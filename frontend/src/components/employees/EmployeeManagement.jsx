@@ -8,8 +8,10 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
     id: null,
     nombre: "",
     apellido: "",
-    dni: "",
-    email: "",
+    tipo_documento: 1,
+    nro_documento: "",
+    fecha_nac:"",
+    mail: "",
     telefono: "",
     sueldo: "",
     horario: "",
@@ -47,9 +49,33 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+
+    const payload = {
+      persona: {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        mail: formData.mail,
+        telefono: formData.telefono,
+        fecha_nac: formData.fecha_nac,
+        tipo_documento: formData.tipo_documento,
+        nro_documento: formData.nro_documento
+      },
+      usuario: {
+        user_name: formData.mail,
+        password: formData.nro_documento,
+        id_permiso: 2
+      },
+      role: {
+        sueldo: formData.sueldo,
+        horario: formData.horario,
+        fecha_alta: formData.fechaAlta
+      }
+    };
+
+    onSave(payload);
     navigate("/dashboard");
   };
+
 
   return (
     <div className="flex justify-center items-center p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -89,11 +115,11 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">DNI</label>
+            <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">Número de Documento</label>
             <input
               type="text"
-              name="dni"
-              value={formData.dni}
+              name="nro_documento"
+              value={formData.nro_documento}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
@@ -102,11 +128,42 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
           </div>
 
           <div>
+            <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">
+              Tipo de Documento
+            </label>
+
+            <select
+              name="tipo_documento"
+              value={formData.tipo_documento}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value={1}>DNI</option>
+              <option value={2}>Pasaporte</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">
+              Fecha Nacimiento
+            </label>
+            <input
+              type="date"
+              name="fecha_nac"
+              value={formData.fecha_nac || ""}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+            />
+          </div>
+
+          <div>
             <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">Email</label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="mail"
+              name="mail"
+              value={formData.mail}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"

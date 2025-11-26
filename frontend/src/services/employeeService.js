@@ -22,10 +22,12 @@ export const employeeService = {
   },
 
   // Crear empleado
-  create: async (employeeData) => {
-    const response = await apiEmployee.post('/empleados', employeeData);
+  create: async (payload) => {
+    const response = await apiEmployee.post('/empleados', payload);
     return response.data;
   },
+
+
 
   // Actualizar empleado
   update: async (id, employeeData) => {
