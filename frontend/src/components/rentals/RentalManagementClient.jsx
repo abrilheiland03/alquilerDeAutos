@@ -215,6 +215,7 @@ const RentalManagementClient = () => {
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                       >
                         <XCircle className="h-4 w-4" />
+
                       </button>
                     )}
                     {/* Botón para ver detalles en vista lista */}

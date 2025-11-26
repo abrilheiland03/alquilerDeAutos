@@ -231,27 +231,40 @@ const RentalCard = ({
 
       {/* CORRECCIÓN 1: Acciones alineadas a la derecha */}
       <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
-          {actions.map(({ action, handler, icon: Icon, color }) => (
-            <button
-              key={action}
-              onClick={() => handler(rental)}
-              className={`p-2 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 dark:hover:bg-${color}-900 rounded-lg transition-colors duration-200`}
-              title={
-                action === 'view' ? 'Ver información detallada' :
-                action === 'start' ? 'Iniciar alquiler' : 
-                action === 'complete' ? 'Finalizar alquiler' : 
-                action === 'cancel' ? 'Cancelar alquiler' : 
-                action === 'multa' ? 'Registrar multa' :
-                action === 'danio' ? 'Registrar daño' :
-                'Eliminar alquiler'
-              }
-            >
-              <Icon className="h-4 w-4" />
-            </button>
-          ))}
-        </div>
-      </div>
+  <div className="flex items-center space-x-2">
+    {actions.map(({ action, handler, icon: Icon, color }) => (
+      <button
+        key={action}
+        onClick={() => handler(rental)}
+        className={`px-2 py-1 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 dark:hover:bg-${color}-900 rounded-lg transition-colors duration-200 flex items-center gap-1`}
+        title={
+          action === 'view' ? 'Ver información detallada' :
+          action === 'start' ? 'Iniciar alquiler' : 
+          action === 'complete' ? 'Finalizar alquiler' : 
+          action === 'cancel' ? 'Cancelar alquiler' : 
+          action === 'multa' ? 'Registrar multa' :
+          action === 'danio' ? 'Registrar daño' :
+          'Eliminar alquiler'
+        }
+      >
+        {action === 'cancel' ? (
+          <>
+            <Icon className="h-4 w-4" />
+            <span className="text-sm font-medium">Cancelar</span>
+          </>
+        ) : action === 'view' ? (
+          <>
+            <Icon className="h-4 w-4" />
+            <span className="text-sm font-medium">Ver alquiler</span>
+          </>
+        ) : (
+          <Icon className="h-4 w-4" />
+        )}
+      </button>
+    ))}
+  </div>
+</div>
+
     </div>
   );
 };
