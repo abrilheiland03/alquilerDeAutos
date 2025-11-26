@@ -1194,6 +1194,48 @@ def obtener_alquileres_empleado_dashboard():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@api.route('/mi-perfil', methods=['GET'])
+def obtener_mi_perfil():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        # Obtener los datos de la persona asociada al usuario
+        persona_data = sistema.obtener_persona_por_usuario(usuario.id_usuario)
+        
+        if not persona_data:
+            return jsonify({"error": "No se encontró el perfil asociado a este usuario"}), 404
+
+        return jsonify(persona_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/mi-perfil', methods=['PUT'])
+def actualizar_mi_perfil():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
+
+        data = request.get_json()
+        
+        # Validar datos requeridos
+        campos_requeridos = ['nombre', 'apellido', 'mail', 'telefono', 'fecha_nacimiento', 'tipo_documento_id', 'nro_documento']
+        for campo in campos_requeridos:
+            if campo not in data:
+                return jsonify({"error": f"Falta el campo requerido: {campo}"}), 400
+
+        exito = sistema.actualizar_persona_por_usuario(usuario.id_usuario, data, usuario)
+        
+        if exito:
+            return jsonify({"mensaje": "Perfil actualizado exitosamente"}), 200
+        return jsonify({"error": "No se pudo actualizar el perfil"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # ---------------------------------------------------------
 # EJECUCIÓN

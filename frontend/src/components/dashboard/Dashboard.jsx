@@ -6,6 +6,7 @@ import { rentalService } from '../../services/rentalService';
 import { maintenanceService } from '../../services/maintenanceService';
 import { clientService } from '../../services/clientService';
 import { dashboardService } from '../../services/dashboardService';
+import ClientProfileModal from '../clients/ClientProfileModal';
 import { 
   Car, 
   Users, 
@@ -48,7 +49,18 @@ const StatCard = ({ title, value, icon: Icon, color, change, changeType }) => (
 );
 
 // Componente de tarjeta de acción rápida
-const QuickActionCard = ({ title, description, icon: Icon, href, buttonText, color, disabled = false, disabledReason = "" }) => (
+// En el componente QuickActionCard, modifica:
+const QuickActionCard = ({ 
+  title, 
+  description, 
+  icon: Icon, 
+  href, 
+  buttonText, 
+  color, 
+  disabled = false, 
+  disabledReason = "",
+  onClick // ← Agregar este prop
+}) => (
   <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200 ${disabled ? 'opacity-60' : ''}`}>
     <div className="flex items-start justify-between">
       <div className="flex-1">
@@ -60,13 +72,23 @@ const QuickActionCard = ({ title, description, icon: Icon, href, buttonText, col
           {disabled ? disabledReason : description}
         </p>
         {!disabled ? (
-          <Link
-            to={href}
-            className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
-          >
-            {buttonText}
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
+          onClick ? ( // ← Si hay onClick, usar botón
+            <button
+              onClick={onClick}
+              className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+            >
+              {buttonText}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </button>
+          ) : ( // ← Si no hay onClick, usar Link
+            <Link
+              to={href}
+              className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+            >
+              {buttonText}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          )
         ) : (
           <span className="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed">
             {buttonText}
@@ -265,6 +287,7 @@ const Dashboard = () => {
   const [lastRental, setLastRental] = useState(null);
   const [lastVehicleAvailable, setLastVehicleAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -539,9 +562,9 @@ const Dashboard = () => {
                 title="Mi Perfil"
                 description="Actualiza tu información personal y preferencias"
                 icon={Users}
-                href="/profile"
                 buttonText="Editar perfil"
                 color="bg-purple-500"
+                onClick={() => setProfileModalOpen(true)} // Cambia href por onClick
               />
               
               {/* Card de último alquiler */}
@@ -717,7 +740,18 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      )}
+      )},
+
+      {isClient() && (
+      <ClientProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        onSave={() => {
+          // Recargar datos si es necesario
+          fetchDashboardData();
+        }}
+      />
+    )}
     </div>
   );
 };

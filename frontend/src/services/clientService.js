@@ -37,5 +37,16 @@ export const clientService = {
   delete: async (id) => {
     const response = await apiClient.delete(`/clientes/${id}`);
     return response.data;
+  },
+
+  getMyProfile: async () => {
+    const response = await apiClient.get('/mi-perfil');
+    return response.data;
+  },
+
+  // Actualizar el perfil personal del usuario actual
+  updateMyProfile: async (profileData) => {
+    const response = await apiClient.put('/mi-perfil', profileData);
+    return response.data;
   }
 };

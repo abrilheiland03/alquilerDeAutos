@@ -1077,3 +1077,21 @@ class SistemaAlquiler:
         except Exception as e:
             print(f"Error obteniendo alquileres del empleado: {e}")
             return []
+    
+    def obtener_persona_por_usuario(self, id_usuario):
+        return self.db_manager.get_persona_por_usuario(id_usuario)
+
+    def actualizar_persona_por_usuario(self, id_usuario, persona_data, usuario_solicitante):
+        # Verificar que el usuario solo pueda editar su propio perfil
+        if str(usuario_solicitante.id_usuario) != str(id_usuario):
+            print("No puedes editar el perfil de otro usuario")
+            return False
+        
+        # Obtener el id_persona del usuario
+        persona_actual = self.db_manager.get_persona_por_usuario(id_usuario)
+        if not persona_actual:
+            print("No se encontró la persona asociada al usuario")
+            return False
+        
+        # Actualizar los datos de la persona
+        return self.db_manager.update_persona_por_id(persona_actual['id_persona'], persona_data)

@@ -2016,3 +2016,74 @@ class DBManager:
             return []
         finally:
             if conn: conn.close()
+    
+    def get_persona_por_usuario(self, id_usuario):
+        sql = """
+            SELECT 
+                p.id_persona, p.nombre, p.apellido, p.mail, p.telefono, 
+                p.fecha_nac, p.nro_documento, p.tipo_documento,
+                doc.descripcion as doc_desc
+            FROM Persona p
+            JOIN Usuario u ON p.id_persona = u.id_persona
+            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
+            WHERE u.id_usuario = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+            
+            row = conn.cursor().execute(sql, (id_usuario,)).fetchone()
+            
+            if row:
+                return {
+                    "id_persona": row['id_persona'],
+                    "nombre": row['nombre'],
+                    "apellido": row['apellido'],
+                    "mail": row['mail'],
+                    "telefono": row['telefono'],
+                    "fecha_nacimiento": row['fecha_nac'],
+                    "nro_documento": row['nro_documento'],
+                    "tipo_documento": row['doc_desc'],
+                    "id_tipo_documento": row['tipo_documento']
+                }
+        except sqlite3.Error as e:
+            print(f"Error al obtener persona por usuario: {e}")
+        finally:
+            if conn:
+                conn.close()
+        return None
+
+    def update_persona_por_id(self, id_persona, persona_data):
+        sql = """
+            UPDATE Persona
+            SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
+                fecha_nac = ?, tipo_documento = ?, nro_documento = ?
+            WHERE id_persona = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return False
+            
+            cursor = conn.cursor()
+            cursor.execute(sql, (
+                persona_data['nombre'], 
+                persona_data['apellido'],
+                persona_data['mail'], 
+                persona_data['telefono'],
+                persona_data['fecha_nacimiento'],
+                persona_data['tipo_documento_id'],
+                persona_data['nro_documento'],
+                id_persona
+            ))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error al actualizar persona: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()
