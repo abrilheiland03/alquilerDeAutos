@@ -146,7 +146,7 @@ export const pdfService = {
       // 4. ALQUILERES POR PERÍODO
       doc.setFontSize(16);
       doc.setTextColor(44, 62, 80);
-      doc.text(`4. ALQUILERES POR ${periodo.toUpperCase()}`, 14, yPosition);
+      doc.text(`4. ALQUILERES ${periodo.toUpperCase()}`, 14, yPosition);
       yPosition += 10;
 
       const periodoTableData = periodoData.map(periodo => [
@@ -286,7 +286,7 @@ export const pdfService = {
       
       switch (type) {
         case 'clientes':
-          headers = ['Cliente', 'DNI', 'Fecha Inicio', 'Fecha Fin', 'Días', 'Marca', 'Modelo', 'Patente', 'Total Alquiler'];
+          headers = ['Cliente', 'DNI', 'Fecha Inicio', 'Fecha Fin', 'Días', 'Marca', 'Modelo', 'Patente', 'Multas', 'Daños', 'Total Alquiler'];
           
           // Reestructurar los datos para mostrar subfilas
           const clientesConSubfilas = [];
@@ -302,14 +302,17 @@ export const pdfService = {
                 cliente.cliente || 'N/A',
                 cliente.nro_documento || 'N/A',
                 'Sin alquileres',
-                '', '', '', '', '',
+                '', '', '', '', '', '', '',
                 '$0'
               ]);
             } else {
-              // Fila principal del cliente (primera fila) - AHORA CON TOTAL INDIVIDUAL
+              // Fila principal del cliente (primera fila) - CON MULTAS Y DAÑOS
               const primerAlquiler = alquileres[0];
               const diasPrimerAlquiler = pdfService._calcularDiasEnteros(primerAlquiler.fecha_inicio, primerAlquiler.fecha_fin);
-              const totalPrimerAlquiler = diasPrimerAlquiler * (primerAlquiler.precio_flota || 0);
+              const totalAlquilerBase = diasPrimerAlquiler * (primerAlquiler.precio_flota || 0);
+              const totalMultas = primerAlquiler.total_multas || 0;
+              const totalDanios = primerAlquiler.total_danios || 0;
+              const totalGeneral = totalAlquilerBase + totalMultas + totalDanios;
               
               clientesConSubfilas.push([
                 { content: cliente.cliente || 'N/A', rowSpan: totalAlquileres },
@@ -320,14 +323,19 @@ export const pdfService = {
                 primerAlquiler.marca || 'N/A',
                 primerAlquiler.modelo || 'N/A',
                 primerAlquiler.patente || 'N/A',
-                `$${totalPrimerAlquiler.toLocaleString('es-AR')}`
+                `$${totalMultas.toLocaleString('es-AR')}`,
+                `$${totalDanios.toLocaleString('es-AR')}`,
+                `$${totalGeneral.toLocaleString('es-AR')}`
               ]);
               
-              // Subfilas para los alquileres restantes - AHORA CON TOTALES INDIVIDUALES
+              // Subfilas para los alquileres restantes - CON MULTAS Y DAÑOS
               for (let i = 1; i < totalAlquileres; i++) {
                 const alquiler = alquileres[i];
                 const diasAlquiler = pdfService._calcularDiasEnteros(alquiler.fecha_inicio, alquiler.fecha_fin);
-                const totalAlquilerIndividual = diasAlquiler * (alquiler.precio_flota || 0);
+                const totalAlquilerBase = diasAlquiler * (alquiler.precio_flota || 0);
+                const totalMultas = alquiler.total_multas || 0;
+                const totalDanios = alquiler.total_danios || 0;
+                const totalGeneral = totalAlquilerBase + totalMultas + totalDanios;
                 
                 clientesConSubfilas.push([
                   alquiler.fecha_inicio ? pdfService._formatearFecha(alquiler.fecha_inicio) : 'N/A',
@@ -336,7 +344,9 @@ export const pdfService = {
                   alquiler.marca || 'N/A',
                   alquiler.modelo || 'N/A',
                   alquiler.patente || 'N/A',
-                  `$${totalAlquilerIndividual.toLocaleString('es-AR')}`
+                  `$${totalMultas.toLocaleString('es-AR')}`,
+                  `$${totalDanios.toLocaleString('es-AR')}`,
+                  `$${totalGeneral.toLocaleString('es-AR')}`
                 ]);
               }
             }
@@ -357,26 +367,103 @@ export const pdfService = {
           break;
           
         case 'periodo':
-          headers = ['Período', 'Total Alq.', 'Ingresos', 'Duración Prom.'];
-          tableData = (data || []).map(periodo => [
-            periodo.periodo || 'N/A',
-            periodo.total_alquileres || 0,
-            `$${((periodo.ingresos_totales || 0)).toLocaleString('es-AR')}`,
-            `${((periodo.duracion_promedio || 0)).toFixed(1)} días`
-          ]);
-          break;
+          // EN LUGAR DE TABLA, MOSTRAR GRÁFICO LINEAL
+          let periodoDataProcessed = false;
           
-        case 'facturacion':
-          headers = ['Mes', 'Facturación'];
-          tableData = (data || []).map(item => [
-            item.periodo || 'N/A',
-            `$${((item.total_facturado || 0)).toLocaleString('es-AR')}`
-          ]);
+          try {
+            // Generar gráfico lineal para la evolución de alquileres
+            const chartURL = chartService.generateLineChartURL(
+              data,
+              `Evolución de Alquileres - Período ${periodo.toUpperCase()}`,
+              periodo
+            );
+            
+            if (chartURL && data && data.length > 0) {
+              const chartImage = await chartService.loadImageAsBase64(chartURL);
+              if (chartImage) {
+                doc.addImage(chartImage, 'PNG', 10, yPosition, 190, 100);
+                yPosition += 110;
+                
+                // ✅ AGREGAR ESTADÍSTICAS RESUMEN DEBAJO DEL GRÁFICO
+                const totalAlquileres = data.reduce((sum, item) => sum + (item.total_alquileres || 0), 0);
+                const totalIngresos = data.reduce((sum, item) => sum + (item.ingresos_totales || 0), 0);
+                const promedioDuracion = data.reduce((sum, item) => sum + (item.duracion_promedio || 0), 0) / data.length;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                
+                // Título del resumen
+                doc.setFontSize(12);
+                doc.setTextColor(44, 62, 80);
+                doc.text('RESUMEN DEL PERÍODO', 14, yPosition);
+                yPosition += 8;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                
+                doc.text(`• Total de alquileres: ${totalAlquileres}`, 20, yPosition);
+                yPosition += 6;
+                doc.text(`• Ingresos totales: $${totalIngresos.toLocaleString('es-AR')}`, 20, yPosition);
+                yPosition += 6;
+                doc.text(`• Duración promedio: ${promedioDuracion.toFixed(1)} días`, 20, yPosition);
+                yPosition += 15;
+                
+                periodoDataProcessed = true;
+              }
+            }
+          } catch (chartError) {
+            console.warn('No se pudo cargar el gráfico lineal:', chartError);
+            // Si falla el gráfico, mostrar tabla como fallback
+          }
+
+          // ✅ FALLBACK: Si no se pudo procesar con gráfico, mostrar tabla
+          if (!periodoDataProcessed) {
+            headers = ['Período', 'Total Alq.', 'Ingresos', 'Duración Prom.'];
+            tableData = (data || []).map(periodoItem => [
+              pdfService._formatearPeriodo(periodoItem.periodo, periodo),
+              periodoItem.total_alquileres || 0,
+              `$${((periodoItem.ingresos_totales || 0)).toLocaleString('es-AR')}`,
+              `${((periodoItem.duracion_promedio || 0)).toFixed(1)} días`
+            ]);
+            
+            if (tableData.length > 0) {
+              autoTable(doc, {
+                startY: yPosition,
+                head: [headers],
+                body: tableData,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [142, 68, 173] },
+                margin: { left: 14, right: 14 }
+              });
+              yPosition = doc.lastAutoTable.finalY + 10;
+              
+              // ✅ AGREGAR ESTADÍSTICAS TAMBIÉN EN EL FALLBACK
+              const totalAlquileres = data.reduce((sum, item) => sum + (item.total_alquileres || 0), 0);
+              const totalIngresos = data.reduce((sum, item) => sum + (item.ingresos_totales || 0), 0);
+              
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`Resumen: ${totalAlquileres} alquileres - $${totalIngresos.toLocaleString('es-AR')} ingresos`, 14, yPosition);
+              yPosition += 10;
+              
+              periodoDataProcessed = true;
+            }
+          }
+
+          // ✅ SOLO mostrar "No hay datos" si realmente no hay datos procesados
+          if (!periodoDataProcessed && (!data || data.length === 0)) {
+            doc.text('No hay datos disponibles', 105, yPosition + 10, { align: 'center' });
+          }
+          
+          // ✅ IMPORTANTE: Prevenir que el código general muestre el mensaje
+          tableData = [{_processed: true}];
           break;
       }
       
       // Solo agregar tabla si hay datos
-      if (tableData.length > 0) {
+      const isPeriodoCase = type === 'periodo' && tableData[0]?._processed;
+
+      if (tableData.length > 0 && !isPeriodoCase) {
         autoTable(doc, {
           startY: yPosition,
           head: [headers],
@@ -387,7 +474,8 @@ export const pdfService = {
           },
           margin: { left: 14, right: 14 }
         });
-      } else {
+      } else if (tableData.length === 0 && type !== 'periodo') {
+        // Solo mostrar "No hay datos" si NO es el caso de período
         doc.text('No hay datos disponibles', 105, yPosition + 10, { align: 'center' });
       }
       
@@ -449,6 +537,38 @@ export const pdfService = {
     } catch (error) {
       console.error('Error formateando fecha:', error);
       return 'N/A';
+    }
+  },
+
+  _formatearPeriodo(periodoString, tipoPeriodo) {
+    if (!periodoString) return 'N/A';
+    
+    try {
+      switch (tipoPeriodo.toLowerCase()) {
+        case 'mensual':
+          // Formato: 2025-03
+          const [yearM, month] = periodoString.split('-');
+          const monthNames = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+          ];
+          return `${monthNames[parseInt(month) - 1]} ${yearM}`;
+          
+        case 'trimestral':
+          // Formato: 2025-1 (trimestre 1 del 2025)
+          const [yearQ, quarter] = periodoString.split('-');
+          return `T${quarter} ${yearQ}`;
+          
+        case 'anual':
+          // Formato: 2025
+          return periodoString;
+          
+        default:
+          return periodoString;
+      }
+    } catch (error) {
+      console.error('Error formateando período:', error, 'Período:', periodoString);
+      return periodoString; // Devolver el original en caso de error
     }
   }
 };

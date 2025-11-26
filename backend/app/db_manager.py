@@ -1742,7 +1742,6 @@ class DBManager:
     # Funciones específicas para PDF
 
     def get_detailed_client_rentals_report(self, fecha_desde, fecha_hasta):
-        """Reporte detallado de alquileres por cliente con todos los alquileres individuales"""
         sql = """
             SELECT 
                 -- Datos del cliente
@@ -1771,6 +1770,20 @@ class DBManager:
                         ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
                     END
                 ) as total_alquiler,
+                
+                -- Multas asociadas al alquiler
+                COALESCE((
+                    SELECT SUM(multa.costo) 
+                    FROM Multa multa 
+                    WHERE multa.alquiler_id = a.id_alquiler
+                ), 0) as total_multas,
+                
+                -- Daños asociados al alquiler  
+                COALESCE((
+                    SELECT SUM(danio.costo) 
+                    FROM Danio danio 
+                    WHERE danio.id_alquiler = a.id_alquiler
+                ), 0) as total_danios,
                 
                 -- Total por cliente (para la fila principal) CORREGIDO
                 SUM(v.precio_flota * 
@@ -1813,12 +1826,15 @@ class DBManager:
                 clientes_dict[cliente_id]['alquileres'].append({
                     'fecha_inicio': row['fecha_inicio'],
                     'fecha_fin': row['fecha_fin'],
-                    'dias': row['dias'],  # Ahora son días enteros
+                    'dias': row['dias'],
                     'modelo': row['modelo'],
                     'marca': row['marca'],
                     'patente': row['patente'],
                     'precio_flota': row['precio_flota'],
-                    'total_alquiler': row['total_alquiler']
+                    'total_alquiler': row['total_alquiler'],
+                    'total_multas': row['total_multas'],
+                    'total_danios': row['total_danios'],
+                    'total_general': row['total_alquiler'] + row['total_multas'] + row['total_danios']
                 })
             
             return list(clientes_dict.values())
@@ -1830,11 +1846,8 @@ class DBManager:
             if conn: conn.close()
 
     def get_rentals_by_period_report(self, periodo_tipo='mensual', fecha_desde=None, fecha_hasta=None):
-        """Reporte de alquileres por período (mensual, trimestral, anual)"""
-        
         # Definir formato según el tipo de período
         format_map = {
-            'semanal': "strftime('%Y-%W', fecha_inicio)",
             'mensual': "strftime('%Y-%m', fecha_inicio)", 
             'trimestral': "strftime('%Y-') || ((strftime('%m', fecha_inicio) - 1) / 3 + 1)",
             'anual': "strftime('%Y', fecha_inicio)"
@@ -1847,12 +1860,23 @@ class DBManager:
                 {periodo_format} as periodo,
                 COUNT(id_alquiler) as total_alquileres,
                 SUM(
-                    (SELECT precio_flota FROM Vehiculo WHERE patente = a.patente) * 
-                    (JULIANDAY(fecha_fin) - JULIANDAY(fecha_inicio))
+                    v.precio_flota * 
+                    CASE 
+                        -- CÁLCULO CORREGIDO: días enteros (mínimo 1 día)
+                        WHEN (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) < 1 THEN 1
+                        ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
+                    END
                 ) as ingresos_totales,
-                AVG(JULIANDAY(fecha_fin) - JULIANDAY(fecha_inicio)) as duracion_promedio
+                AVG(
+                    CASE 
+                        -- CÁLCULO CORREGIDO: días enteros para el promedio también
+                        WHEN (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) < 1 THEN 1
+                        ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
+                    END
+                ) as duracion_promedio
             FROM Alquiler a
-            WHERE id_estado = 4
+            JOIN Vehiculo v ON a.patente = v.patente
+            WHERE a.id_estado = 4
         """
         
         params = []

@@ -583,7 +583,6 @@ const Reports = () => {
               className="w-full mb-3 input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
               disabled={exporting}
             >
-              <option value="semanal">Semanal</option>
               <option value="mensual">Mensual</option>
               <option value="trimestral">Trimestral</option>
               <option value="anual">Anual</option>
