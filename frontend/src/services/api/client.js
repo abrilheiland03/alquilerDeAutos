@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  // Si estamos en localhost, usar localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  // Si no, usar la URL del tunnel
+  return 'https://dp36lzm9-5000.brs.devtunnels.ms/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({

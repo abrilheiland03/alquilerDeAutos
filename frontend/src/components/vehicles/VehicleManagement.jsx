@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { vehicleService } from '../../services/vehicleService';
@@ -36,58 +36,63 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [colores, setColores] = useState([]);
   const [estados, setEstados] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [catalogosLoaded, setCatalogosLoaded] = useState(false);
 
+  // Cargar catálogos solo una vez cuando se abre el modal
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !catalogosLoaded) {
       fetchCatalogos();
-      if (vehicle) {
-        
-        setFormData({
-          patente: vehicle.patente || '',
-          modelo: vehicle.modelo || '',
-          // Buscar el ID de la marca por su descripción
-          id_marca: findMarcaId(vehicle.marca) || '',
-          anio: vehicle.anio || new Date().getFullYear(),
-          precio_flota: vehicle.precio_flota || '',
-          asientos: vehicle.asientos || 5,
-          puertas: vehicle.puertas || 4,
-          caja_manual: vehicle.caja_manual || false,
-          // Buscar el ID del estado por su descripción
-          id_estado: findEstadoId(vehicle.estado) || 1,
-          // Buscar el ID del color por su descripción
-          id_color: findColorId(vehicle.color) || ''
-        });
-      } else {
-        setFormData({
-          patente: '',
-          modelo: '',
-          id_marca: '',
-          anio: new Date().getFullYear(),
-          precio_flota: '',
-          asientos: 5,
-          puertas: 4,
-          caja_manual: false,
-          id_estado: 1,
-          id_color: ''
-        });
-      }
     }
-  }, [isOpen, vehicle, marcas, colores, estados]);
+  }, [isOpen, catalogosLoaded]);
 
-  const findMarcaId = (marcaDescripcion) => {
-    const marca = marcas.find(m => m.descripcion === marcaDescripcion);
-    return marca ? marca.id_marca : '';
-  };
+  // Actualizar formData cuando vehicle cambie Y los catálogos estén cargados
+  useEffect(() => {
+    if (isOpen && catalogosLoaded && vehicle) {
+      const findMarcaId = (marcaDescripcion) => {
+        const marca = marcas.find(m => m.descripcion === marcaDescripcion);
+        return marca ? marca.id_marca : '';
+      };
 
-  const findColorId = (colorDescripcion) => {
-    const color = colores.find(c => c.descripcion === colorDescripcion);
-    return color ? color.id_color : '';
-  };
+      const findColorId = (colorDescripcion) => {
+        const color = colores.find(c => c.descripcion === colorDescripcion);
+        return color ? color.id_color : '';
+      };
 
-  const findEstadoId = (estadoDescripcion) => {
-    const estado = estados.find(e => e.descripcion === estadoDescripcion);
-    return estado ? estado.id_estado : 1;
-  };
+      const findEstadoId = (estadoDescripcion) => {
+        const estado = estados.find(e => e.descripcion === estadoDescripcion);
+        return estado ? estado.id_estado : 1;
+      };
+
+      const updatedFormData = {
+        patente: vehicle.patente || '',
+        modelo: vehicle.modelo || '',
+        anio: vehicle.anio || new Date().getFullYear(),
+        precio_flota: vehicle.precio_flota || '',
+        asientos: vehicle.asientos || 5,
+        puertas: vehicle.puertas || 4,
+        caja_manual: vehicle.caja_manual || false,
+        id_marca: findMarcaId(vehicle.marca),
+        id_estado: findEstadoId(vehicle.estado),
+        id_color: findColorId(vehicle.color)
+      };
+      
+      setFormData(updatedFormData);
+    } else if (isOpen && !vehicle) {
+      // Resetear a valores por defecto cuando es un nuevo vehículo
+      setFormData({
+        patente: '',
+        modelo: '',
+        id_marca: '',
+        anio: new Date().getFullYear(),
+        precio_flota: '',
+        asientos: 5,
+        puertas: 4,
+        caja_manual: false,
+        id_estado: 1,
+        id_color: ''
+      });
+    }
+  }, [isOpen, vehicle, catalogosLoaded, marcas, colores, estados]);
 
   const fetchCatalogos = async () => {
     try {
@@ -100,6 +105,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
       setMarcas(marcasData);
       setColores(coloresData);
       setEstados(estadosData);
+      setCatalogosLoaded(true);
     } catch (error) {
       console.error('Error fetching catalogos:', error);
     }
@@ -107,10 +113,20 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar que todos los campos requeridos estén llenos
+    if (!formData.patente || !formData.modelo || !formData.id_marca || 
+        !formData.id_color || !formData.id_estado) {
+      alert('Por favor complete todos los campos requeridos');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await onSave(formData);
+      // Resetear estados al cerrar
+      setCatalogosLoaded(false);
       onClose();
     } catch (error) {
       console.error('Error saving vehicle:', error);
@@ -126,6 +142,13 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
+
+  // Resetear cuando se cierre el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setCatalogosLoaded(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
