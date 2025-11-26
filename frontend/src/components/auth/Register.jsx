@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Car, ArrowLeft, Loader2 } from 'lucide-react';
 import { authService } from '../../services/authService';
+import logoNaranja from '../../assets/logo-sin-fondo.png';
 
 // Componente para mensajes de estado
 const FormMessage = ({ type, text }) => {
@@ -113,13 +114,13 @@ const Register = () => {
             
             {/* Header del Formulario */}
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-                <div className="flex items-center justify-center mb-2">
-                    <Car className="h-10 w-10 text-orange-500" />
-                    <span className="ml-3 text-3xl font-extrabold text-gray-900 dark:text-white">IngRide</span>
-                </div>
+                <img 
+                    src={logoNaranja} 
+                    alt="IngRide Logo" 
+                    className="max-h-20 w-auto object-contain mx-auto"
+                />
                 <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Crear Cuenta</h1>
             </div>
-
             {/* Contenedor del Formulario */}
             <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="registro-section">

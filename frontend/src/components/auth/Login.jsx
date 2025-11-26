@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Car, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
+import logoNaranja from '../../assets/logo-sin-fondo.png';
 
 // Componente para mensajes de estado (éxito/error)
 const FormMessage = ({ type, text }) => {
@@ -128,12 +129,15 @@ const Login = () => {
             
             {/* Header del Formulario */}
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-                <div className="flex items-center justify-center mb-2">
-                    <Car className="h-10 w-10 text-orange-500" />
-                    <span className="ml-3 text-3xl font-extrabold text-gray-900 dark:text-white">IngRide</span>
-                </div>
-                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Sistema de Gestión de Alquileres</h1>
+                <img 
+                    src={logoNaranja} 
+                    alt="IngRide Logo" 
+                    className="max-h-20 w-auto object-contain mx-auto"
+                />
+                <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Sistema de Gestión de Alquileres</h1>
             </div>
+
+
 
             {/* Contenedor del Formulario */}
             <div className="relative w-full max-w-md bg-white dark:bg-gray-800 p-8 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../contexts/AuthContext';
 
 // --- Funciones de formateo para el sueldo ---
 function formatearSueldoVisual(valor) {
@@ -13,6 +14,7 @@ function limpiarSueldo(valor) {
 
 export default function EmployeeManagement({ onSave, employeeToEdit }) {
   const navigate = useNavigate();
+  const { user, isAdmin, isEmployee, isClient } = useAuth();
 
   const [formData, setFormData] = useState({
     id: null,
@@ -88,6 +90,8 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
 
 
   return (
+    <>
+    {isAdmin() && (
     <div className="flex justify-center items-center p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
       <form
         onSubmit={handleSubmit}
@@ -271,5 +275,7 @@ export default function EmployeeManagement({ onSave, employeeToEdit }) {
         </div>
       </form>
     </div>
-  );
+  )}
+  </>
+);
 }

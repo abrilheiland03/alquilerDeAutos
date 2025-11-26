@@ -594,16 +594,19 @@ const Dashboard = () => {
                 buttonText="Registrar cliente"
                 color="bg-purple-500"
               />
-              <QuickActionCard
+              
+              {/* Solo Admin puede ver reportes y crear empleado */}
+              {isAdmin() && (
+                <>
+                <QuickActionCard
                 title="Crear Empleado"
                 description="Registrar un nuevo empleado en el sistema"
                 icon={Users}
                 href="/employees/new"
                 buttonText="Registrar empleado"
                 color="bg-purple-500"
-              />
-              {/* Solo Admin puede ver reportes */}
-              {isAdmin() && (
+                />
+
                 <QuickActionCard
                   title="Ver Reportes"
                   description="Analizar estadísticas y reportes del sistema"
@@ -612,6 +615,7 @@ const Dashboard = () => {
                   buttonText="Ver reportes"
                   color="bg-green-500"
                 />
+                </>
               )}
               <QuickActionCard
                 title="Programar Mantenimiento"
