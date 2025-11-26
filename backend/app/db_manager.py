@@ -1741,44 +1741,88 @@ class DBManager:
 
     # Funciones específicas para PDF
 
-    def get_detailed_rentals_by_client_report(self, fecha_desde=None, fecha_hasta=None):
-        """Reporte detallado de alquileres por cliente para PDF - AGRUPADO POR CLIENTE"""
+    def get_detailed_client_rentals_report(self, fecha_desde, fecha_hasta):
+        """Reporte detallado de alquileres por cliente con todos los alquileres individuales"""
         sql = """
             SELECT 
+                -- Datos del cliente
+                c.id_cliente,
                 p.nombre || ' ' || p.apellido as cliente,
                 p.nro_documento,
-                p.mail,
-                p.telefono,
-                COUNT(a.id_alquiler) as total_alquileres,
-                SUM(
-                    v.precio_flota * 
-                    (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio))
-                ) as total_facturado,
-                AVG(JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) as duracion_promedio,
-                MAX(a.fecha_inicio) as ultimo_alquiler
+                
+                -- Datos de cada alquiler individual
+                a.id_alquiler,
+                a.fecha_inicio,
+                a.fecha_fin,
+                -- CÁLCULO CORREGIDO: días enteros (mínimo 1 día)
+                CASE 
+                    WHEN (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) < 1 THEN 1
+                    ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
+                END as dias,
+                v.modelo,
+                m.descripcion as marca,
+                v.patente,
+                v.precio_flota,
+                
+                -- Total por alquiler individual CORREGIDO
+                (v.precio_flota * 
+                    CASE 
+                        WHEN (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) < 1 THEN 1
+                        ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
+                    END
+                ) as total_alquiler,
+                
+                -- Total por cliente (para la fila principal) CORREGIDO
+                SUM(v.precio_flota * 
+                    CASE 
+                        WHEN (JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) < 1 THEN 1
+                        ELSE CAST((JULIANDAY(a.fecha_fin) - JULIANDAY(a.fecha_inicio)) AS INTEGER)
+                    END
+                ) OVER (PARTITION BY c.id_cliente) as total_cliente
+                
             FROM Alquiler a
             JOIN Cliente c ON a.id_cliente = c.id_cliente
             JOIN Persona p ON c.id_persona = p.id_persona
             JOIN Vehiculo v ON a.patente = v.patente
+            JOIN Marca m ON v.id_marca = m.id_marca
             WHERE a.id_estado = 4  -- Solo alquileres finalizados
-        """
-        
-        params = []
-        if fecha_desde and fecha_hasta:
-            sql += " AND a.fecha_inicio BETWEEN ? AND ?"
-            params.extend([fecha_desde, fecha_hasta])
-        
-        sql += """
-            GROUP BY c.id_cliente
-            ORDER BY total_facturado DESC
+            AND a.fecha_inicio BETWEEN ? AND ?
+            ORDER BY cliente, a.fecha_inicio DESC
         """
         
         conn = None
         try:
             conn = self._get_connection()
             if conn is None: return []
-            rows = conn.cursor().execute(sql, params).fetchall()
-            return [dict(row) for row in rows]
+            rows = conn.cursor().execute(sql, [fecha_desde, fecha_hasta]).fetchall()
+            
+            # Agrupar por cliente
+            clientes_dict = {}
+            for row in rows:
+                cliente_id = row['id_cliente']
+                
+                if cliente_id not in clientes_dict:
+                    clientes_dict[cliente_id] = {
+                        'cliente': row['cliente'],
+                        'nro_documento': row['nro_documento'],
+                        'total_facturado': row['total_cliente'],
+                        'alquileres': []
+                    }
+                
+                # Agregar alquiler individual
+                clientes_dict[cliente_id]['alquileres'].append({
+                    'fecha_inicio': row['fecha_inicio'],
+                    'fecha_fin': row['fecha_fin'],
+                    'dias': row['dias'],  # Ahora son días enteros
+                    'modelo': row['modelo'],
+                    'marca': row['marca'],
+                    'patente': row['patente'],
+                    'precio_flota': row['precio_flota'],
+                    'total_alquiler': row['total_alquiler']
+                })
+            
+            return list(clientes_dict.values())
+            
         except Exception as e:
             print(f"Error en reporte detallado por cliente: {e}")
             return []

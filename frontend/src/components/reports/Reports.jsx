@@ -208,7 +208,7 @@ const Reports = () => {
         let data;
         switch (type) {
           case 'clientes':
-            data = await reportService.getClientRentalsPDF(dateRange.start, dateRange.end);
+            data = await reportService.getDetailedClientRentalsPDF(dateRange.start, dateRange.end);
             break;
           case 'ranking':
             data = await reportService.getVehicleRankingPDF(dateRange.start, dateRange.end);
@@ -302,91 +302,6 @@ const Reports = () => {
             Métricas y estadísticas del sistema de alquileres
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
-          {/* Selector de período para PDF */}
-          <select 
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-            disabled={exporting}
-          >
-            <option value="semanal">Semanal</option>
-            <option value="mensual">Mensual</option>
-            <option value="trimestral">Trimestral</option>
-            <option value="anual">Anual</option>
-          </select>
-          
-          {/* Botones de exportación */}
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <button
-                onClick={() => handleExportPDF('completo')}
-                disabled={exporting}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-600 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                {exporting ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <FileText className="h-4 w-4 mr-2" />
-                )}
-                {exporting ? 'Generando...' : 'PDF Completo'}
-              </button>
-            </div>
-            
-            <div className="relative group">
-              <button
-                disabled={exporting}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                PDF Individual
-              </button>
-              
-              {/* Menú desplegable para PDFs individuales */}
-              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                <div className="py-1">
-                  <button
-                    onClick={() => handleExportPDF('clientes')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Clientes
-                  </button>
-                  <button
-                    onClick={() => handleExportPDF('ranking')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-                  >
-                    <Car className="h-4 w-4 mr-2" />
-                    Ranking Vehículos
-                  </button>
-                  <button
-                    onClick={() => handleExportPDF('periodo')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Por Período
-                  </button>
-                  <button
-                    onClick={() => handleExportPDF('facturacion')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-                  >
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Facturación
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleExportExcel}
-              disabled={exporting}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Excel
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Filtros de Fecha */}
@@ -415,13 +330,7 @@ const Reports = () => {
                 className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
-            <button
-              onClick={fetchReports}
-              className="btn-primary"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Aplicar
-            </button>
+            {/* ELIMINADO: Botón "Aplicar" */}
           </div>
         </div>
       </div>
@@ -611,6 +520,100 @@ const Reports = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Generar PDF</h1>
+        </div>
+      </div>
+
+      {/* Cards de Generación de PDFs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Card Clientes */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 cursor-pointer group">
+          <div className="flex flex-col items-center text-center" onClick={() => handleExportPDF('clientes')}>
+            <div className="p-3 rounded-full bg-blue-500 group-hover:bg-blue-600 transition-colors duration-200 mb-3">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Clientes</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Detalle completo de alquileres por cliente
+            </p>
+            <div className="flex items-center text-sm text-orange-600 dark:text-orange-400 font-medium">
+              <Download className="h-4 w-4 mr-1" />
+              Generar PDF
+            </div>
+          </div>
+        </div>
+
+        {/* Card Ranking */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 cursor-pointer group">
+          <div className="flex flex-col items-center text-center" onClick={() => handleExportPDF('ranking')}>
+            <div className="p-3 rounded-full bg-green-500 group-hover:bg-green-600 transition-colors duration-200 mb-3">
+              <Award className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ranking</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Vehículos más alquilados del período
+            </p>
+            <div className="flex items-center text-sm text-orange-600 dark:text-orange-400 font-medium">
+              <Download className="h-4 w-4 mr-1" />
+              Generar PDF
+            </div>
+          </div>
+        </div>
+
+        {/* Card Período con Selector */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 group">
+          <div className="flex flex-col items-center text-center">
+            <div className="p-3 rounded-full bg-purple-500 group-hover:bg-purple-600 transition-colors duration-200 mb-3">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Por Período</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Alquileres agrupados por período
+            </p>
+            
+            <select 
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="w-full mb-3 input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+              disabled={exporting}
+            >
+              <option value="semanal">Semanal</option>
+              <option value="mensual">Mensual</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="anual">Anual</option>
+            </select>
+            
+            <button 
+              onClick={() => handleExportPDF('periodo')}
+              disabled={exporting}
+              className="flex items-center justify-center w-full text-sm text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Generar PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Card Facturación */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md hover:border-orange-300 dark:hover:border-orange-600 cursor-pointer group">
+          <div className="flex flex-col items-center text-center" onClick={() => handleExportPDF('facturacion')}>
+            <div className="p-3 rounded-full bg-orange-500 group-hover:bg-orange-600 transition-colors duration-200 mb-3">
+              <DollarSign className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Facturación</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Facturación mensual detallada
+            </p>
+            <div className="flex items-center text-sm text-orange-600 dark:text-orange-400 font-medium">
+              <Download className="h-4 w-4 mr-1" />
+              Generar PDF
+            </div>
           </div>
         </div>
       </div>

@@ -852,6 +852,18 @@ class SistemaAlquiler:
         
         return self.db_manager.get_rentals_by_period_report(periodo, fecha_desde, fecha_hasta)
     
+    def reporte_detalle_clientes_completo_pdf(self, fecha_desde, fecha_hasta, usuario):
+        if not usuario:
+            return []
+
+        es_admin = self.check_permission("Admin", usuario)
+        es_empleado = self.check_permission("Empleado", usuario)
+
+        if not (es_admin or es_empleado):
+            return []
+        
+        return self.db_manager.get_detailed_client_rentals_report(fecha_desde, fecha_hasta)
+    
     # --- NUEVOS MÉTODOS PARA DASHBOARD ---
 
     def obtener_estadisticas_dashboard(self, usuario):

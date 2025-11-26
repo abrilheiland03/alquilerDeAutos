@@ -50,5 +50,11 @@ export const reportService = {
   getMonthlyRevenuePDF: async (fechaDesde, fechaHasta) => {
     const response = await apiClient.get(`/reportes/pdf/facturacion-mensual?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
     return response.data;
-  }
+  },
+
+  // En reportService.js - agregar nueva función
+  getDetailedClientRentalsPDF: async (fechaDesde, fechaHasta) => {
+    const response = await apiClient.get(`/reportes/pdf/detalle-clientes-completo?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
+    return response.data;
+},
 };

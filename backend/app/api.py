@@ -1100,6 +1100,24 @@ def generar_pdf_facturacion_mensual():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# En api.py - agregar nuevo endpoint
+@api.route('/reportes/pdf/detalle-clientes-completo', methods=['GET'])
+def generar_pdf_detalle_clientes_completo():
+    try:
+        usuario = obtener_usuario_actual()
+        if not usuario:
+            return jsonify({"error": "No autorizado"}), 401
+
+        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
+        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
+
+        # Esta función debería devolver los datos estructurados con alquileres individuales
+        data = sistema.reporte_detalle_clientes_completo_pdf(fecha_desde, fecha_hasta, usuario)
+        return jsonify(data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # --- NUEVOS ENDPOINTS PARA DASHBOARD ---
 
 @api.route('/dashboard/estadisticas', methods=['GET'])

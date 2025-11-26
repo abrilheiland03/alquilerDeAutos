@@ -31,6 +31,8 @@ async function addHeaderToPDF(doc, dateRange) {
   }
 }
 
+
+
 export const pdfService = {
   // Generar PDF de detalle de alquileres por cliente
   generateClientRentalsPDF: async (dateRange, periodo = 'mensual') => {
@@ -284,19 +286,66 @@ export const pdfService = {
       
       switch (type) {
         case 'clientes':
-          headers = ['Cliente', 'Documento', 'Total Alq.', 'Ingresos', 'Duración Prom.', 'Último Alq.'];
-          tableData = (data || []).map(cliente => [
-            cliente.cliente || 'N/A',
-            cliente.nro_documento || 'N/A',
-            cliente.total_alquileres || 0,
-            `$${((cliente.total_facturado || 0)).toLocaleString('es-AR')}`,
-            `${((cliente.duracion_promedio || 0)).toFixed(1)} días`,
-            cliente.ultimo_alquiler ? new Date(cliente.ultimo_alquiler).toLocaleDateString('es-AR') : 'N/A'
-          ]);
+          headers = ['Cliente', 'DNI', 'Fecha Inicio', 'Fecha Fin', 'Días', 'Marca', 'Modelo', 'Patente', 'Total Alquiler'];
+          
+          // Reestructurar los datos para mostrar subfilas
+          const clientesConSubfilas = [];
+          
+          (data || []).forEach(cliente => {
+            // Verificar si el cliente tiene alquileres
+            const alquileres = cliente.alquileres || [];
+            const totalAlquileres = alquileres.length;
+            
+            if (totalAlquileres === 0) {
+              // Si no tiene alquileres, mostrar solo la fila del cliente
+              clientesConSubfilas.push([
+                cliente.cliente || 'N/A',
+                cliente.nro_documento || 'N/A',
+                'Sin alquileres',
+                '', '', '', '', '',
+                '$0'
+              ]);
+            } else {
+              // Fila principal del cliente (primera fila) - AHORA CON TOTAL INDIVIDUAL
+              const primerAlquiler = alquileres[0];
+              const diasPrimerAlquiler = pdfService._calcularDiasEnteros(primerAlquiler.fecha_inicio, primerAlquiler.fecha_fin);
+              const totalPrimerAlquiler = diasPrimerAlquiler * (primerAlquiler.precio_flota || 0);
+              
+              clientesConSubfilas.push([
+                { content: cliente.cliente || 'N/A', rowSpan: totalAlquileres },
+                { content: cliente.nro_documento || 'N/A', rowSpan: totalAlquileres },
+                primerAlquiler.fecha_inicio ? pdfService._formatearFecha(primerAlquiler.fecha_inicio) : 'N/A',
+                primerAlquiler.fecha_fin ? pdfService._formatearFecha(primerAlquiler.fecha_fin) : 'N/A',
+                diasPrimerAlquiler,
+                primerAlquiler.marca || 'N/A',
+                primerAlquiler.modelo || 'N/A',
+                primerAlquiler.patente || 'N/A',
+                `$${totalPrimerAlquiler.toLocaleString('es-AR')}`
+              ]);
+              
+              // Subfilas para los alquileres restantes - AHORA CON TOTALES INDIVIDUALES
+              for (let i = 1; i < totalAlquileres; i++) {
+                const alquiler = alquileres[i];
+                const diasAlquiler = pdfService._calcularDiasEnteros(alquiler.fecha_inicio, alquiler.fecha_fin);
+                const totalAlquilerIndividual = diasAlquiler * (alquiler.precio_flota || 0);
+                
+                clientesConSubfilas.push([
+                  alquiler.fecha_inicio ? pdfService._formatearFecha(alquiler.fecha_inicio) : 'N/A',
+                  alquiler.fecha_fin ? pdfService._formatearFecha(alquiler.fecha_fin) : 'N/A',
+                  diasAlquiler,
+                  alquiler.marca || 'N/A',
+                  alquiler.modelo || 'N/A',
+                  alquiler.patente || 'N/A',
+                  `$${totalAlquilerIndividual.toLocaleString('es-AR')}`
+                ]);
+              }
+            }
+          });
+
+          tableData = clientesConSubfilas;
           break;
           
         case 'ranking':
-          // ✅ ELIMINAR COLUMNA "INGRESOS"
           headers = ['Pos.', 'Modelo', 'Marca', 'Patente', 'Alquileres'];
           tableData = (data || []).map((vehiculo, index) => [
             `#${index + 1}`,
@@ -362,5 +411,45 @@ export const pdfService = {
       console.error('Error generando PDF individual:', error);
       throw error;
     }
+  },
+
+  // FUNCIONES AUXILIARES - DENTRO DEL OBJETO pdfService
+  _calcularDiasEnteros(fechaInicio, fechaFin) {
+    if (!fechaInicio || !fechaFin) return 0;
+    
+    try {
+      const inicio = new Date(fechaInicio);
+      const fin = new Date(fechaFin);
+      
+      // Resetear horas a mediodía para evitar problemas con horarios
+      inicio.setHours(12, 0, 0, 0);
+      fin.setHours(12, 0, 0, 0);
+      
+      const diferencia = fin.getTime() - inicio.getTime();
+      const dias = Math.ceil(diferencia / (1000 * 3600 * 24));
+      
+      // Asegurar mínimo 1 día
+      return Math.max(1, dias);
+    } catch (error) {
+      console.error('Error calculando días:', error);
+      return 0;
+    }
+  },
+
+  _formatearFecha(fechaString) {
+    if (!fechaString) return 'N/A';
+    
+    try {
+      const fecha = new Date(fechaString);
+      return fecha.toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return 'N/A';
+    }
   }
 };
+
