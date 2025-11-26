@@ -89,20 +89,20 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+        fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
-            <span className="ml-2 text-xl font-bold text-gray-900">MENU</span>
+            <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">MENU</span>
           </div>
           
           {/* Close Button for Mobile */}
           <button
             onClick={onClose}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 lg:hidden"
+            className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 lg:hidden transition-colors duration-200"
           >
             <X className="h-6 w-6" />
           </button>
@@ -113,7 +113,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           
           {/* Main Navigation */}
           <div className="space-y-1">
-            <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Navegación
             </p>
             
@@ -129,12 +129,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                   className={`
                     flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200
                     ${isActive 
-                      ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-500' 
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-orange-50 dark:bg-orange-900 text-orange-700 dark:text-orange-300 border-r-2 border-orange-500' 
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                     }
                   `}
                 >
-                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
+                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`} />
                   {item.name}
                 </Link>
               );
@@ -143,8 +143,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Admin Section */}
           {filteredAdminItems.length > 0 && (
-            <div className="space-y-1 pt-4 border-t border-gray-200">
-              <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="space-y-1 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Administración
               </p>
               
@@ -160,12 +160,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                     className={`
                       flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200
                       ${isActive 
-                        ? 'bg-red-50 text-red-700 border-r-2 border-red-500' 
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 border-r-2 border-red-500' 
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                       }
                     `}
                   >
-                    <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-red-500' : 'text-gray-400'}`} />
+                    <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'}`} />
                     {item.name}
                   </Link>
                 );
@@ -174,19 +174,19 @@ const Sidebar = ({ isOpen, onClose }) => {
           )}
 
           {/* User Info Section */}
-          <div className="pt-4 border-t border-gray-200">
-            <div className="px-3 py-3 bg-gray-50 rounded-lg">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="px-3 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                    <UserCheck className="h-4 w-4 text-orange-600" />
+                  <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                    <UserCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user?.userName || 'Usuario'}
                   </p>
-                  <p className="text-xs text-gray-500 capitalize">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                     {user?.userRole?.toLowerCase() || 'Rol no definido'}
                   </p>
                 </div>
@@ -196,16 +196,16 @@ const Sidebar = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="flex-shrink-0 border-t border-gray-200 p-4">
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-xs font-medium text-green-800">v1.0</span>
+              <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <span className="text-xs font-medium text-green-800 dark:text-green-200">v1.0</span>
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">IngRide</p>
-              <p className="text-xs text-gray-500">Sistema de Gestión</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">IngRide</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Sistema de Gestión</p>
             </div>
           </div>
         </div>

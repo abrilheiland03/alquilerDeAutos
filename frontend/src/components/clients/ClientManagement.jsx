@@ -43,27 +43,25 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
       if (client) {
         // CORRECCIÓN: Formatear correctamente las fechas para input type="date"
         const formatDateForInput = (dateString) => {
-  if (!dateString) return '';
+          if (!dateString) return '';
 
-  // Si viene tipo "2025-01-10T03:00:00.000Z"
-  if (dateString.includes('T')) {
-    return dateString.split('T')[0];
-  }
+          // Si viene tipo "2025-01-10T03:00:00.000Z"
+          if (dateString.includes('T')) {
+            return dateString.split('T')[0];
+          }
 
-  // Si viene tipo "2025-01-10 00:00:00"
-  if (dateString.includes(' ')) {
-    return dateString.split(' ')[0];
-  }
+          // Si viene tipo "2025-01-10 00:00:00"
+          if (dateString.includes(' ')) {
+            return dateString.split(' ')[0];
+          }
 
-  // Si ya viene como YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    return dateString;
-  }
+          // Si ya viene como YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return dateString;
+          }
 
-  return dateString;
-};
-
-
+          return dateString;
+        };
 
         setFormData({
           nombre: client.nombre || '',
@@ -392,14 +390,14 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {client ? 'Editar Cliente' : 'Nuevo Cliente'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -409,7 +407,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nombre */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nombre *
               </label>
               <input
@@ -432,7 +430,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Apellido */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Apellido *
               </label>
               <input
@@ -455,7 +453,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Email */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email *
               </label>
               <input
@@ -485,7 +483,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Teléfono */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Teléfono *
               </label>
               <input
@@ -516,7 +514,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Fecha de Nacimiento */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha de Nacimiento *
               </label>
               <input
@@ -545,7 +543,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Tipo de Documento */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tipo de Documento *
               </label>
               <select
@@ -565,7 +563,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Número de Documento */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Número de Documento *
               </label>
               <input
@@ -594,7 +592,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
 
             {/* Fecha de Alta */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha de Alta *
               </label>
               <input
@@ -616,11 +614,11 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
             >
               Cancelar
             </button>
@@ -677,24 +675,24 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {client.nombre} {client.apellido}
             </h3>
-            <p className="text-sm text-gray-500 flex items-center mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
               <FileText className="h-4 w-4 mr-1" />
               {client.tipo_documento}: {client.nro_documento}
             </p>
           </div>
           <div className="flex flex-col items-end">
-            <span className="status-badge bg-blue-100 text-blue-800">
+            <span className="status-badge bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
               Cliente #{client.id_cliente}
             </span>
-            <span className="text-xs text-gray-500 mt-1">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Desde {getClientSince(client.fecha_alta)}
             </span>
           </div>
@@ -702,37 +700,36 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
 
         {/* Información del cliente */}
         <div className="space-y-3 mb-4">
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
             <Mail className="h-4 w-4 mr-2" />
             <span className="truncate">{client.mail}</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
             <Phone className="h-4 w-4 mr-2" />
             <span>{client.telefono}</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
             <Calendar className="h-4 w-4 mr-2" />
             <span>
               {calculateAge(client.fecha_nacimiento)} años • {client.fecha_nacimiento?.split('-').reverse().join('/')}
-
             </span>
           </div>
         </div>
 
         {/* Fecha de Alta */}
-        <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-200 pt-3">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
           <span>Fecha de alta:</span>
           <span className="font-medium">{new Date(client.fecha_alta).toLocaleDateString()}</span>
         </div>
 
         {/* Acciones - Iconos alineados a la derecha */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex-1"></div>
           <div className="flex items-center space-x-2">
             {canEdit && (
               <button
                 onClick={() => onEdit(client)}
-                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg transition-colors duration-200"
                 title="Editar"
               >
                 <Edit className="h-4 w-4" />
@@ -741,7 +738,7 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
             {canDelete && (
               <button
                 onClick={() => onDelete(client)}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
                 title="Eliminar"
               >
                 <Trash2 className="h-4 w-4" />
@@ -911,7 +908,7 @@ const ClientManagement = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando clientes...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando clientes...</p>
         </div>
       </div>
     );
@@ -924,8 +921,8 @@ const ClientManagement = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Clientes</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Clientes</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Administra la base de clientes de IngRide
           </p>
         </div>
@@ -942,26 +939,26 @@ const ClientManagement = () => {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total Clientes</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Total Clientes</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">+{stats.newThisMonth}</div>
-          <div className="text-sm text-gray-600">Nuevos este mes</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">+{stats.newThisMonth}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Nuevos este mes</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.withDNI}</div>
-          <div className="text-sm text-gray-600">Con DNI</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.withDNI}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Con DNI</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-purple-600">{stats.withPassport}</div>
-          <div className="text-sm text-gray-600">Con Pasaporte</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.withPassport}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Con Pasaporte</div>
         </div>
       </div>
 
       {/* Filtros y Búsqueda */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           {/* Búsqueda */}
           <div className="flex-1 max-w-md">
@@ -991,10 +988,10 @@ const ClientManagement = () => {
             </select>
 
             {/* Botones de Vista */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
               <button
                 onClick={() => setView('grid')}
-                className={`p-2 ${view === 'grid' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 ${view === 'grid' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
               >
                 <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                   <div className="bg-current rounded-sm"></div>
@@ -1005,7 +1002,7 @@ const ClientManagement = () => {
               </button>
               <button
                 onClick={() => setView('list')}
-                className={`p-2 ${view === 'list' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 ${view === 'list' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
               >
                 <div className="w-4 h-4 flex flex-col space-y-0.5">
                   <div className="bg-current h-1 rounded-sm"></div>
@@ -1020,10 +1017,10 @@ const ClientManagement = () => {
 
       {/* Lista de Clientes */}
       {filteredClients.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron clientes</h3>
-          <p className="text-gray-600 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Users className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No se encontraron clientes</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchTerm || documentFilter !== 'all' 
               ? 'Intenta ajustar los filtros de búsqueda' 
               : 'No hay clientes registrados en el sistema'
@@ -1054,30 +1051,30 @@ const ClientManagement = () => {
                 onDelete={canDelete ? handleDeleteClient : null}
               />
             ) : (
-              <div key={client.id_cliente} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div key={client.id_cliente} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-orange-600" />
+                    <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {client.nombre} {client.apellido}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {client.tipo_documento}: {client.nro_documento} • {client.mail}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       Desde {new Date(client.fecha_alta).toLocaleDateString()}
                     </span>
                     <div className="flex items-center space-x-2">
                       {canEdit && (
                         <button
                           onClick={() => openModal(client)}
-                          className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg transition-colors duration-200"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
@@ -1085,7 +1082,7 @@ const ClientManagement = () => {
                       {canDelete && (
                         <button
                           onClick={() => handleDeleteClient(client)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

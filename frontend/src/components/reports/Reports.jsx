@@ -23,19 +23,19 @@ import {
 
 // Componente de Tarjeta de Métrica
 const MetricCard = ({ title, value, change, changeType, icon: Icon, color }) => (
-  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
         {change && (
           <p className={`text-sm mt-1 flex items-center ${
-            changeType === 'positive' ? 'text-green-600' : 
-            changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
+            changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 
+            changeType === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
           }`}>
             <TrendingUp className={`h-4 w-4 mr-1 ${
-              changeType === 'positive' ? 'text-green-500' : 
-              changeType === 'negative' ? 'text-red-500' : 'text-gray-500'
+              changeType === 'positive' ? 'text-green-500 dark:text-green-400' : 
+              changeType === 'negative' ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
             }`} />
             {change}
           </p>
@@ -53,21 +53,21 @@ const BarChart = ({ data, title, color = 'bg-blue-500' }) => {
   const maxValue = Math.max(...data.map(item => item.value), 1);
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
       <div className="space-y-3">
         {data.map((item, index) => (
           <div key={index} className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 w-20 truncate">{item.label}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400 w-20 truncate">{item.label}</span>
             <div className="flex-1 mx-4">
-              <div className="bg-gray-200 rounded-full h-4">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4 transition-colors duration-200">
                 <div 
                   className={`h-4 rounded-full ${color} transition-all duration-500`}
                   style={{ width: `${(item.value / maxValue) * 100}%` }}
                 ></div>
               </div>
             </div>
-            <span className="text-sm font-medium text-gray-900 w-12 text-right">
+            <span className="text-sm font-medium text-gray-900 dark:text-white w-12 text-right">
               {item.value}
             </span>
           </div>
@@ -84,8 +84,8 @@ const LineChartComponent = ({ data, title, color = 'text-blue-500' }) => {
   const range = maxValue - minValue;
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
       <div className="h-48 relative">
         <div className="absolute inset-0 flex items-end">
           {data.map((item, index) => (
@@ -101,10 +101,10 @@ const LineChartComponent = ({ data, title, color = 'text-blue-500' }) => {
                   minHeight: '4px'
                 }}
               ></div>
-              <div className="text-xs text-gray-500 mt-2 text-center">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                 {item.label}
               </div>
-              <div className="text-xs font-medium text-gray-900 mt-1">
+              <div className="text-xs font-medium text-gray-900 dark:text-white mt-1">
                 {item.value}
               </div>
             </div>
@@ -165,7 +165,7 @@ const Reports = () => {
       showNotification('Error al cargar los reportes', 'error');
       
       // Datos de ejemplo para desarrollo
-      setReportData(getSampleData());
+      //setReportData(getSampleData());
     } finally {
       setLoading(false);
     }
@@ -187,41 +187,7 @@ const Reports = () => {
     };
   };
 
-  const getSampleData = () => {
-    return {
-      metrics: {
-        totalRevenue: 1250000,
-        totalRentals: 45,
-        avgRentalDuration: 3.2,
-        popularVehicle: 'Toyota Corolla (12)',
-        revenueGrowth: '+15%',
-        rentalGrowth: '+8%'
-      },
-      ranking: [
-        { patente: 'AA111AA', modelo: 'Toyota Corolla', marca: 'Toyota', cantidad_alquileres: 12 },
-        { patente: 'BB222BB', modelo: 'Ford Focus', marca: 'Ford', cantidad_alquileres: 8 },
-        { patente: 'CC333CC', modelo: 'Chevrolet Cruze', marca: 'Chevrolet', cantidad_alquileres: 6 },
-        { patente: 'DD444DD', modelo: 'Renault Clio', marca: 'Renault', cantidad_alquileres: 5 },
-        { patente: 'EE555EE', modelo: 'Volkswagen Golf', marca: 'Volkswagen', cantidad_alquileres: 4 }
-      ],
-      evolution: [
-        { periodo: '2024-01', total_alquileres: 8 },
-        { periodo: '2024-02', total_alquileres: 12 },
-        { periodo: '2024-03', total_alquileres: 15 },
-        { periodo: '2024-04', total_alquileres: 10 },
-        { periodo: '2024-05', total_alquileres: 18 },
-        { periodo: '2024-06', total_alquileres: 22 }
-      ],
-      revenue: [
-        { periodo: '2024-01', total_facturado: 185000 },
-        { periodo: '2024-02', total_facturado: 265000 },
-        { periodo: '2024-03', total_facturado: 320000 },
-        { periodo: '2024-04', total_facturado: 240000 },
-        { periodo: '2024-05', total_facturado: 410000 },
-        { periodo: '2024-06', total_facturado: 485000 }
-      ]
-    };
-  };
+  
 
   const handleDateChange = (field, value) => {
     setDateRange(prev => ({
@@ -287,9 +253,9 @@ const Reports = () => {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
-          <BarChart3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso Restringido</h3>
-          <p className="text-gray-600">
+          <BarChart3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Acceso Restringido</h3>
+          <p className="text-gray-600 dark:text-gray-400">
             No tienes permisos para acceder a los reportes del sistema.
           </p>
         </div>
@@ -302,7 +268,7 @@ const Reports = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando reportes...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando reportes...</p>
         </div>
       </div>
     );
@@ -331,8 +297,8 @@ const Reports = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reportes y Análisis</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reportes y Análisis</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Métricas y estadísticas del sistema de alquileres
           </p>
         </div>
@@ -341,7 +307,7 @@ const Reports = () => {
           <select 
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="input-primary text-sm"
+            className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
             disabled={exporting}
           >
             <option value="semanal">Semanal</option>
@@ -356,7 +322,7 @@ const Reports = () => {
               <button
                 onClick={() => handleExportPDF('completo')}
                 disabled={exporting}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-600 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-600 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {exporting ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -370,39 +336,39 @@ const Reports = () => {
             <div className="relative group">
               <button
                 disabled={exporting}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 <Download className="h-4 w-4 mr-2" />
                 PDF Individual
               </button>
               
               {/* Menú desplegable para PDFs individuales */}
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                 <div className="py-1">
                   <button
                     onClick={() => handleExportPDF('clientes')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Clientes
                   </button>
                   <button
                     onClick={() => handleExportPDF('ranking')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     <Car className="h-4 w-4 mr-2" />
                     Ranking Vehículos
                   </button>
                   <button
                     onClick={() => handleExportPDF('periodo')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     <Calendar className="h-4 w-4 mr-2" />
                     Por Período
                   </button>
                   <button
                     onClick={() => handleExportPDF('facturacion')}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     <DollarSign className="h-4 w-4 mr-2" />
                     Facturación
@@ -414,7 +380,7 @@ const Reports = () => {
             <button
               onClick={handleExportExcel}
               disabled={exporting}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <Download className="h-4 w-4 mr-2" />
               Excel
@@ -424,29 +390,29 @@ const Reports = () => {
       </div>
 
       {/* Filtros de Fecha */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex items-center space-x-4">
             <Calendar className="h-5 w-5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-700">Período:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Período:</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <div>
-              <label className="text-sm text-gray-600 mr-2">Desde:</label>
+              <label className="text-sm text-gray-600 dark:text-gray-400 mr-2">Desde:</label>
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => handleDateChange('start', e.target.value)}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 mr-2">Hasta:</label>
+              <label className="text-sm text-gray-600 dark:text-gray-400 mr-2">Hasta:</label>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => handleDateChange('end', e.target.value)}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             <button
@@ -525,50 +491,50 @@ const Reports = () => {
       {/* Tablas Detalladas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Ranking Detallado */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               <Car className="h-5 w-5 mr-2 text-blue-500" />
               Ranking de Vehículos
             </h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Vehículo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Alquileres
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Posición
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
                 {ranking.map((vehicle, index) => (
-                  <tr key={vehicle.patente} className="hover:bg-gray-50">
+                  <tr key={vehicle.patente} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {vehicle.modelo}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {vehicle.marca} • {vehicle.patente}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{vehicle.cantidad_alquileres}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{vehicle.cantidad_alquileres}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                        index === 1 ? 'bg-gray-100 text-gray-800' :
-                        index === 2 ? 'bg-orange-100 text-orange-800' :
-                        'bg-blue-100 text-blue-800'
+                        index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
+                        index === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' :
+                        index === 2 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' :
+                        'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                       }`}>
                         #{index + 1}
                       </span>
@@ -581,29 +547,29 @@ const Reports = () => {
         </div>
 
         {/* Facturación Detallada */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               <DollarSign className="h-5 w-5 mr-2 text-green-500" />
               Facturación por Período
             </h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Período
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Facturación
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Crecimiento
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
                 {revenue.map((item, index) => {
                   const prevRevenue = index > 0 ? revenue[index - 1].total_facturado : item.total_facturado;
                   const growth = ((item.total_facturado - prevRevenue) / prevRevenue) * 100;
@@ -619,23 +585,23 @@ const Reports = () => {
                   };
                   
                   return (
-                    <tr key={item.periodo} className="hover:bg-gray-50">
+                    <tr key={item.periodo} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {formatPeriodo(item.periodo)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-green-600">
+                        <div className="text-sm font-medium text-green-600 dark:text-green-400">
                           {formatCurrency(item.total_facturado)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center text-sm font-medium ${
-                          growth >= 0 ? 'text-green-600' : 'text-red-600'
+                          growth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                         }`}>
                           <TrendingUp className={`h-4 w-4 mr-1 ${
-                            growth >= 0 ? 'text-green-500' : 'text-red-500'
+                            growth >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
                           }`} />
                           {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%
                         </span>
@@ -650,12 +616,12 @@ const Reports = () => {
       </div>
 
       {/* Resumen Ejecutivo */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 transition-colors duration-200">
+        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center">
           <BarChart3 className="h-5 w-5 mr-2" />
           Resumen Ejecutivo
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800 dark:text-blue-200">
           <div>
             <p className="font-medium mb-2">Puntos Destacados:</p>
             <ul className="space-y-1 list-disc list-inside">

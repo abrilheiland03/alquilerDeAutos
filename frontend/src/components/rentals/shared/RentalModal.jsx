@@ -255,17 +255,17 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {rental ? 'Editar Alquiler' : 'Nuevo Alquiler'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
 
@@ -273,7 +273,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <User className="h-4 w-4 inline mr-1" />
                   Cliente *
                 </label>
@@ -281,7 +281,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="id_cliente"
                   value={formData.id_cliente}
                   onChange={handleChange}
-                  className={`input-primary ${errors.id_cliente ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.id_cliente ? 'border-red-500' : ''}`}
                   required
                 >
                   <option value="">Seleccionar cliente</option>
@@ -297,7 +297,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Car className="h-4 w-4 inline mr-1" />
                   Vehículo *
                 </label>
@@ -305,7 +305,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="patente"
                   value={formData.patente}
                   onChange={handleChange}
-                  className={`input-primary ${errors.patente ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.patente ? 'border-red-500' : ''}`}
                   required
                 >
                   <option value="">Seleccionar vehículo</option>
@@ -321,7 +321,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4 inline mr-1" />
                   Fecha de Inicio *
                 </label>
@@ -330,7 +330,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="fecha_inicio"
                   value={formData.fecha_inicio}
                   onChange={handleChange}
-                  className={`input-primary ${errors.fecha_inicio ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fecha_inicio ? 'border-red-500' : ''}`}
                   min={new Date().toISOString().split('T')[0]}
                   required
                 />
@@ -340,7 +340,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4 inline mr-1" />
                   Fecha de Fin *
                 </label>
@@ -349,7 +349,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleChange}
-                  className={`input-primary ${errors.fecha_fin ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fecha_fin ? 'border-red-500' : ''}`}
                   min={formData.fecha_inicio}
                   required
                 />
@@ -360,14 +360,14 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
 
               {rental && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Estado
                   </label>
                   <select
                     name="estado"
                     value={formData.estado}
                     onChange={handleChange}
-                    className="input-primary"
+                    className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
                     <option value="RESERVADO">Reservado</option>
                     <option value="ACTIVO">Activo</option>
@@ -379,31 +379,31 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
             </div>
 
             {formData.patente && formData.fecha_inicio && formData.fecha_fin && selectedVehicle && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-blue-900 mb-3">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 transition-colors duration-200">
+                <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">
                   Resumen del Alquiler
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-blue-700">Duración:</span>
-                    <p className="font-medium text-blue-900">{getDuration()}</p>
+                    <span className="text-blue-700 dark:text-blue-300">Duración:</span>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">{getDuration()}</p>
                   </div>
                   <div>
-                    <span className="text-blue-700">Precio Total:</span>
-                    <p className="font-medium text-green-600 flex items-center">
+                    <span className="text-blue-700 dark:text-blue-300">Precio Total:</span>
+                    <p className="font-medium text-green-600 dark:text-green-400 flex items-center">
                       <DollarSign className="h-3 w-3 mr-1" />
                       {calculatedPrice.toLocaleString()}
                     </p>
                   </div>
                   <div className="md:col-span-2">
-                    <span className="text-blue-700">Vehículo Seleccionado:</span>
-                    <p className="font-medium text-blue-900">
+                    <span className="text-blue-700 dark:text-blue-300">Vehículo Seleccionado:</span>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">
                       {selectedVehicle.modelo} - {selectedVehicle.marca}
                     </p>
                   </div>
                   <div className="md:col-span-2">
-                    <span className="text-blue-700">Precio por día:</span>
-                    <p className="font-medium text-blue-900">
+                    <span className="text-blue-700 dark:text-blue-300">Precio por día:</span>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">
                       ${selectedVehicle.precio_flota}
                     </p>
                   </div>
@@ -411,11 +411,11 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
             )}
 
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
               >
                 Cancelar
               </button>
@@ -432,33 +432,33 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
           <form onSubmit={handleSubmitCliente} className="p-6 space-y-6">
             {/* Mostrar error si no hay datos */}
             {errors.general && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-700 text-sm">{errors.general}</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 transition-colors duration-200">
+                <p className="text-red-700 dark:text-red-300 text-sm">{errors.general}</p>
               </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <h3 className="text-sm font-medium text-blue-900 mb-3">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4 transition-colors duration-200">
+              <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">
                 Información del Alquiler
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-blue-700">Vehículo:</span>
-                  <p className="font-medium text-blue-900">
+                  <span className="text-blue-700 dark:text-blue-300">Vehículo:</span>
+                  <p className="font-medium text-blue-900 dark:text-blue-100">
                     {vehicle?.modelo} - {vehicle?.marca}
                   </p>
-                  <p className="text-blue-600">Patente: {vehicle?.patente}</p>
+                  <p className="text-blue-600 dark:text-blue-400">Patente: {vehicle?.patente}</p>
                 </div>
                 <div>
-                  <span className="text-blue-700">Cliente:</span>
-                  <p className="font-medium text-blue-900">
+                  <span className="text-blue-700 dark:text-blue-300">Cliente:</span>
+                  <p className="font-medium text-blue-900 dark:text-blue-100">
                     {user?.nombre} {user?.apellido}
                   </p>
-                  <p className="text-blue-600">ID: {user?.userId}</p> {/* Cambiar a userId */}
+                  <p className="text-blue-600 dark:text-blue-400">ID: {user?.userId}</p> {/* Cambiar a userId */}
                 </div>
                 <div className="col-span-2">
-                  <span className="text-blue-700">Precio por día:</span>
-                  <p className="font-medium text-green-600">
+                  <span className="text-blue-700 dark:text-blue-300">Precio por día:</span>
+                  <p className="font-medium text-green-600 dark:text-green-400">
                     ${vehicle?.precio_flota}
                   </p>
                 </div>
@@ -467,7 +467,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4 inline mr-1" />
                   Fecha de Inicio *
                 </label>
@@ -476,7 +476,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="fecha_inicio"
                   value={formData.fecha_inicio}
                   onChange={handleChange}
-                  className={`input-primary ${errors.fecha_inicio ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fecha_inicio ? 'border-red-500' : ''}`}
                   min={new Date().toLocaleDateString('en-CA')}
                   required
                 />
@@ -486,7 +486,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4 inline mr-1" />
                   Fecha de Fin *
                 </label>
@@ -495,7 +495,7 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleChange}
-                  className={`input-primary ${errors.fecha_fin ? 'border-red-500' : ''}`}
+                  className={`input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.fecha_fin ? 'border-red-500' : ''}`}
                   min={formData.fecha_inicio}
                   required
                 />
@@ -506,18 +506,18 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
             </div>
 
             {formData.fecha_inicio && formData.fecha_fin && vehicle && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-blue-900 mb-3">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 transition-colors duration-200">
+                <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">
                   Resumen del Alquiler
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-blue-700">Duración:</span>
-                    <p className="font-medium text-blue-900">{getDuration()}</p>
+                    <span className="text-blue-700 dark:text-blue-300">Duración:</span>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">{getDuration()}</p>
                   </div>
                   <div>
-                    <span className="text-blue-700">Precio Total:</span>
-                    <p className="font-medium text-green-600 flex items-center">
+                    <span className="text-blue-700 dark:text-blue-300">Precio Total:</span>
+                    <p className="font-medium text-green-600 dark:text-green-400 flex items-center">
                       <DollarSign className="h-3 w-3 mr-1" />
                       {calculatedPrice.toLocaleString()}
                     </p>
@@ -526,11 +526,11 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
               </div>
             )}
 
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
               >
                 Cancelar
               </button>

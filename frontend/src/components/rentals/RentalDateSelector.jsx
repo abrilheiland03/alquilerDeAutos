@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Search } from 'lucide-react';
 
-
 const RentalDateSelector = ({ onSearch, loading }) => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
@@ -37,15 +36,15 @@ const RentalDateSelector = ({ onSearch, loading }) => {
   const minDate = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
         Selecciona las fechas de alquiler
       </h2>
       
       <form onSubmit={handleSearch} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Inicio *
             </label>
             <div className="relative">
@@ -55,14 +54,14 @@ const RentalDateSelector = ({ onSearch, loading }) => {
                 value={fechaInicio}
                 onChange={(e) => setFechaInicio(e.target.value)}
                 min={minDate}
-                className="input-primary pl-10"
+                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Fin *
             </label>
             <div className="relative">
@@ -72,7 +71,7 @@ const RentalDateSelector = ({ onSearch, loading }) => {
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
                 min={fechaInicio || minDate}
-                className="input-primary pl-10"
+                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
@@ -80,15 +79,15 @@ const RentalDateSelector = ({ onSearch, loading }) => {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 transition-colors duration-200">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading || !fechaInicio || !fechaFin}
-          className="btn-primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+          className="btn-primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-200"
         >
           <Search className="h-4 w-4 mr-2" />
           {loading ? 'Buscando...' : 'Buscar Vehículos Disponibles'}
@@ -99,4 +98,3 @@ const RentalDateSelector = ({ onSearch, loading }) => {
 };
 
 export default RentalDateSelector;
-

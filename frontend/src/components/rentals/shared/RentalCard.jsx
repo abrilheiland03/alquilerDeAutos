@@ -18,13 +18,31 @@ const RentalCard = ({
   
   const getStatusConfig = (estado) => {
     const config = {
-      'Reservado': { color: 'bg-blue-100 text-blue-800', icon: Clock },
-      'Activo': { color: 'bg-green-100 text-green-800', icon: Play },
-      'Atrasado': { color: 'bg-red-100 text-red-800', icon: AlertTriangle },
-      'Finalizado': { color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
-      'Cancelado': { color: 'bg-yellow-100 text-yellow-800', icon: XCircle }
+      'Reservado': { 
+        color: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200', 
+        icon: Clock 
+      },
+      'Activo': { 
+        color: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200', 
+        icon: Play 
+      },
+      'Atrasado': { 
+        color: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200', 
+        icon: AlertTriangle 
+      },
+      'Finalizado': { 
+        color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200', 
+        icon: CheckCircle 
+      },
+      'Cancelado': { 
+        color: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200', 
+        icon: XCircle 
+      }
     };
-    return config[estado] || { color: 'bg-gray-100 text-gray-800', icon: Clock };
+    return config[estado] || { 
+      color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200', 
+      icon: Clock 
+    };
   };
 
   const getActions = () => {
@@ -107,26 +125,26 @@ const RentalCard = ({
   // CORRECCIÓN 4: Mostrar información completa del cliente para admin y empleado
   const renderClientInfo = () => {
     if (isClient) {
-      return <p className="font-medium text-gray-900">Tú</p>;
+      return <p className="font-medium text-gray-900 dark:text-white">Tú</p>;
     }
     
     // Para empleados y administradores, mostrar información completa
     if (isEmployee || isAdmin) {
       return (
         <div>
-          <p className="font-medium text-gray-900">
+          <p className="font-medium text-gray-900 dark:text-white">
             {rental.nombre_cliente || 'N/A'} {rental.apellido_cliente || ''}
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
             {rental.tipo_documento || 'DNI'}: {rental.nro_documento || 'N/A'}
           </p>
           {rental.telefono_cliente && (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               Tel: {rental.telefono_cliente}
             </p>
           )}
           {rental.mail_cliente && (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               Mail: {rental.mail_cliente}
             </p>
           )}
@@ -138,17 +156,17 @@ const RentalCard = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-full ${statusConfig.color}`}>
             <StatusIcon className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-gray-900 dark:text-white">
               Alquiler #{rental.id_alquiler}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {rental.modelo} {rental.marca} - {rental.patente}
             </p>
           </div>
@@ -161,7 +179,7 @@ const RentalCard = ({
       {/* Información del cliente */}
       <div className="mb-4">
         <div className={isEmployee || isAdmin ? 'mb-4' : ''}>
-          <p className="text-sm text-gray-600 mb-2">Cliente</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Cliente</p>
           {renderClientInfo()}
         </div>
       </div>
@@ -170,55 +188,55 @@ const RentalCard = ({
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* Fecha inicio */}
         <div>
-          <p className="text-sm text-gray-600">Fecha inicio</p>
-          <p className="font-medium text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Fecha inicio</p>
+          <p className="font-medium text-gray-900 dark:text-white">
             {formatDate(rental.fecha_inicio)}
           </p>
         </div>
         
         {/* Fecha fin */}
         <div>
-          <p className="text-sm text-gray-600">Fecha fin</p>
-          <p className="font-medium text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Fecha fin</p>
+          <p className="font-medium text-gray-900 dark:text-white">
             {formatDate(rental.fecha_fin)}
           </p>
         </div>
         
         {/* Precio/día */}
         <div>
-          <p className="text-sm text-gray-600">Precio/día</p>
-          <p className="font-medium text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Precio/día</p>
+          <p className="font-medium text-gray-900 dark:text-white">
             ${rental.precio_flota?.toLocaleString() || 'N/A'}
           </p>
         </div>
         
         {/* Días */}
         <div>
-          <p className="text-sm text-gray-600">Días</p>
-          <p className="font-medium text-gray-900">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Días</p>
+          <p className="font-medium text-gray-900 dark:text-white">
             {days}
           </p>
         </div>
       </div>
 
       {/* Total - Ocupa toda la fila */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+      <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
         <div className="flex justify-between items-center">
-          <p className="text-sm font-medium text-gray-700">Total estimado</p>
-          <p className="text-lg font-bold text-orange-600">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Total estimado</p>
+          <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
             ${total.toLocaleString()}
           </p>
         </div>
       </div>
 
       {/* CORRECCIÓN 1: Acciones alineadas a la derecha */}
-      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200">
+      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-2">
           {actions.map(({ action, handler, icon: Icon, color }) => (
             <button
               key={action}
               onClick={() => handler(rental)}
-              className={`p-2 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 rounded-lg transition-colors`}
+              className={`p-2 text-gray-400 hover:text-${color}-500 hover:bg-${color}-50 dark:hover:bg-${color}-900 rounded-lg transition-colors duration-200`}
               title={
                 action === 'view' ? 'Ver información detallada' :
                 action === 'start' ? 'Iniciar alquiler' : 

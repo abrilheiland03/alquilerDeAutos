@@ -7,11 +7,11 @@ import { authService } from '../../services/authService';
 // Componente para mensajes de estado (éxito/error)
 const FormMessage = ({ type, text }) => {
     if (!text) return null;
-    const color = type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' : 
-                  type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
-                  'bg-blue-100 text-blue-800 border border-blue-200';
+    const color = type === 'error' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-700' : 
+                  type === 'success' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700' :
+                  'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700';
     return (
-        <div className={`p-3 rounded-lg text-sm mb-4 ${color}`} role="alert">
+        <div className={`p-3 rounded-lg text-sm mb-4 ${color} transition-colors duration-200`} role="alert">
             {text}
         </div>
     );
@@ -124,39 +124,39 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center pb-4 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-center items-center pb-4 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
             
             {/* Header del Formulario */}
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
                 <div className="flex items-center justify-center mb-2">
                     <Car className="h-10 w-10 text-orange-500" />
-                    <span className="ml-3 text-3xl font-extrabold text-gray-900">IngRide</span>
+                    <span className="ml-3 text-3xl font-extrabold text-gray-900 dark:text-white">IngRide</span>
                 </div>
-                <h1 className="text-xl font-semibold text-gray-800">Sistema de Gestión de Alquileres</h1>
+                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Sistema de Gestión de Alquileres</h1>
             </div>
 
             {/* Contenedor del Formulario */}
-            <div className="relative w-full max-w-md bg-white p-8 shadow-2xl rounded-xl border border-gray-200">
+            <div className="relative w-full max-w-md bg-white dark:bg-gray-800 p-8 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="login-section animate-fadeIn">
-                    <h2 className="text-3xl font-extrabold text-gray-900 flex items-center justify-center mb-2">
+                    <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center justify-center mb-2">
                         <LogIn className="w-6 h-6 mr-2 text-orange-500" />
                         Iniciar Sesión
                     </h2>
-                    <p className="text-gray-700 mb-6 text-center font-medium">Accede a tu cuenta de IngRide</p>
+                    <p className="text-gray-700 dark:text-gray-300 mb-6 text-center font-medium">Accede a tu cuenta de IngRide</p>
                     
                     <FormMessage type={message.type} text={message.text} />
 
                     <form onSubmit={handleLoginSubmit} noValidate className="space-y-4">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="email">
+                            <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2" htmlFor="email">
                                 Email
                             </label>
                             <input 
                                 type="email" 
                                 id="email"
                                 name="email" 
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-offset-1 focus:ring-orange-500 focus:border-orange-500 transition duration-150 bg-white text-gray-900 placeholder-gray-500 ${
-                                    fieldErrors.email ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-offset-1 focus:ring-orange-500 focus:border-orange-500 transition duration-150 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                                    fieldErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                                 }`}
                                 placeholder="ejemplo@correo.com" 
                                 value={loginData.email}
@@ -166,21 +166,21 @@ const Login = () => {
                                 disabled={loading}
                             />
                             {fieldErrors.email && (
-                                <div className="flex items-center mt-1 text-red-600 text-sm">
+                                <div className="flex items-center mt-1 text-red-600 dark:text-red-400 text-sm">
                                     <AlertCircle className="w-4 h-4 mr-1" />
                                     {fieldErrors.email}
                                 </div>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="password">
+                            <label className="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2" htmlFor="password">
                                 Contraseña
                             </label>
                             <input 
                                 type="password" 
                                 id="password"
                                 name="password" 
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-offset-1 focus:ring-orange-500 focus:border-orange-500 transition duration-150 bg-white text-gray-900 placeholder-gray-500"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-offset-1 focus:ring-orange-500 focus:border-orange-500 transition duration-150 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="••••••••" 
                                 value={loginData.password}
                                 onChange={handleLoginChange}
@@ -204,10 +204,10 @@ const Login = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-700 mb-3 font-medium">¿No tenés cuenta?</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 font-medium">¿No tenés cuenta?</p>
                         <Link 
                             to="/register"
-                            className="w-full block px-4 py-3 border-2 border-orange-500 text-sm font-semibold rounded-lg text-orange-600 bg-white hover:bg-orange-50 transition duration-150 text-center"
+                            className="w-full block px-4 py-3 border-2 border-orange-500 text-sm font-semibold rounded-lg text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-orange-900 transition duration-150 text-center"
                         >
                             Crear una cuenta
                         </Link>
@@ -216,7 +216,7 @@ const Login = () => {
                     <div className="mt-4 text-center">
                         <Link 
                             to="/"
-                            className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition"
+                            className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
                         >
                             ← Volver al inicio
                         </Link>
@@ -225,7 +225,7 @@ const Login = () => {
             </div>
             
             {/* Pie de página simple */}
-            <p className="mt-8 text-center text-sm text-gray-700 font-medium">
+            <p className="mt-8 text-center text-sm text-gray-700 dark:text-gray-300 font-medium">
                 Solo Empleados y Administradores pueden iniciar sesión en el panel de gestión.
             </p>
         </div>

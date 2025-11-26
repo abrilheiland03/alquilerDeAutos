@@ -26,15 +26,15 @@ import {
 
 // Componente de tarjeta de estadística
 const StatCard = ({ title, value, icon: Icon, color, change, changeType }) => (
-  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
         {change && (
           <p className={`text-sm mt-1 ${
-            changeType === 'positive' ? 'text-green-600' : 
-            changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
+            changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 
+            changeType === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
           }`}>
             {change}
           </p>
@@ -49,26 +49,26 @@ const StatCard = ({ title, value, icon: Icon, color, change, changeType }) => (
 
 // Componente de tarjeta de acción rápida
 const QuickActionCard = ({ title, description, icon: Icon, href, buttonText, color, disabled = false, disabledReason = "" }) => (
-  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${disabled ? 'opacity-60' : ''}`}>
+  <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200 ${disabled ? 'opacity-60' : ''}`}>
     <div className="flex items-start justify-between">
       <div className="flex-1">
         <div className={`inline-flex items-center p-2 rounded-lg ${color} mb-3`}>
           <Icon className="h-5 w-5 text-white" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600 text-sm mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
+        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
           {disabled ? disabledReason : description}
         </p>
         {!disabled ? (
           <Link
             to={href}
-            className="inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors"
+            className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
           >
             {buttonText}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         ) : (
-          <span className="inline-flex items-center text-sm font-medium text-gray-400 cursor-not-allowed">
+          <span className="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed">
             {buttonText}
             <ArrowRight className="ml-1 h-4 w-4" />
           </span>
@@ -82,16 +82,16 @@ const QuickActionCard = ({ title, description, icon: Icon, href, buttonText, col
 const LastRentalCard = ({ rental, vehicle, onRepeatRental, isVehicleAvailable }) => {
   if (!rental) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
         <div className="text-center">
-          <Car className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Aún no tienes alquileres</h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <Car className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Aún no tienes alquileres</h3>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
             Realiza tu primer alquiler para verlo aquí
           </p>
           <Link
             to="/vehicles"
-            className="inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700"
+            className="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
           >
             Alquilar mi primer vehículo
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -105,21 +105,21 @@ const LastRentalCard = ({ rental, vehicle, onRepeatRental, isVehicleAvailable })
   const canRepeat = isVehicleAvailable && rental.id_estado === 4; // Solo se puede repetir alquileres finalizados
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Tu último alquiler</h3>
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tu último alquiler</h3>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status.color} dark:${status.darkColor}`}>
           {status.text}
         </span>
       </div>
       
       <div className="flex items-center space-x-4 mb-4">
         <div className="flex-shrink-0">
-          <Car className="h-12 w-12 text-gray-400" />
+          <Car className="h-12 w-12 text-gray-400 dark:text-gray-500" />
         </div>
         <div className="flex-1">
-          <h4 className="font-medium text-gray-900">{vehicle?.modelo || 'Vehículo no encontrado'}</h4>
-          <p className="text-sm text-gray-500">
+          <h4 className="font-medium text-gray-900 dark:text-white">{vehicle?.modelo || 'Vehículo no encontrado'}</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {vehicle?.marca || 'Marca no disponible'} • {rental.patente} • {new Date(rental.fecha_inicio).toLocaleDateString()} - {new Date(rental.fecha_fin).toLocaleDateString()}
           </p>
         </div>
@@ -131,7 +131,7 @@ const LastRentalCard = ({ rental, vehicle, onRepeatRental, isVehicleAvailable })
         className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
           canRepeat 
             ? 'bg-orange-500 text-white hover:bg-orange-600' 
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
         }`}
       >
         <Repeat className="h-4 w-4 mr-2" />
@@ -143,43 +143,87 @@ const LastRentalCard = ({ rental, vehicle, onRepeatRental, isVehicleAvailable })
 
 // Componente de lista de elementos recientes
 const RecentItem = ({ title, subtitle, status, icon: Icon, time, statusColor }) => (
-  <div className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
+  <div className="flex items-center space-x-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
     <div className={`p-2 rounded-full ${statusColor}`}>
       <Icon className="h-4 w-4 text-white" />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
-      <p className="text-sm text-gray-500 truncate">{subtitle}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{title}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{subtitle}</p>
     </div>
     <div className="flex flex-col items-end">
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
         {status}
       </span>
-      <span className="text-xs text-gray-400 mt-1">{time}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">{time}</span>
     </div>
   </div>
 );
 
-// Funciones auxiliares para estados
+// Funciones auxiliares para estados - ACTUALIZADAS CON COLORES DARK
 const getRentalStatus = (estadoId) => {
   const statusMap = {
-    1: { text: 'Reservado', color: 'bg-blue-100 text-blue-800' },
-    2: { text: 'Activo', color: 'bg-green-100 text-green-800' },
-    3: { text: 'Atrasado', color: 'bg-red-100 text-red-800' },
-    4: { text: 'Finalizado', color: 'bg-gray-100 text-gray-800' },
-    5: { text: 'Cancelado', color: 'bg-yellow-100 text-yellow-800' }
+    1: { 
+      text: 'Reservado', 
+      color: 'bg-blue-100 text-blue-800',
+      darkColor: 'bg-blue-900 text-blue-200'
+    },
+    2: { 
+      text: 'Activo', 
+      color: 'bg-green-100 text-green-800',
+      darkColor: 'bg-green-900 text-green-200'
+    },
+    3: { 
+      text: 'Atrasado', 
+      color: 'bg-red-100 text-red-800',
+      darkColor: 'bg-red-900 text-red-200'
+    },
+    4: { 
+      text: 'Finalizado', 
+      color: 'bg-gray-100 text-gray-800',
+      darkColor: 'bg-gray-700 text-gray-200'
+    },
+    5: { 
+      text: 'Cancelado', 
+      color: 'bg-yellow-100 text-yellow-800',
+      darkColor: 'bg-yellow-900 text-yellow-200'
+    }
   };
-  return statusMap[estadoId] || { text: 'Desconocido', color: 'bg-gray-100 text-gray-800' };
+  return statusMap[estadoId] || { 
+    text: 'Desconocido', 
+    color: 'bg-gray-100 text-gray-800',
+    darkColor: 'bg-gray-700 text-gray-200'
+  };
 };
 
 const getMaintenanceStatus = (estadoId) => {
   const statusMap = {
-    1: { text: 'En Curso', color: 'bg-orange-100 text-orange-800' },
-    2: { text: 'Finalizado', color: 'bg-green-100 text-green-800' },
-    3: { text: 'Pendiente', color: 'bg-blue-100 text-blue-800' },
-    4: { text: 'Cancelado', color: 'bg-red-100 text-red-800' }
+    1: { 
+      text: 'En Curso', 
+      color: 'bg-orange-100 text-orange-800',
+      darkColor: 'bg-orange-900 text-orange-200'
+    },
+    2: { 
+      text: 'Finalizado', 
+      color: 'bg-green-100 text-green-800',
+      darkColor: 'bg-green-900 text-green-200'
+    },
+    3: { 
+      text: 'Pendiente', 
+      color: 'bg-blue-100 text-blue-800',
+      darkColor: 'bg-blue-900 text-blue-200'
+    },
+    4: { 
+      text: 'Cancelado', 
+      color: 'bg-red-100 text-red-800',
+      darkColor: 'bg-red-900 text-red-200'
+    }
   };
-  return statusMap[estadoId] || { text: 'Desconocido', color: 'bg-gray-100 text-gray-800' };
+  return statusMap[estadoId] || { 
+    text: 'Desconocido', 
+    color: 'bg-gray-100 text-gray-800',
+    darkColor: 'bg-gray-700 text-gray-200'
+  };
 };
 
 const getStatusIcon = (estadoId, type) => {
@@ -351,10 +395,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando dashboard...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -363,14 +407,14 @@ const Dashboard = () => {
   const lastRentalVehicle = lastRental ? vehicles.find(v => v.patente === lastRental.patente) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen p-6 transition-colors duration-200">
       {/* Header del Dashboard */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             ¡Bienvenido, {user?.userName}!
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             {isAdmin() && 'Panel de administración completo del sistema.'}
             {isEmployee() && 'Gestión operativa de alquileres y vehículos.'}
             {isClient() && 'Seguimiento de tus alquileres y vehículos disponibles.'}
@@ -380,7 +424,7 @@ const Dashboard = () => {
           {(isAdmin() || isEmployee()) && (
             <Link
               to="/rentals/new"
-              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-colors"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Alquiler
@@ -389,7 +433,7 @@ const Dashboard = () => {
           {isClient() && (
             <Link
               to="/vehicles"
-              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-colors"
             >
               <Car className="h-4 w-4 mr-2" />
               Alquilar Vehículo
@@ -468,7 +512,7 @@ const Dashboard = () => {
         
         {/* Acciones Rápidas y Último Alquiler */}
         <div className="lg:col-span-1 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {isClient() ? 'Tus Acciones' : 'Acciones Rápidas'}
           </h2>
           
@@ -481,7 +525,7 @@ const Dashboard = () => {
                 icon={Car}
                 href="/vehicles"
                 buttonText="Ver vehículos"
-                color="bg-green-100"
+                color="bg-green-500"
               />
               <QuickActionCard
                 title="Mis Alquileres"
@@ -489,7 +533,7 @@ const Dashboard = () => {
                 icon={Calendar}
                 href="/rentals"
                 buttonText="Ver mis alquileres"
-                color="bg-blue-100"
+                color="bg-blue-500"
               />
               <QuickActionCard
                 title="Mi Perfil"
@@ -497,7 +541,7 @@ const Dashboard = () => {
                 icon={Users}
                 href="/profile"
                 buttonText="Editar perfil"
-                color="bg-purple-100"
+                color="bg-purple-500"
               />
               
               {/* Card de último alquiler */}
@@ -517,7 +561,7 @@ const Dashboard = () => {
                 icon={Car}
                 href="/vehicles/new"
                 buttonText="Agregar vehículo"
-                color="bg-blue-100"
+                color="bg-blue-500"
               />
               <QuickActionCard
                 title="Nuevo Cliente"
@@ -525,7 +569,7 @@ const Dashboard = () => {
                 icon={Users}
                 href="/clients/new"
                 buttonText="Registrar cliente"
-                color="bg-purple-100"
+                color="bg-purple-500"
               />
               <QuickActionCard
                 title="Crear Empleado"
@@ -533,7 +577,7 @@ const Dashboard = () => {
                 icon={Users}
                 href="/employees/new"
                 buttonText="Registrar empleado"
-                color="bg-purple-100"
+                color="bg-purple-500"
               />
               {/* Solo Admin puede ver reportes */}
               {isAdmin() && (
@@ -543,7 +587,7 @@ const Dashboard = () => {
                   icon={BarChart3}
                   href="/reports"
                   buttonText="Ver reportes"
-                  color="bg-green-100"
+                  color="bg-green-500"
                 />
               )}
               <QuickActionCard
@@ -552,7 +596,7 @@ const Dashboard = () => {
                 icon={Wrench}
                 href="/maintenance/new"
                 buttonText="Programar"
-                color="bg-orange-100"
+                color="bg-orange-500"
               />
             </>
           )}
@@ -562,22 +606,22 @@ const Dashboard = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Alquileres Recientes */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {isClient() ? 'Tus Alquileres Recientes' : 
                    isEmployee() ? 'Tus Alquileres Gestionados' : 'Alquileres Recientes'}
                 </h2>
                 <Link
                   to="/rentals"
-                  className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                  className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
                 >
                   Ver todos
                 </Link>
               </div>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-600">
               {recentRentals.length > 0 ? (
                 recentRentals.map((rental, index) => {
                   const status = getRentalStatus(rental.id_estado);
@@ -595,8 +639,8 @@ const Dashboard = () => {
                   );
                 })
               ) : (
-                <div className="p-6 text-center text-gray-500">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                  <Calendar className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
                   <p>
                     {isClient() ? 'Aún no tienes alquileres' : 
                      isEmployee() ? 'No has gestionado alquileres recientemente' : 'No hay alquileres recientes'}
@@ -604,7 +648,7 @@ const Dashboard = () => {
                   {isClient() && (
                     <Link
                       to="/vehicles"
-                      className="inline-flex items-center mt-2 text-orange-600 hover:text-orange-700"
+                      className="inline-flex items-center mt-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
                     >
                       Realiza tu primer alquiler
                       <ArrowRight className="ml-1 h-4 w-4" />
@@ -617,19 +661,19 @@ const Dashboard = () => {
 
           {/* Mantenimientos Recientes - Solo para admin/empleado */}
           {(isAdmin() || isEmployee()) && recentMaintenance.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Mantenimientos Recientes</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mantenimientos Recientes</h2>
                   <Link
                     to="/maintenance"
-                    className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                    className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
                   >
                     Ver todos
                   </Link>
                 </div>
               </div>
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-gray-200 dark:divide-gray-600">
                 {recentMaintenance.map((maint, index) => {
                   const status = getMaintenanceStatus(maint.id_estado);
                   const StatusIcon = getStatusIcon(maint.id_estado, 'maintenance');
@@ -653,14 +697,14 @@ const Dashboard = () => {
 
       {/* Mensaje para Clientes sin alquileres */}
       {isClient() && userRentals.length === 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-6 transition-colors duration-200">
           <div className="flex items-center">
-            <Car className="h-8 w-8 text-blue-500 mr-4" />
+            <Car className="h-8 w-8 text-blue-500 dark:text-blue-400 mr-4" />
             <div>
-              <h3 className="text-lg font-semibold text-blue-900">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
                 ¿Listo para tu primer viaje?
               </h3>
-              <p className="text-blue-700 mt-1">
+              <p className="text-blue-700 dark:text-blue-300 mt-1">
                 Explora nuestra flota de vehículos y reserva el que mejor se adapte a tus necesidades.
               </p>
               <Link

@@ -19,7 +19,9 @@ const LoadingSpinner = ({ message = 'Cargando...', size = 'medium' }) => {
     <div className="flex flex-col items-center justify-center p-4">
       <Loader2 className={`${getSizeClass()} animate-spin text-orange-500 mb-2`} />
       {message && (
-        <p className="text-sm text-gray-600 text-center">{message}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center transition-colors duration-200">
+          {message}
+        </p>
       )}
     </div>
   );

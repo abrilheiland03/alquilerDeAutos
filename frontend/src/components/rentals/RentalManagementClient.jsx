@@ -115,7 +115,7 @@ const RentalManagementClient = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando tus alquileres...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando tus alquileres...</p>
         </div>
       </div>
     );
@@ -126,8 +126,8 @@ const RentalManagementClient = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis Alquileres</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mis Alquileres</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Consulta el estado de tus alquileres actuales e históricos
           </p>
         </div>
@@ -153,12 +153,12 @@ const RentalManagementClient = () => {
 
       {/* Lista de Alquileres */}
       {filteredRentals.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Calendar className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
             No tienes alquileres
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchTerm || statusFilter !== 'all' 
               ? 'Intenta ajustar los filtros de búsqueda' 
               : 'Comienza reservando tu primer vehículo'
@@ -188,31 +188,31 @@ const RentalManagementClient = () => {
                 isClient={true}
               />
             ) : (
-              <div key={rental.id_alquiler} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div key={rental.id_alquiler} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
                 {/* Vista de lista simplificada para cliente */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Calendar className="h-10 w-10 text-orange-500" />
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         Alquiler #{rental.id_alquiler}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {rental.modelo} - {rental.patente}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-500">
                         {new Date(rental.fecha_inicio).toLocaleDateString()} - {new Date(rental.fecha_fin).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className={`status-badge ${getStatusConfig(rental.estado_desc).color}`}>
+                    <span className={`status-badge ${getStatusConfig(rental.estado_desc).color} ${getStatusConfig(rental.estado_desc).darkColor}`}>
                       {rental.estado_desc}
                     </span>
                     {canClientCancel(rental) && (
                       <button
                         onClick={() => handleCancelRental(rental)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                       >
                         <XCircle className="h-4 w-4" />
                       </button>
@@ -220,7 +220,7 @@ const RentalManagementClient = () => {
                     {/* Botón para ver detalles en vista lista */}
                     <button
                       onClick={() => handleViewRental(rental)}
-                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
                     >
                       <Search className="h-4 w-4" />
                     </button>
@@ -246,16 +246,34 @@ const RentalManagementClient = () => {
   );
 };
 
-// Helper function (podría moverse a un archivo de utils)
+// Helper function actualizada para modo oscuro
 const getStatusConfig = (estado) => {
   const config = {
-    'Reservado': { color: 'bg-blue-100 text-blue-800' },
-    'Activo': { color: 'bg-green-100 text-green-800' },
-    'Atrasado': { color: 'bg-red-100 text-red-800' },
-    'Finalizado': { color: 'bg-gray-100 text-gray-800' },
-    'Cancelado': { color: 'bg-yellow-100 text-yellow-800' }
+    'Reservado': { 
+      color: 'bg-blue-100 text-blue-800',
+      darkColor: 'dark:bg-blue-900/30 dark:text-blue-300'
+    },
+    'Activo': { 
+      color: 'bg-green-100 text-green-800',
+      darkColor: 'dark:bg-green-900/30 dark:text-green-300'
+    },
+    'Atrasado': { 
+      color: 'bg-red-100 text-red-800',
+      darkColor: 'dark:bg-red-900/30 dark:text-red-300'
+    },
+    'Finalizado': { 
+      color: 'bg-gray-100 text-gray-800',
+      darkColor: 'dark:bg-gray-700 dark:text-gray-300'
+    },
+    'Cancelado': { 
+      color: 'bg-yellow-100 text-yellow-800',
+      darkColor: 'dark:bg-yellow-900/30 dark:text-yellow-300'
+    }
   };
-  return config[estado] || { color: 'bg-gray-100 text-gray-800' };
+  return config[estado] || { 
+    color: 'bg-gray-100 text-gray-800',
+    darkColor: 'dark:bg-gray-700 dark:text-gray-300'
+  };
 };
 
 export default RentalManagementClient;

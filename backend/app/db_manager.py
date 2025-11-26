@@ -1692,9 +1692,7 @@ class DBManager:
         sql = """
             SELECT 
                 strftime('%Y-%m', a.fecha_fin) as periodo,
-                a.fecha_inicio, a.fecha_fin, v.precio_flota,
-                COALESCE((SELECT SUM(costo) FROM Multa WHERE alquiler_id = a.id_alquiler), 0) as multas,
-                COALESCE((SELECT SUM(costo) FROM Danio WHERE id_alquiler = a.id_alquiler), 0) as danios
+                a.fecha_inicio, a.fecha_fin, v.precio_flota
             FROM Alquiler a
             JOIN Vehiculo v ON a.patente = v.patente
             WHERE a.id_estado = 4 
@@ -1724,7 +1722,7 @@ class DBManager:
                 dias = (fin - inicio).days
                 if dias < 1: dias = 1
                 
-                total_row = (dias * row['precio_flota']) + row['multas'] + row['danios']
+                total_row = (dias * row['precio_flota'])
                 
                 if periodo in facturacion_por_mes:
                     facturacion_por_mes[periodo] += total_row

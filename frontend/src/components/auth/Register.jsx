@@ -6,11 +6,11 @@ import { authService } from '../../services/authService';
 // Componente para mensajes de estado
 const FormMessage = ({ type, text }) => {
     if (!text) return null;
-    const color = type === 'error' ? 'bg-red-100 text-red-700' : 
-                  type === 'success' ? 'bg-green-100 text-green-700' :
-                  'bg-blue-100 text-blue-700';
+    const color = type === 'error' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' : 
+                  type === 'success' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                  'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300';
     return (
-        <div className={`p-3 rounded-lg text-sm mb-4 ${color}`} role="alert">
+        <div className={`p-3 rounded-lg text-sm mb-4 ${color} transition-colors duration-200`} role="alert">
             {text}
         </div>
     );
@@ -23,7 +23,6 @@ const fechaMayor = () => {
     hoy.setDate(hoy.getDate() - 1);
     return hoy.toISOString().split('T')[0];
 }
-
 
 const Register = () => {
     const navigate = useNavigate();
@@ -110,44 +109,44 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center pb-4 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-center items-center pb-4 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
             
             {/* Header del Formulario */}
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
                 <div className="flex items-center justify-center mb-2">
                     <Car className="h-10 w-10 text-orange-500" />
-                    <span className="ml-3 text-3xl font-extrabold text-gray-900">IngRide</span>
+                    <span className="ml-3 text-3xl font-extrabold text-gray-900 dark:text-white">IngRide</span>
                 </div>
-                <h1 className="text-xl font-semibold text-gray-700">Crear Cuenta</h1>
+                <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Crear Cuenta</h1>
             </div>
 
             {/* Contenedor del Formulario */}
-            <div className="relative w-full max-w-2xl bg-white p-8 shadow-2xl rounded-xl">
+            <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="registro-section">
-                    <h2 className="text-3xl font-extrabold text-gray-900 flex items-center justify-center mb-2">
-                        <UserPlus className="w-6 h-6 mr-2 text-gray-700" />
+                    <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center justify-center mb-2">
+                        <UserPlus className="w-6 h-6 mr-2 text-gray-700 dark:text-gray-300" />
                         Crear Cuenta
                     </h2>
-                    <p className="text-gray-700 mb-6 text-center">Registro de nuevo usuario</p>
+                    <p className="text-gray-700 dark:text-gray-300 mb-6 text-center">Registro de nuevo usuario</p>
                     
                     <FormMessage type={message.type} text={message.text} />
 
                     <form onSubmit={handleRegistroSubmit} className="space-y-6">
                         {/* Tipo de Usuario */}
                         {/*<div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuario</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Usuario</label>
                             <select 
                                 name="tipo"
                                 value={registroData.tipo}
                                 onChange={handleRegistroChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                 required
                             >
                                 <option value="cliente">Cliente</option>
                                 <option value="empleado">Empleado</option>
                                 <option value="admin">Administrador</option>
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {registroData.tipo === 'cliente' && "Los clientes pueden realizar alquileres y ver su historial."}
                                 {registroData.tipo === 'empleado' && "Los empleados pueden gestionar alquileres y clientes."}
                                 {registroData.tipo === 'admin' && "Los administradores tienen acceso completo al sistema."}
@@ -157,12 +156,11 @@ const Register = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nombre */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
                                 <input 
                                     type="text" 
                                     name="datos.nombre"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    //placeholder="Tu nombre" 
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     value={registroData.datos.nombre}
                                     onChange={handleRegistroChange}
                                     required
@@ -171,12 +169,11 @@ const Register = () => {
 
                             {/* Apellido */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellido</label>
                                 <input 
                                     type="text" 
                                     name="datos.apellido"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    //placeholder="Tu apellido" 
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     value={registroData.datos.apellido}
                                     onChange={handleRegistroChange}
                                     required
@@ -186,12 +183,11 @@ const Register = () => {
 
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                             <input 
                                 type="email" 
                                 name="datos.mail"
-                                className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                //placeholder="tu.email@ejemplo.com" 
+                                className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                 value={registroData.datos.mail}
                                 onChange={handleRegistroChange}
                                 required
@@ -201,11 +197,11 @@ const Register = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Teléfono */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
                                 <input 
                                     type="tel" 
                                     name="datos.telefono"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     placeholder="ej: 351 123-4567" 
                                     value={registroData.datos.telefono}
                                     onChange={handleRegistroChange}
@@ -215,11 +211,11 @@ const Register = () => {
 
                             {/* Fecha de Nacimiento */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de Nacimiento</label>
                                 <input 
                                     type="date" 
                                     name="datos.fecha_nacimiento"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     value={registroData.datos.fecha_nacimiento}
                                     onChange={handleRegistroChange}
                                     max={fechaMayor()}
@@ -231,12 +227,12 @@ const Register = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Tipo Documento */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Documento</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de Documento</label>
                                 <select 
                                     name="datos.tipo_documento_id"
                                     value={registroData.datos.tipo_documento_id}
                                     onChange={handleRegistroChange}
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     required
                                 >
                                     <option value={1}>DNI</option>
@@ -246,12 +242,11 @@ const Register = () => {
 
                             {/* Número de Documento */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Número de Documento</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número de Documento</label>
                                 <input 
                                     type="text" 
                                     name="datos.nro_documento"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    //placeholder="12345678" 
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     value={registroData.datos.nro_documento}
                                     onChange={handleRegistroChange}
                                     required
@@ -262,12 +257,11 @@ const Register = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nombre de Usuario */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre de Usuario</label>
                                 <input 
                                     type="text" 
                                     name="datos.user_name"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    //placeholder="usuario123" 
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     value={registroData.datos.user_name}
                                     onChange={handleRegistroChange}
                                     required
@@ -276,11 +270,11 @@ const Register = () => {
 
                             {/* Contraseña */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
                                 <input 
                                     type="password" 
                                     name="datos.password"
-                                    className="placeholder:text-gray-800 text-gray-800 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-gray-800 dark:placeholder:text-gray-400 text-gray-800 dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     placeholder="Mínimo 6 caracteres" 
                                     value={registroData.datos.password}
                                     onChange={handleRegistroChange}
@@ -294,22 +288,22 @@ const Register = () => {
                         {registroData.tipo === 'empleado' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Alta</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de Alta</label>
                                     <input 
                                         type="date" 
                                         name="datos.fecha_alta"
-                                        className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        className="placeholder:text-black dark:placeholder:text-gray-400 text-black dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                         value={registroData.datos.fecha_alta}
                                         onChange={handleRegistroChange}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Sueldo</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sueldo</label>
                                     <input 
                                         type="number" 
                                         name="datos.sueldo"
-                                        className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                        className="placeholder:text-black dark:placeholder:text-gray-400 text-black dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                         placeholder="850000.00" 
                                         value={registroData.datos.sueldo || ''}
                                         onChange={handleRegistroChange}
@@ -321,11 +315,11 @@ const Register = () => {
 
                         {registroData.tipo === 'admin' && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
                                 <input 
                                     type="text" 
                                     name="datos.descripcion"
-                                    className="placeholder:text-black text-black w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                    className="placeholder:text-black dark:placeholder:text-gray-400 text-black dark:text-white w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700"
                                     placeholder="Descripción del administrador" 
                                     value={registroData.datos.descripcion || ''}
                                     onChange={handleRegistroChange}
@@ -351,14 +345,14 @@ const Register = () => {
                     <div className="mt-6 text-center space-y-3">
                         <Link 
                             to="/login"
-                            className="flex items-center justify-center mx-auto text-sm font-medium text-gray-600 hover:text-gray-800 transition"
+                            className="flex items-center justify-center mx-auto text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1" />
                             Volver a Iniciar Sesión
                         </Link>
                         <Link 
                             to="/"
-                            className="block text-sm font-medium text-gray-600 hover:text-gray-800 transition"
+                            className="block text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition"
                         >
                             ← Volver al inicio
                         </Link>

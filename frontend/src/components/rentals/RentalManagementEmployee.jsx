@@ -160,7 +160,7 @@ const RentalManagementEmployee = () => {
         showNotification('Multa registrada exitosamente', 'success');
       } else {
         await danioService.create(eventData);
-        showNotification('Daño registrado exitosamente', 'success');
+        showNotification('Daño registrada exitosamente', 'success');
       }
       fetchRentals(); // Recargar la lista
     } catch (error) {
@@ -207,7 +207,7 @@ const RentalManagementEmployee = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando alquileres...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando alquileres...</p>
         </div>
       </div>
     );
@@ -217,8 +217,8 @@ const RentalManagementEmployee = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Alquileres</h1>
-          <p className="text-gray-600 mt-1">Administra los alquileres de la flota</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Alquileres</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Administra los alquileres de la flota</p>
         </div>
         <button
           onClick={() => openModal()}
@@ -242,12 +242,12 @@ const RentalManagementEmployee = () => {
 
       {/* Lista de alquileres con acciones de empleado */}
       {filteredRentals.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Calendar className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
             No se encontraron alquileres
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchTerm || statusFilter !== 'all' 
               ? 'Intenta ajustar los filtros de búsqueda' 
               : 'No hay alquileres registrados en el sistema'

@@ -153,24 +153,24 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {vehicle ? 'Editar Vehículo' : 'Nuevo Vehículo'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Patente *
               </label>
               <input
@@ -178,7 +178,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="patente"
                 value={formData.patente}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="AA123BB"
                 required
                 disabled={!!vehicle}
@@ -186,7 +186,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Modelo *
               </label>
               <input
@@ -194,21 +194,21 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="modelo"
                 value={formData.modelo}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="Corolla, Focus, etc."
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Marca *
               </label>
               <select
                 name="id_marca"
                 value={formData.id_marca}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
                 <option value="">Seleccionar marca</option>
@@ -221,14 +221,14 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Color *
               </label>
               <select
                 name="id_color"
                 value={formData.id_color}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
                 <option value="">Seleccionar color</option>
@@ -241,7 +241,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Año *
               </label>
               <input
@@ -249,7 +249,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="anio"
                 value={formData.anio}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 min="2000"
                 max={new Date().getFullYear() + 1}
                 required
@@ -257,7 +257,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Precio por Día ($) *
               </label>
               <input
@@ -265,7 +265,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="precio_flota"
                 value={formData.precio_flota}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="25000"
                 step="0.01"
                 min="0"
@@ -274,7 +274,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Número de Asientos *
               </label>
               <input
@@ -282,7 +282,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="asientos"
                 value={formData.asientos}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 min="2"
                 max="9"
                 required
@@ -290,7 +290,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Número de Puertas *
               </label>
               <input
@@ -298,7 +298,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="puertas"
                 value={formData.puertas}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 min="2"
                 max="5"
                 required
@@ -306,14 +306,14 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estado *
               </label>
               <select
                 name="id_estado"
                 value={formData.id_estado}
                 onChange={handleChange}
-                className="input-primary"
+                className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
                 {estados.map(estado => (
@@ -330,19 +330,19 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
                 name="caja_manual"
                 checked={formData.caja_manual}
                 onChange={handleChange}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
               />
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Caja Manual
               </label>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
             >
               Cancelar
             </button>
@@ -379,12 +379,12 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{vehicle.modelo}</h3>
-            <p className="text-sm text-gray-500">{vehicle.marca}</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{vehicle.modelo}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{vehicle.marca}</p>
           </div>
           <span className={`status-badge ${getStatusBadge(vehicle.estado)}`}>
             {vehicle.estado}
@@ -393,29 +393,29 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
 
         <div className="space-y-3 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Patente:</span>
-            <span className="font-medium text-gray-600">{vehicle.patente}</span>
+            <span className="text-gray-600 dark:text-gray-400">Patente:</span>
+            <span className="font-medium text-gray-600 dark:text-gray-300">{vehicle.patente}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Año:</span>
-            <span className="font-medium text-gray-600">{vehicle.anio}</span>
+            <span className="text-gray-600 dark:text-gray-400">Año:</span>
+            <span className="font-medium text-gray-600 dark:text-gray-300">{vehicle.anio}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Color:</span>
-            <span className="font-medium text-gray-600">{vehicle.color}</span>
+            <span className="text-gray-600 dark:text-gray-400">Color:</span>
+            <span className="font-medium text-gray-600 dark:text-gray-300">{vehicle.color}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Transmisión:</span>
-            <span className="font-medium text-gray-600">{getTransmissionText(vehicle.caja_manual)}</span>
+            <span className="text-gray-600 dark:text-gray-400">Transmisión:</span>
+            <span className="font-medium text-gray-600 dark:text-gray-300">{getTransmissionText(vehicle.caja_manual)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Precio/día:</span>
-            <span className="font-medium text-green-600">${vehicle.precio_flota}</span>
+            <span className="text-gray-600 dark:text-gray-400">Precio/día:</span>
+            <span className="font-medium text-green-600 dark:text-green-400">${vehicle.precio_flota}</span>
           </div>
         </div>
 
         {/* SECCIÓN DE ASIENTOS Y PUERTAS - MANTENIDA */}
-        <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-200 pt-3">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-500 border-t border-gray-200 dark:border-gray-600 pt-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
               <Users className="h-4 w-4 mr-1" />
@@ -428,14 +428,14 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
           {canEdit || canDelete ? (
             <>
               <div className="flex-1"></div> {/* Espacio para empujar a la derecha */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onEdit(vehicle)}
-                  className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors duration-200"
                   title="Editar"
                 >
                   <Edit className="h-4 w-4" />
@@ -443,7 +443,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
                 {canDelete && (
                   <button
                     onClick={() => onDelete(vehicle)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                     title="Eliminar"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -456,7 +456,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete, onView, onRent }) => {
               <div className="flex-1"></div> {/* Mismo espacio para empujar a la derecha */}
               <button
                 onClick={() => onRent(vehicle)}
-                className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200"
               >
                 <Calendar className="h-4 w-4 mr-1" />
                 Alquilar
@@ -650,7 +650,7 @@ const resetRentalFlow = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando vehículos...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando vehículos...</p>
         </div>
       </div>
     );
@@ -660,8 +660,8 @@ const resetRentalFlow = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Vehículos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Vehículos</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Administra la flota de vehículos de IngRide
           </p>
         </div>
@@ -679,7 +679,7 @@ const resetRentalFlow = () => {
       
       {/* Filtros y busquedas */}
       {(isAdmin() || isEmployee()) && (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex-1 max-w-md">
             <div className="relative">
@@ -689,7 +689,7 @@ const resetRentalFlow = () => {
                 placeholder="Buscar por patente, modelo o marca..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-primary pl-10"
+                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -699,7 +699,7 @@ const resetRentalFlow = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-primary"
+              className="input-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="all">Todos los estados</option>
               <option value="Libre">Libre</option>
@@ -707,10 +707,14 @@ const resetRentalFlow = () => {
               <option value="En mantenimiento">En mantenimiento</option>
             </select>
 
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
               <button
                 onClick={() => setView('grid')}
-                className={`p-2 ${view === 'grid' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 transition-colors duration-200 ${
+                  view === 'grid' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                }`}
               >
                 <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                   <div className="bg-current rounded-sm"></div>
@@ -721,7 +725,11 @@ const resetRentalFlow = () => {
               </button>
               <button
                 onClick={() => setView('list')}
-                className={`p-2 ${view === 'list' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 transition-colors duration-200 ${
+                  view === 'list' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                }`}
               >
                 <div className="w-4 h-4 flex flex-col space-y-0.5">
                   <div className="bg-current h-1 rounded-sm"></div>
@@ -737,27 +745,27 @@ const resetRentalFlow = () => {
  {/* Mostrar estadísticas solo para administradores y empleados */}
 {(isAdmin() || isEmployee()) && (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-      <div className="text-2xl font-bold text-gray-900">{vehicles.length}</div>
-      <div className="text-sm text-gray-600">Total</div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+      <div className="text-2xl font-bold text-gray-900 dark:text-white">{vehicles.length}</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
     </div>
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-      <div className="text-2xl font-bold text-green-600">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
         {vehicles.filter(v => v.estado === 'Libre').length}
       </div>
-      <div className="text-sm text-gray-600">Disponibles</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">Disponibles</div>
     </div>
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-      <div className="text-2xl font-bold text-red-600">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
         {vehicles.filter(v => v.estado === 'Ocupado').length}
       </div>
-      <div className="text-sm text-gray-600">Ocupados</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">Ocupados</div>
     </div>
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-      <div className="text-2xl font-bold text-orange-600">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
         {vehicles.filter(v => v.estado === 'En mantenimiento').length}
       </div>
-      <div className="text-sm text-gray-600">Mantenimiento</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">Mantenimiento</div>
     </div>
   </div>
 )}
@@ -774,12 +782,12 @@ const resetRentalFlow = () => {
             <div className="mb-6">
               <button
                 onClick={resetRentalFlow}
-                className="flex items-center text-orange-500 hover:text-orange-600 mb-4"
+                className="flex items-center text-orange-500 hover:text-orange-600 mb-4 transition-colors duration-200"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Cambiar fechas
               </button>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
               </h2>
             </div>
@@ -799,12 +807,12 @@ const resetRentalFlow = () => {
       )}
 
       {availableVehicles.length === 0 && rentalDates && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Car className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
             No hay vehículos disponibles
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             No encontramos vehículos disponibles para las fechas seleccionadas.
           </p>
           <button
@@ -822,10 +830,10 @@ const resetRentalFlow = () => {
       )}
 
       {!rentalDates && filteredVehicles.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron vehículos</h3>
-          <p className="text-gray-600 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Car className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No se encontraron vehículos</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchTerm || statusFilter !== 'all' 
               ? 'Intenta ajustar los filtros de búsqueda' 
               : 'No hay vehículos registrados en el sistema'
@@ -863,20 +871,20 @@ const resetRentalFlow = () => {
                 onRent={openRentalModal}
               />
             ) : (
-              <div key={vehicle.patente} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div key={vehicle.patente} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Car className="h-10 w-10 text-orange-500" />
                     <div>
-                      <h3 className="font-semibold text-gray-900">{vehicle.modelo}</h3>
-                      <p className="text-sm text-gray-600">{vehicle.marca} • {vehicle.patente}</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{vehicle.modelo}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{vehicle.marca} • {vehicle.patente}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <span className={`status-badge ${getStatusBadge(vehicle.estado)}`}>
                       {vehicle.estado}
                     </span>
-                    <span className="text-sm font-medium text-green-600">
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
                       ${vehicle.precio_flota}/día
                     </span>
                     <div className="flex items-center space-x-2">
@@ -893,7 +901,7 @@ const resetRentalFlow = () => {
                           {canEdit && (
                             <button
                               onClick={() => openVehicleModal(vehicle)}
-                              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors duration-200"
                             >
                               <Edit className="h-4 w-4" />
                             </button>
@@ -901,7 +909,7 @@ const resetRentalFlow = () => {
                           {canDelete && (
                             <button
                               onClick={() => handleDeleteVehicle(vehicle)}
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

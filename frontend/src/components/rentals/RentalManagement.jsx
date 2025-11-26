@@ -4,7 +4,6 @@ import RentalManagementClient from './RentalManagementClient';
 import RentalManagementEmployee from './RentalManagementEmployee';
 import RentalManagementAdmin from './RentalManagementAdmin';
 
-
 const RentalManagement = () => {
   const { isAdmin, isEmployee, isClient } = useAuth();
 
@@ -23,10 +22,10 @@ const RentalManagement = () => {
   return (
     <div className="flex items-center justify-center min-h-96">
       <div className="text-center">
-        <p className="text-gray-600">No tienes permisos para acceder a esta sección.</p>
+        <p className="text-gray-600 dark:text-gray-400">No tienes permisos para acceder a esta sección.</p>
       </div>
     </div>
   );
 };
 
-export default RentalManagement;  
+export default RentalManagement;

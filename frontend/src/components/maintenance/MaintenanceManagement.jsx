@@ -112,14 +112,14 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {maintenance ? 'Editar Mantenimiento' : 'Programar Mantenimiento'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -129,7 +129,7 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Vehículo */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Vehículo *
               </label>
               <select
@@ -151,7 +151,7 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
 
             {/* Fecha de Inicio */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha de Inicio *
               </label>
               <input
@@ -167,7 +167,7 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
 
             {/* Fecha de Fin */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha de Fin Estimada *
               </label>
               <input
@@ -180,7 +180,7 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
                 required
               />
               {formData.fecha_inicio && formData.fecha_fin && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Duración estimada: {calculateDuration()}
                 </p>
               )}
@@ -188,7 +188,7 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
 
             {/* Detalle */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Detalle del Mantenimiento *
               </label>
               <textarea
@@ -204,22 +204,22 @@ const MaintenanceModal = ({ isOpen, onClose, maintenance, onSave }) => {
           </div>
 
           {/* Información Adicional */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">
+          <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
               Información importante:
             </h3>
-            <ul className="text-sm text-blue-700 space-y-1">
+            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li>• El vehículo quedará marcado como "En mantenimiento" durante este período</li>
               <li>• No podrá ser alquilado hasta que el mantenimiento finalice</li>
               <li>• Verifique que las fechas no se superpongan con alquileres existentes</li>
             </ul>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
             >
               Cancelar
             </button>
@@ -242,27 +242,27 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
   const getStatusConfig = (estado) => {
     const config = {
       'Realizando': { 
-        color: 'bg-orange-100 text-orange-800',
+        color: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200',
         icon: Play,
         actions: ['complete']
       },
       'Finalizado': { 
-        color: 'bg-green-100 text-green-800',
+        color: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
         icon: CheckCircle,
         actions: []
       },
       'Pendiente': { 
-        color: 'bg-blue-100 text-blue-800',
+        color: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
         icon: Clock,
         actions: ['start', 'cancel']
       },
       'Cancelado': { 
-        color: 'bg-red-100 text-red-800',
+        color: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
         icon: XCircle,
         actions: []
       }
     };
-    return config[estado] || { color: 'bg-gray-100 text-gray-800', icon: Clock, actions: [] };
+    return config[estado] || { color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200', icon: Clock, actions: [] };
   };
 
   const getDaysRemaining = (fechaFin) => {
@@ -282,15 +282,15 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {maintenance.modelo} - {maintenance.patente}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Mantenimiento #{maintenance.id_mantenimiento}
             </p>
           </div>
@@ -300,7 +300,7 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
               {maintenance.estado_desc}
             </span>
             {maintenance.estado_desc === 'Pendiente' && (
-              <span className="text-xs text-gray-500 mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {getDaysRemaining(maintenance.fecha_fin)}
               </span>
             )}
@@ -310,28 +310,28 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
         {/* Información del mantenimiento */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Período:</span>
-            <span className="font-medium">
+            <span className="text-gray-600 dark:text-gray-400">Período:</span>
+            <span className="font-medium text-gray-900 dark:text-white">
               {new Date(maintenance.fecha_inicio).toLocaleDateString()} - {new Date(maintenance.fecha_fin).toLocaleDateString()}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Duración:</span>
-            <span className="font-medium">
+            <span className="text-gray-600 dark:text-gray-400">Duración:</span>
+            <span className="font-medium text-gray-900 dark:text-white">
               {Math.ceil((new Date(maintenance.fecha_fin) - new Date(maintenance.fecha_inicio)) / (1000 * 60 * 60 * 24))} días
             </span>
           </div>
           <div className="text-sm">
-            <span className="text-gray-600 block mb-1">Detalle:</span>
-            <p className="text-gray-900 line-clamp-2">{maintenance.detalle}</p>
+            <span className="text-gray-600 dark:text-gray-400 block mb-1">Detalle:</span>
+            <p className="text-gray-900 dark:text-gray-100 line-clamp-2">{maintenance.detalle}</p>
           </div>
         </div>
 
         {/* Acciones */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => onView(maintenance)}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200"
           >
             <Eye className="h-4 w-4 mr-1" />
             Ver Detalles
@@ -341,7 +341,7 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
             {statusConfig.actions.includes('start') && (
               <button
                 onClick={() => onStart(maintenance)}
-                className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors duration-200"
                 title="Iniciar Mantenimiento"
               >
                 <Play className="h-4 w-4" />
@@ -350,7 +350,7 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
             {statusConfig.actions.includes('complete') && (
               <button
                 onClick={() => onComplete(maintenance)}
-                className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors duration-200"
                 title="Finalizar Mantenimiento"
               >
                 <CheckCircle className="h-4 w-4" />
@@ -359,7 +359,7 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
             {statusConfig.actions.includes('cancel') && (
               <button
                 onClick={() => onCancel(maintenance)}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
                 title="Cancelar Mantenimiento"
               >
                 <XCircle className="h-4 w-4" />
@@ -367,7 +367,7 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
             )}
             <button
               onClick={() => onDelete(maintenance)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
               title="Eliminar"
             >
               <Trash2 className="h-4 w-4" />
@@ -549,7 +549,7 @@ const MaintenanceManagement = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando mantenimientos...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando mantenimientos...</p>
         </div>
       </div>
     );
@@ -562,8 +562,8 @@ const MaintenanceManagement = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Mantenimientos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Mantenimientos</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Programa y gestiona el mantenimiento de la flota de vehículos
           </p>
         </div>
@@ -580,26 +580,26 @@ const MaintenanceManagement = () => {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
-          <div className="text-sm text-gray-600">Pendientes</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.pending}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Pendientes</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-orange-600">{stats.inProgress}</div>
-          <div className="text-sm text-gray-600">En Curso</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.inProgress}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">En Curso</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-          <div className="text-sm text-gray-600">Finalizados</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Finalizados</div>
         </div>
       </div>
 
       {/* Filtros y Búsqueda */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           {/* Búsqueda */}
           <div className="flex-1 max-w-md">
@@ -631,10 +631,10 @@ const MaintenanceManagement = () => {
             </select>
 
             {/* Botones de Vista */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
               <button
                 onClick={() => setView('grid')}
-                className={`p-2 ${view === 'grid' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 ${view === 'grid' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400'} transition-colors duration-200`}
               >
                 <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                   <div className="bg-current rounded-sm"></div>
@@ -645,7 +645,7 @@ const MaintenanceManagement = () => {
               </button>
               <button
                 onClick={() => setView('list')}
-                className={`p-2 ${view === 'list' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
+                className={`p-2 ${view === 'list' ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400'} transition-colors duration-200`}
               >
                 <div className="w-4 h-4 flex flex-col space-y-0.5">
                   <div className="bg-current h-1 rounded-sm"></div>
@@ -660,10 +660,10 @@ const MaintenanceManagement = () => {
 
       {/* Lista de Mantenimientos */}
       {filteredMaintenances.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Wrench className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron mantenimientos</h3>
-          <p className="text-gray-600 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-colors duration-200">
+          <Wrench className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No se encontraron mantenimientos</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchTerm || statusFilter !== 'all' 
               ? 'Intenta ajustar los filtros de búsqueda' 
               : 'No hay mantenimientos programados en el sistema'
@@ -697,15 +697,15 @@ const MaintenanceManagement = () => {
                 onView={() => openModal(maintenance)}
               />
             ) : (
-              <div key={maintenance.id_mantenimiento} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div key={maintenance.id_mantenimiento} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Wrench className="h-10 w-10 text-orange-500" />
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {maintenance.modelo} - {maintenance.patente}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {maintenance.detalle} • {new Date(maintenance.fecha_inicio).toLocaleDateString()} - {new Date(maintenance.fecha_fin).toLocaleDateString()}
                       </p>
                     </div>
@@ -717,7 +717,7 @@ const MaintenanceManagement = () => {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => openModal(maintenance)}
-                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors duration-200"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
@@ -726,7 +726,7 @@ const MaintenanceManagement = () => {
                           {getStatusConfig(maintenance.estado_desc).actions.includes('start') && (
                             <button
                               onClick={() => handleStartMaintenance(maintenance)}
-                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors duration-200"
                             >
                               <Play className="h-4 w-4" />
                             </button>
@@ -734,7 +734,7 @@ const MaintenanceManagement = () => {
                           {getStatusConfig(maintenance.estado_desc).actions.includes('complete') && (
                             <button
                               onClick={() => handleCompleteMaintenance(maintenance)}
-                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors duration-200"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </button>
@@ -742,7 +742,7 @@ const MaintenanceManagement = () => {
                           {getStatusConfig(maintenance.estado_desc).actions.includes('cancel') && (
                             <button
                               onClick={() => handleCancelMaintenance(maintenance)}
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
                             >
                               <XCircle className="h-4 w-4" />
                             </button>
@@ -752,7 +752,7 @@ const MaintenanceManagement = () => {
                       {canDelete && (
                         <button
                           onClick={() => handleDeleteMaintenance(maintenance)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -780,12 +780,12 @@ const MaintenanceManagement = () => {
 // Helper function para obtener configuración de estado
 const getStatusConfig = (estado) => {
   const config = {
-    'Realizando': { color: 'bg-orange-100 text-orange-800' },
-    'Finalizado': { color: 'bg-green-100 text-green-800' },
-    'Pendiente': { color: 'bg-blue-100 text-blue-800' },
-    'Cancelado': { color: 'bg-red-100 text-red-800' }
+    'Realizando': { color: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' },
+    'Finalizado': { color: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' },
+    'Pendiente': { color: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' },
+    'Cancelado': { color: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }
   };
-  return config[estado] || { color: 'bg-gray-100 text-gray-800' };
+  return config[estado] || { color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' };
 };
 
 export default MaintenanceManagement;
