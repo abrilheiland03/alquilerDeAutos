@@ -788,7 +788,7 @@ const resetRentalFlow = () => {
                 Cambiar fechas
               </button>
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
+                Vehículos disponibles del {new Date(rentalDates.fecha_inicio + 'T00:00:00').toLocaleDateString('es-AR')} al {new Date(rentalDates.fecha_fin + 'T00:00:00').toLocaleDateString('es-AR')}
               </h2>
             </div>
           )}
