@@ -267,7 +267,9 @@ cursor.executemany("INSERT OR IGNORE INTO EstadoAuto (id_estado, descripcion) VA
     (1, 'Libre'), 
     (2, 'Ocupado'), 
     (3, 'En mantenimiento'),
-    (4, 'Pendiente Revsion')
+    (4, 'Pendiente Revsion'),
+    (5, 'Reservado')
+
 ])
 
 cursor.executemany("INSERT OR IGNORE INTO EstadoAlquiler (id_estado, descripcion) VALUES (?, ?)", [

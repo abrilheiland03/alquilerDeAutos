@@ -434,8 +434,18 @@ class SistemaAlquiler:
         
     # --- BUSCAR VEHICULOS LIBRES ---
 
-    def listar_vehiculos_libres(self):
-        return self.db_manager.get_vehiculos_libres()
+    def listar_vehiculos_libres(self, fecha_inicio=None, fecha_fin=None):
+        """
+        Obtiene vehículos libres, opcionalmente filtrados por rango de fechas.
+        
+        Args:
+            fecha_inicio (str, optional): Fecha de inicio en formato ISO (YYYY-MM-DD)
+            fecha_fin (str, optional): Fecha de fin en formato ISO (YYYY-MM-DD)
+            
+        Returns:
+            list: Lista de vehículos disponibles
+        """
+        return self.db_manager.get_vehiculos_libres(fecha_inicio, fecha_fin)
 
     # --- FUNCIONES DE ALQUILER ---
 

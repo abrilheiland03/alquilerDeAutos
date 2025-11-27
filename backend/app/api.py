@@ -302,50 +302,46 @@ def buscar_vehiculo_por_patente(patente):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@api.route('/vehiculos/libres', methods=['GET'])
-def listar_vehiculos_libres():
-    try:
-        lista = sistema.listar_vehiculos_libres()
-        # Serialización manual si vars() no es suficiente por objetos anidados
-        respuesta = []
-        for v in lista:
-            respuesta.append({
-                "patente": v.patente,
-                "modelo": v.modelo,
-                "marca": v.marca.descripcion if v.marca else None,
-                "color": v.color.descripcion if v.color else None,
-                "anio": v.anio,
-                "precio_flota": v.precio_flota,
-                "estado": v.estado.descripcion if v.estado else None,
-                "asientos": v.asientos,
-                "puertas": v.puertas,
-                "caja_manual": v.caja_manual
-            })
-        return jsonify(respuesta), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
 @api.route('/vehiculos', methods=['GET'])
 def listar_vehiculos():
     try:
-        lista = sistema.listar_vehiculos()
-        respuesta = []
-        for v in lista:
-            respuesta.append({
-                "patente": v.patente,
-                "modelo": v.modelo,
-                "marca": v.marca.descripcion if v.marca else None,
-                "color": v.color.descripcion if v.color else None,
-                "anio": v.anio,
-                "precio_flota": v.precio_flota,
-                "estado": v.estado.descripcion if v.estado else None,
-                "asientos": v.asientos,
-                "puertas": v.puertas,
-                "caja_manual": v.caja_manual
-            })
-        return jsonify(respuesta), 200
+        # Obtener todos los vehículos con sus relaciones
+        vehiculos = sistema.db_manager.get_all_vehiculos()
+        
+        # Debug: Imprimir el primer vehículo para ver su estructura
+        if vehiculos and len(vehiculos) > 0:
+            print("Estructura del primer vehículo:", vehiculos[0])
+        
+        # Devolver directamente los vehículos ya que ya están en formato diccionario
+        return jsonify(vehiculos), 200
+        
     except Exception as e:
+        print(f"Error al listar vehículos: {str(e)}")
+        return jsonify({"error": f"Error al listar vehículos: {str(e)}"}), 500
+
+@api.route('/vehiculos/libres', methods=['GET'])
+def listar_vehiculos_libres():
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        if not fecha_inicio or not fecha_fin:
+            return jsonify({"error": "Se requieren fecha_inicio y fecha_fin"}), 400
+
+        # Obtener vehículos libres
+        vehiculos = sistema.db_manager.get_vehiculos_libres(fecha_inicio, fecha_fin)
+        
+        # Debug: Imprimir la cantidad de vehículos encontrados
+        print(f"Vehículos libres encontrados: {len(vehiculos)}")
+        if vehiculos and len(vehiculos) > 0:
+            print("Primer vehículo:", vehiculos[0])
+        
+        return jsonify(vehiculos), 200
+        
+    except Exception as e:
+        print(f"Error en listar_vehiculos_libres: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
     
 # --- Endpoints ABMC Clientes ---
 
