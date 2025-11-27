@@ -62,6 +62,9 @@ export default function EmployeeManagement() {
     return `${numeric.slice(0, 3)}-${numeric.slice(3, 6)}-${numeric.slice(6, 10)}`;
   };
 
+  //errores
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handlePhoneChange = (e) => {
     const formatted = formatPhoneNumber(e.target.value);
     setFormData((prev) => ({ ...prev, telefono: formatted }));
@@ -97,15 +100,24 @@ export default function EmployeeManagement() {
       await employeeService.createOrUpdate(payload, formData.id);
       await loadEmployees();
       setView("list");
+      setErrorMessage(""); // Limpiar error si todo salió bien
     } catch (error) {
       console.error("Error guardando empleado:", error);
+
+      // Mostrar mensaje específico si es mail duplicado
+      if (error?.response?.data?.error?.includes("mail")) {
+        setErrorMessage("El mail ingresado ya se encuentra registrado.");
+      } else {
+        setErrorMessage("Error al guardar el empleado. Verifique los datos.");
+      }
     }
   };
+
 
   // Cargar datos para editar
   const handleEdit = (emp) => {
     setFormData({
-      id: emp.id,
+      id: emp.id_empleado, // <-- usar id_empleado aquí
       nombre: emp.nombre,
       apellido: emp.apellido,
       tipo_documento: emp.tipo_documento,
@@ -119,7 +131,7 @@ export default function EmployeeManagement() {
     });
 
     setView("form");
-  };
+};
 
   // Nuevo empleado → formulario vacío
   const handleNew = () => {
@@ -145,6 +157,35 @@ export default function EmployeeManagement() {
     setView("list");
   };
 
+  // Estadisticas
+  const getEmployeesStats = () => {
+  const total = employees.length;
+
+  const newThisMonth = employees.filter(emp => {
+  if (!emp.fecha_alta) return false;
+  const empDate = new Date(emp.fecha_alta);
+  const today = new Date();
+  return empDate.getMonth() === today.getMonth() &&
+  empDate.getFullYear() === today.getFullYear();
+  }).length;
+
+  const withDNI = employees.filter(emp => emp.tipo_documento === 1).length;
+  const withPassport = employees.filter(emp => emp.tipo_documento === 2).length;
+
+  return { total, newThisMonth, withDNI, withPassport };
+  };
+
+  const [stats, setStats] = useState({
+  total: 0,
+  newThisMonth: 0,
+  withDNI: 0,
+  withPassport: 0
+  });
+
+  useEffect(() => {
+  setStats(getEmployeesStats());
+  }, [employees]);
+
   // -------------------------------------------------------
   //                 VISTA 1 — LISTADO
   // -------------------------------------------------------
@@ -160,6 +201,26 @@ export default function EmployeeManagement() {
           >
             + Nuevo Empleado
           </button>
+        </div>
+
+        {/* Estadísticas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total Empleados</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">+{stats.newThisMonth}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Nuevos este mes</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.withDNI}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Con DNI</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-center transition-colors duration-200">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.withPassport}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Con Pasaporte</div>
+          </div>
         </div>
 
         {/* Cards */}
@@ -340,6 +401,13 @@ export default function EmployeeManagement() {
             />
           </div>
         </div>
+        
+        {/* Mostrar mensaje de error si existe */}
+        {errorMessage && (
+          <div className="mb-4 text-red-600 font-medium">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="flex justify-end gap-4 mt-6">
           <button

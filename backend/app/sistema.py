@@ -251,39 +251,51 @@ class SistemaAlquiler:
     
     # --- ABMC de CLIENTE ---
 
+    #modificado para que el admin o empleado pueda crear un cliente junto con su usuario
     def crear_cliente_mostrador(self, data, usuario):
+        # Validación de permisos
         if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return None
-        
+
         try:
+            persona = data["persona"]
+            usuario = data["usuario"]
+            role = data["role"]
+
+             # Datos para Persona
             persona_data = {
-                'nombre': data['nombre'], 'apellido': data['apellido'],
-                'mail': data['mail'], 'telefono': data['telefono'],
-                'fecha_nacimiento': data['fecha_nacimiento'],
-                'tipo_documento_id': data['tipo_documento_id'],
-                'nro_documento': data['nro_documento']
+                "id_cliente": None,
+                "nombre": persona["nombre"],
+                "apellido": persona["apellido"],
+                "mail": persona["mail"],
+                "telefono": persona["telefono"],
+                "fecha_nac": persona["fecha_nac"],
+                "tipo_documento": persona["tipo_documento"],
+                "nro_documento": persona["nro_documento"]
             }
+
+            # Usuario
+            usuario_data = {
+                "user_name": usuario["user_name"],
+                "password": usuario["password"],
+                "id_permiso": usuario["id_permiso"]
+            }
+
+            # --- Datos del rol (Cliente) ---
             role_data = {
-                'fecha_alta': data.get('fecha_alta')
+                'fecha_alta': data['role']['fecha_alta']
             }
 
-            id_cliente_creado = self.db_manager.create_client_only(
-                persona_data, role_data
+            # Crear cliente en la BD (Persona + Usuario + Cliente)
+            resultado = self.db_manager.create_client_with_user(
+                persona_data, usuario_data, role_data
             )
+            return resultado  # devuelve ids (cliente, usuario, persona)
 
-            if id_cliente_creado:
-                print(f"Cliente (mostrador) creado con ID: {id_cliente_creado}")
-                return id_cliente_creado
-            else:
-                print("La creación del cliente falló.")
-                return None
-                
-        except KeyError as e:
-            print(f"Error en los datos de creación: falta la clave {e}")
-            return None
         except Exception as e:
-            print(f"Error inesperado durante la creación: {e}")
+            print("Error en crear_cliente_mostrador:", e)
             return None
+
 
     def buscar_cliente_por_id(self, id_cliente, usuario):
         if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
@@ -1214,3 +1226,12 @@ class SistemaAlquiler:
             print(f"Error en listar_todos_los_empleados: {e}")
             return []
 
+    def actualizar_datos_empleado(self, id_empleado, data, usuario_actual):
+        # Verificar permisos según tu lógica
+        if not self.check_permission('admin', usuario_actual):
+            return False
+        
+        persona_data = data.get("persona", {})
+        role_data = data.get("role", {})
+        
+        return self.db_manager.update_employee_full(id_empleado, persona_data, role_data)

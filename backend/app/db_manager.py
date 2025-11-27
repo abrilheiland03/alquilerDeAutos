@@ -308,11 +308,14 @@ class DBManager:
                          role_data, role_type):
         conn = None
         try:
+            # Verificar si el mail ya existe
+            if self.get_user_data_for_login_by_mail(persona_data['mail']):
+                print(f"Error: el mail {persona_data['mail']} ya está registrado.")
+                return None
+
             conn = self._get_connection()
             if conn is None: return None
-            
             cursor = conn.cursor()
-            
             cursor.execute("BEGIN")
 
             sql_persona = """
@@ -539,51 +542,71 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
+    
     # --- ABMC de CLIENTE ---
 
-    def create_client_only(self, persona_data, role_data):
-        conn = None
+    #para cuando el admin o empleado crea un cliente nuevo, tambien le cree el usuario
+    def create_client_with_user(self, persona_data, usuario_data, role_data):
+        """Crea solo un cliente (sin usuario) validando con objetos"""
+        # Validar creando objetos
+        
+
+        # Verificar si el mail ya existe
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            raise ValueError(f"El mail {persona_data['mail']} ya está registrado.")
+
+        conn = self._get_connection()
+        if conn is None:
+            print("Error: no se pudo abrir conexión a la BD.")
+           
+            raise sqlite3.Error("No se pudo conectar a la base de datos")
+        
         try:
-            conn = self._get_connection()
-            if conn is None: return None
-            
             cursor = conn.cursor()
-            cursor.execute("BEGIN")
 
-            # AJUSTE: Se cambió 'fecha_nacimiento' por 'fecha_nac' en la columna SQL
-            sql_persona = """
-                INSERT INTO Persona (nombre, apellido, mail, telefono, 
-                                     fecha_nac, tipo_documento, nro_documento)
+            # Insert Persona
+            cursor.execute("""
+                INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """
-            cursor.execute(sql_persona, (
-                persona_data['nombre'], persona_data['apellido'], 
-                persona_data['mail'], persona_data['telefono'],
-                persona_data['fecha_nacimiento'], # El dato viene del dict python como 'fecha_nacimiento'
-                persona_data['tipo_documento_id'], 
-                persona_data['nro_documento']
+            """, (
+                persona_data["nombre"], persona_data["apellido"], persona_data["mail"],
+                persona_data["telefono"], persona_data["fecha_nac"],
+                persona_data["tipo_documento"], persona_data["nro_documento"]
             ))
-            
             id_persona = cursor.lastrowid
-            if not id_persona:
-                raise sqlite3.Error("No se pudo obtener el ID de la persona.")
 
-            sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
-            cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
-            
-            id_cliente = cursor.lastrowid
-            
+            # Insert Usuario
+            cursor.execute("""
+                INSERT INTO Usuario(id_persona, user_name, password, id_permiso)
+                VALUES (?, ?, ?, ?)
+            """, (
+                id_persona,
+                usuario_data["user_name"],
+                usuario_data["password"],  # CORREGIDO
+                usuario_data["id_permiso"]
+            ))
+
+            # Insert Cliente
+            cursor.execute("""
+                INSERT INTO Cliente(id_persona, fecha_alta)
+                VALUES (?, ?)
+            """, (
+                id_persona,
+                role_data["fecha_alta"]
+            ))
+
             conn.commit()
-            return id_cliente
+            return cursor.lastrowid
 
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error durante la creación del cliente, revirtiendo cambios: {e}")
-            if conn:
-                conn.rollback()
+        except Exception as e:
+            print("Error insertando cliente:", e)
+            conn.rollback()
             return None
+
         finally:
-            if conn:
-                conn.close()
+            conn.close()
+
 
     def get_client_by_id(self, id_cliente):
         # AJUSTE: Se selecciona 'p.fecha_nac' en lugar de 'p.fecha_nacimiento'
@@ -2164,6 +2187,11 @@ class DBManager:
         conn = self._get_connection()
         if conn is None:
             print("Error: no se pudo abrir conexión a la BD.")
+            return None
+
+        # Verificar mail duplicado
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            print(f"Error: el mail {persona_data['mail']} ya está registrado.")
             return None
 
         try:

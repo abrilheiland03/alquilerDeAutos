@@ -22,13 +22,14 @@ import {
 // Componente de Modal para Crear/Editar Cliente
 const ClientModal = ({ isOpen, onClose, client, onSave }) => {
   const [formData, setFormData] = useState({
+    id: null,
     nombre: '',
     apellido: '',
+    tipo_documento: 1,
+    nro_documento: '',
+    fecha_nac: '',
     mail: '',
     telefono: '',
-    fecha_nacimiento: '',
-    tipo_documento_id: 1,
-    nro_documento: '',
     fecha_alta: new Date().toISOString().split('T')[0]
   });
   
@@ -68,7 +69,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           apellido: client.apellido || '',
           mail: client.mail || '',
           telefono: client.telefono || '',
-          fecha_nacimiento: formatDateForInput(client.fecha_nacimiento),
+          fecha_nac: formatDateForInput(client.fecha_nac),
           tipo_documento_id: client.id_tipo_documento || 1,
           nro_documento: client.nro_documento?.toString() || '',
           // CORRECCIÓN: Usar la fecha de alta existente del cliente
@@ -80,8 +81,8 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           apellido: '',
           mail: '',
           telefono: '',
-          fecha_nacimiento: '',
-          tipo_documento_id: 1,
+          fecha_nac: '',
+          tipo_documento: 1,
           nro_documento: '',
           fecha_alta: new Date().toISOString().split('T')[0]
         });
@@ -123,7 +124,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
         }
         break;
 
-      case 'fecha_nacimiento':
+      case 'fecha_nac':
         if (value) {
           const birthDate = new Date(value);
           const today = new Date();
@@ -131,12 +132,12 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           minDate.setFullYear(today.getFullYear() - 18);
           
           if (birthDate > minDate) {
-            newErrors.fecha_nacimiento = 'Debe ser mayor de 18 años';
+            newErrors.fecha_nac = 'Debe ser mayor de 18 años';
           } else {
-            delete newErrors.fecha_nacimiento;
+            delete newErrors.fecha_nac;
           }
         } else {
-          newErrors.fecha_nacimiento = 'Fecha de nacimiento requerida';
+          newErrors.fecha_nac = 'Fecha de nacimiento requerida';
         }
         break;
 
@@ -276,51 +277,38 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Marcar todos los campos como tocados
-    const allTouched = Object.keys(formData).reduce((acc, key) => {
-      acc[key] = true;
-      return acc;
-    }, {});
-    setTouched(allTouched);
+// Guardar empleado
+const handleSaveCliente = async (e) => {
+  e.preventDefault();
 
-    // Validar todos los campos
-    const allValid = Object.keys(formData).every(key => validateField(key, formData[key], formData));
-    
-    if (!allValid) {
-      showNotification('Por favor corrige los errores en el formulario', 'error');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // CORRECCIÓN: Preparar datos en el formato exacto que espera el backend
-      // Ahora el teléfono se envía con formato xxx-xxxxxxx
-      const submitData = {
-        nombre: formData.nombre.trim(),
-        apellido: formData.apellido.trim(),
-        mail: formData.mail.trim(),
-        // CORRECCIÓN: Enviar teléfono con formato xxx-xxxxxxx
-        telefono: formatPhoneForDatabase(formData.telefono),
-        fecha_nacimiento: formData.fecha_nacimiento,
-        tipo_documento_id: parseInt(formData.tipo_documento_id),
-        nro_documento: parseInt(formData.nro_documento.replace(/\D/g, '')),
-        fecha_alta: formData.fecha_alta
-      };
-      
-      console.log('Enviando datos al backend:', submitData);
-      await onSave(submitData);
-      onClose();
-    } catch (error) {
-      console.error('Error saving client:', error);
-      // La notificación de error se maneja en el componente padre
-    } finally {
-      setLoading(false);
+  const payload = {
+    persona: {
+      nombre: formData.nombre,
+      apellido: formData.apellido,
+      mail: formData.mail,
+      telefono: formData.telefono,
+      fecha_nac: formData.fecha_nac,      // OBLIGATORIO
+      tipo_documento: formData.tipo_documento, // OBLIGATORIO
+      nro_documento: formData.nro_documento,   // OBLIGATORIO
+    },
+    usuario: {
+      user_name: formData.mail,
+      password: formData.nro_documento,
+      id_permiso: 1,        // permiso cliente (o el que uses)
+    },
+    role: {
+      fecha_alta: formData.fecha_alta,     // OBLIGATORIO
     }
   };
+
+  try {
+    await clientService.createOrUpdate(payload, formData.id);
+  } catch (error) {
+    console.error("Error guardando cliente:", error);
+  }
+};
+
+
 
   const calculateAge = (fechaNacimiento) => {
     if (!fechaNacimiento) return '';
@@ -403,7 +391,7 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSaveCliente} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nombre */}
             <div>
@@ -519,24 +507,24 @@ const ClientModal = ({ isOpen, onClose, client, onSave }) => {
               </label>
               <input
                 type="date"
-                name="fecha_nacimiento"
-                value={formData.fecha_nacimiento}
+                name="fecha_nac"
+                value={formData.fecha_nac}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 max={getMaxBirthDate()}
-                className={`input-primary ${errors.fecha_nacimiento && touched.fecha_nacimiento ? 'border-red-500' : ''}`}
+                className={`input-primary ${errors.fecha_nac && touched.fecha_nac ? 'border-red-500' : ''}`}
                 required
               />
-              {errors.fecha_nacimiento && touched.fecha_nacimiento && (
+              {errors.fecha_nac && touched.fecha_nac && (
                 <p className="text-red-500 text-xs mt-1 flex items-center">
                   <AlertCircle className="h-3 w-3 mr-1" />
-                  {errors.fecha_nacimiento}
+                  {errors.fecha_nac}
                 </p>
               )}
-              {formData.fecha_nacimiento && !errors.fecha_nacimiento && (
+              {formData.fecha_nac && !errors.fecha_nac && (
                 <p className="text-green-500 text-xs mt-1 flex items-center">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Edad: {calculateAge(formData.fecha_nacimiento)} años
+                  Edad: {calculateAge(formData.fecha_nac)} años
                 </p>
               )}
             </div>
@@ -711,7 +699,7 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
           <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
             <Calendar className="h-4 w-4 mr-2" />
             <span>
-              {calculateAge(client.fecha_nacimiento)} años • {client.fecha_nacimiento?.split('-').reverse().join('/')}
+              {calculateAge(client.fecha_nac)} años • {client.fecha_nac?.split('-').reverse().join('/')}
             </span>
           </div>
         </div>
@@ -786,7 +774,7 @@ const ClientManagement = () => {
       const formattedClients = clientsData.map(client => ({
         ...client,
         // Asegurar que las fechas estén en formato correcto
-        fecha_nacimiento: client.fecha_nacimiento,
+        fecha_nac: client.fecha_nac,
         fecha_alta: client.fecha_alta,
         // Asegurar que el número de documento sea string para display
         nro_documento: client.nro_documento?.toString() || ''
