@@ -10,7 +10,8 @@ import {
   Home,
   X,
   Shield,
-  UserCheck
+  UserCheck,
+  UserCog
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -63,6 +64,12 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: Shield,
       permission: 'admin', // Solo Admin
     },
+    {
+      name: 'Empleados',
+      href: '/employees/new',
+      icon: UserCog,
+      permission: 'admin', // Solo Admin
+    }
   ];
 
   const isItemActive = (href) => {

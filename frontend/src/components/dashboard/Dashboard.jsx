@@ -599,11 +599,11 @@ const Dashboard = () => {
               {isAdmin() && (
                 <>
                 <QuickActionCard
-                title="Crear Empleado"
-                description="Registrar un nuevo empleado en el sistema"
+                title="Gestionar Empleados"
+                description="Gestionar empleados en el sistema"
                 icon={Users}
                 href="/employees/new"
-                buttonText="Registrar empleado"
+                buttonText="Gestionar Empleados"
                 color="bg-purple-500"
                 />
 
@@ -744,7 +744,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      )},
+      )}
 
       {isClient() && (
       <ClientProfileModal
