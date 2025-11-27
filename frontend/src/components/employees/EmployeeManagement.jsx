@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { employeeService } from "../../services/employeeService.js";
-import { useAuth } from '../../contexts/AuthContext';
 
 // --- Funciones de formateo para el sueldo ---
 function formatearSueldoVisual(valor) {
@@ -15,8 +14,12 @@ function limpiarSueldo(valor) {
 
 export default function EmployeeManagement() {
   const navigate = useNavigate();
-  const { user, isAdmin, isEmployee, isClient } = useAuth();
 
+  // Alterna entre vista "lista" y vista "formulario"
+  const [view, setView] = useState("list"); // list | form
+  const [employees, setEmployees] = useState([]);
+
+  // Formulario
   const [formData, setFormData] = useState({
     id: null,
     nombre: "",
@@ -203,9 +206,7 @@ export default function EmployeeManagement() {
   //                 VISTA 2 — FORMULARIO
   // -------------------------------------------------------
   return (
-    <>
-    {isAdmin() && (
-    <div className="flex justify-center items-center p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <div className="flex justify-center items-center p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <form
         onSubmit={handleSubmit}
         className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-4xl"
@@ -358,7 +359,5 @@ export default function EmployeeManagement() {
         </div>
       </form>
     </div>
-  )}
-  </>
-);
+  );
 }
