@@ -431,6 +431,31 @@ class DBManager:
             if conn:
                 conn.close()
         return None
+
+    def get_empleado_id_by_usuario_id(self, id_usuario):
+        """Return Empleado.id_empleado for the Usuario given its id_usuario.
+        This looks up the Persona associated with the Usuario and returns the
+        corresponding Empleado.id_empleado if present.
+        """
+        sql = """
+            SELECT e.id_empleado
+            FROM Empleado e
+            JOIN Usuario u ON e.id_persona = u.id_persona
+            WHERE u.id_usuario = ?
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: return None
+
+            row = conn.cursor().execute(sql, (id_usuario,)).fetchone()
+            if row:
+                return row['id_empleado']
+        except sqlite3.Error as e:
+            print(f"Error al buscar id_empleado por id_usuario: {e}")
+        finally:
+            if conn: conn.close()
+        return None
     
     def delete_user_full(self, id_usuario):
         conn = None
@@ -1479,10 +1504,13 @@ class DBManager:
             conn.commit()
             return True
 
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error al programar mantenimiento: {e}")
+        except sqlite3.Error as e:
+            # DB-level errors (sqlite) -> log and return False
+            print(f"Error al programar mantenimiento (DB error): {e}")
             if conn: conn.rollback()
             return False
+        # NOTE: ValueError used as a business validation (overlapping rentals) should
+        # bubble up to the caller so the API endpoint can return an explanatory 400.
         finally:
             if conn: conn.close()
 
