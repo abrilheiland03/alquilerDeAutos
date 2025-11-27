@@ -1183,3 +1183,16 @@ class SistemaAlquiler:
         except Exception as e:
             print("Error en crear_empleado_mostrador:", e)
             return None
+        
+    def listar_todos_los_empleados(self, usuario):
+        try:
+            if not self.check_permission('Admin', usuario) and not self.check_permission('Empleado', usuario):
+                return []
+
+            # Retorna lista de diccionarios con todos los empleados
+            return self.db_manager.get_all_empleados()
+        
+        except Exception as e:
+            print(f"Error en listar_todos_los_empleados: {e}")
+            return []
+

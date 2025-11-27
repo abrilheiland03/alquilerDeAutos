@@ -2184,3 +2184,46 @@ class DBManager:
 
         finally:
             conn.close()
+
+    def get_all_empleados(self):
+        sql = """
+            SELECT e.id_empleado, e.id_persona, p.nombre, p.apellido, p.mail, p.telefono,
+                p.nro_documento, p.fecha_nac, e.fecha_alta, e.sueldo, p.tipo_documento
+            FROM Empleado e
+            JOIN Persona p ON e.id_persona = p.id_persona
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                return []
+
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            empleados = []
+            for row in rows:
+                empleados.append({
+                    "id_empleado": row["id_empleado"],
+                    "id_persona": row["id_persona"],
+                    "nombre": row["nombre"],
+                    "apellido": row["apellido"],
+                    "mail": row["mail"],
+                    "telefono": row["telefono"],
+                    "nro_documento": row["nro_documento"],
+                    "fecha_nacimiento": str(row["fecha_nac"]),
+                    "fecha_alta": str(row["fecha_alta"]),
+                    "sueldo": row["sueldo"],
+                    "tipo_documento": row["tipo_documento"]
+                })
+
+            return empleados
+
+        except Exception as e:
+            print(f"Error obteniendo empleados: {e}")
+            return []
+
+        finally:
+            if conn:
+                conn.close()

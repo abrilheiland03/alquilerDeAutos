@@ -22,11 +22,17 @@ export const employeeService = {
   },
 
   // Crear empleado
-  create: async (payload) => {
-    const response = await apiEmployee.post('/empleados', payload);
-    return response.data;
+  createOrUpdate: async (payload, id = null) => {
+    if (id) {
+      // Actualizar empleado existente
+      const response = await apiEmployee.put(`/empleados/${id}`, payload);
+      return response.data;
+    } else {
+      // Crear nuevo empleado
+      const response = await apiEmployee.post('/empleados', payload);
+      return response.data;
+    }
   },
-
 
 
   // Actualizar empleado
