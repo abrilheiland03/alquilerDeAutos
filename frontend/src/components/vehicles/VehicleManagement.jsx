@@ -593,9 +593,17 @@ const VehicleManagement = () => {
       return;
     }
 
-    setSelectedVehicleForRental(vehicle);
+    setSelectedVehicleForRental({
+      ...vehicle,
+      // Si hay fechas de filtro, las incluimos en el vehículo seleccionado
+      ...(rentalDates && {
+        fecha_inicio: rentalDates.fecha_inicio,
+        fecha_fin: rentalDates.fecha_fin
+      })
+    });
     setRentalModalOpen(true);
   };
+
 
   const closeRentalModal = () => {
     setSelectedVehicleForRental(null);
@@ -936,9 +944,10 @@ const resetRentalFlow = () => {
       <RentalModal
         isOpen={rentalModalOpen}
         onClose={closeRentalModal}
+        onSave={handleSaveRental}
         vehicle={selectedVehicleForRental}
         user={user}
-        onSave={handleSaveRental}
+        initialData={selectedVehicleForRental} // Make sure this is passed
       />
     </div>
   );
