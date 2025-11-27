@@ -21,6 +21,8 @@ import {
 
 // Componente de Modal para Crear/Editar Cliente
 const ClientModal = ({ isOpen, onClose, client, onSave }) => {
+  const { showNotification } = useNotification();
+
   const [formData, setFormData] = useState({
     id: null,
     nombre: '',
@@ -303,8 +305,13 @@ const handleSaveCliente = async (e) => {
 
   try {
     await clientService.createOrUpdate(payload, formData.id);
+    showNotification("Cliente creado exitosamente", "success");
+    onClose();
+    if (onSave) onSave();
+
   } catch (error) {
     console.error("Error guardando cliente:", error);
+    showNotification("Hubo un error al guardar el cliente", "error");
   }
 };
 
@@ -1087,9 +1094,9 @@ const ClientManagement = () => {
       {/* Modal */}
       <ClientModal
         isOpen={modalOpen}
-        onClose={closeModal}
+        onClose={() => setModalOpen(false)}
         client={selectedClient}
-        onSave={handleSaveClient}
+        onSave={fetchClients}
       />
     </div>
   );
