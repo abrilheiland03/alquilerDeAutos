@@ -2244,3 +2244,69 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
+    def update_employee_full(self, id_empleado, persona_data, role_data):
+        """
+        Actualiza los datos de la persona y del empleado.
+        
+        Args:
+            id_empleado: ID del empleado a actualizar.
+            persona_data: dict con los campos de Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+            role_data: dict con los campos de Empleado (sueldo, horario, fecha_alta)
+            
+        Retorna:
+            True si se actualizó al menos un registro, False en caso contrario.
+        """
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            # Primero obtener el id_persona asociado al empleado
+            cursor.execute("SELECT id_persona FROM Empleado WHERE id_empleado = ?", (id_empleado,))
+            row = cursor.fetchone()
+            if not row:
+                print(f"No se encontró empleado con id {id_empleado}")
+                return False
+            id_persona = row[0]
+            
+            # --- Actualizar Persona ---
+            sql_persona = """
+                UPDATE Persona
+                SET nombre = ?, apellido = ?, mail = ?, telefono = ?, fecha_nac = ?, tipo_documento = ?, nro_documento = ?
+                WHERE id_persona = ?
+            """
+            cursor.execute(sql_persona, (
+                persona_data["nombre"],
+                persona_data["apellido"],
+                persona_data["mail"],
+                persona_data["telefono"],
+                persona_data.get("fecha_nac", None),
+                persona_data["tipo_documento"],
+                persona_data["nro_documento"],
+                id_persona
+            ))
+            
+            # --- Actualizar Empleado ---
+            sql_empleado = """
+                UPDATE Empleado
+                SET sueldo = ?, horario = ?, fecha_alta = ?
+                WHERE id_empleado = ?
+            """
+            cursor.execute(sql_empleado, (
+                role_data["sueldo"],
+                role_data["horario"],
+                role_data["fecha_alta"],
+                id_empleado
+            ))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Error actualizando empleado completo: {e}")
+            if conn:
+                conn.rollback()
+            return False
+        finally:
+            if conn:
+                conn.close()

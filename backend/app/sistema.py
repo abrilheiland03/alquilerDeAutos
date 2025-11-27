@@ -1208,3 +1208,12 @@ class SistemaAlquiler:
             print(f"Error en listar_todos_los_empleados: {e}")
             return []
 
+    def actualizar_datos_empleado(self, id_empleado, data, usuario_actual):
+        # Verificar permisos según tu lógica
+        if not self.check_permission('admin', usuario_actual):
+            return False
+        
+        persona_data = data.get("persona", {})
+        role_data = data.get("role", {})
+        
+        return self.db_manager.update_employee_full(id_empleado, persona_data, role_data)

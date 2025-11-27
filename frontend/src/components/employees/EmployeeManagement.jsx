@@ -117,7 +117,7 @@ export default function EmployeeManagement() {
   // Cargar datos para editar
   const handleEdit = (emp) => {
     setFormData({
-      id: emp.id,
+      id: emp.id_empleado, // <-- usar id_empleado aquí
       nombre: emp.nombre,
       apellido: emp.apellido,
       tipo_documento: emp.tipo_documento,
@@ -131,7 +131,7 @@ export default function EmployeeManagement() {
     });
 
     setView("form");
-  };
+};
 
   // Nuevo empleado → formulario vacío
   const handleNew = () => {
