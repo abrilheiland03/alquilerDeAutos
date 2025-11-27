@@ -549,7 +549,8 @@ def listar_empleados():
                 "fecha_alta": e["fecha_alta"],
                 "sueldo": e["sueldo"],
                 "tipo_documento": e["tipo_documento"],
-                "id_tipo_documento": None  # Si no tienes esa info
+                "id_tipo_documento": None,  # Si no tienes esa info
+                "horario": e["horario"]
             })
 
 
