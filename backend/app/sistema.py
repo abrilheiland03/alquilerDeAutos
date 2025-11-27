@@ -264,6 +264,7 @@ class SistemaAlquiler:
 
              # Datos para Persona
             persona_data = {
+                "id_cliente": None,
                 "nombre": persona["nombre"],
                 "apellido": persona["apellido"],
                 "mail": persona["mail"],

@@ -11,13 +11,6 @@ from models.permiso import Permiso
 from models.usuario import Usuario
 from models.color import Color
 from models.marca import Marca
-from models.persona import Persona
-from models.empleado import Empleado
-from models.administrador import Administrador
-from models.alquiler import Alquiler
-from models.mantenimiento import Mantenimiento
-from models.multa import Multa
-from models.danio import Danio
 
 
 
@@ -311,28 +304,23 @@ class DBManager:
     
     # --- ABMC DE USUARIO ---
     
-    def create_full_user(self, persona_data, usuario_data, role_data, role_type):
-        """Crea un usuario completo validando mediante creación de objetos"""
+    def create_full_user(self, persona_data, usuario_data, 
+                         role_data, role_type):
         conn = None
         try:
-            # Validar creando objetos
-            persona_obj = self._crear_y_validar_persona(persona_data)
-            
             # Verificar si el mail ya existe
             if self.get_user_data_for_login_by_mail(persona_data['mail']):
-                raise ValueError(f"El mail {persona_data['mail']} ya está registrado.")
+                print(f"Error: el mail {persona_data['mail']} ya está registrado.")
+                return None
 
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return None
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
-            # Insertar Persona
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
-                                    fecha_nac, tipo_documento, nro_documento)
+                                        fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             cursor.execute(sql_persona, (
@@ -345,9 +333,8 @@ class DBManager:
             
             id_persona = cursor.lastrowid
             if not id_persona:
-                raise sqlite3.Error("No se pudo obtener el ID de la persona")
+                raise sqlite3.Error("No se pudo obtener el ID de la persona.")
 
-            # Insertar Usuario
             sql_usuario = """
                 INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
                 VALUES (?, ?, ?, ?)
@@ -357,43 +344,29 @@ class DBManager:
                 usuario_data['password_hash'], usuario_data['id_permiso']
             ))
 
-            # Insertar Rol específico
             if role_type == 'cliente':
-                cliente_obj = Cliente(
-                    id_persona=id_persona,
-                    fecha_alta=datetime.fromisoformat(role_data['fecha_alta'])
-                )
                 sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
             
             elif role_type == 'empleado':
-                empleado_obj = Empleado(
-                    id_persona=id_persona,
-                    fecha_alta=datetime.fromisoformat(role_data['fecha_alta']),
-                    sueldo=role_data['sueldo']
-                )
                 sql_role = "INSERT INTO Empleado (id_persona, fecha_alta, sueldo) VALUES (?, ?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta'], role_data['sueldo']))
             
             elif role_type == 'admin':
-                admin_obj = Administrador(
-                    id_persona=id_persona,
-                    descripcion=role_data['descripcion']
-                )
                 sql_role = "INSERT INTO Administrador (id_persona, descripcion) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['descripcion']))
             
             else:
-                raise ValueError("Tipo de rol no válido")
+                raise ValueError("Tipo de rol no válido.")
 
             conn.commit()
             return id_persona
 
         except (sqlite3.Error, ValueError) as e:
-            print(f"Error durante el registro: {e}")
+            print(f"Error durante el registro, revirtiendo cambios: {e}")
             if conn:
                 conn.rollback()
-            raise e
+            return None
         finally:
             if conn:
                 conn.close()
@@ -502,31 +475,27 @@ class DBManager:
 
     #--modificar usuario--
     def actualizar_usuario(self, user_id, update_fields):
-        """Actualiza un usuario validando con objetos"""
+        """
+        Actualiza los campos de un usuario en la base de datos.
+        
+        Args:
+            user_id: ID del usuario a actualizar
+            update_fields: Diccionario con los campos a actualizar
+        
+        Returns:
+            bool: True si la actualización fue exitosa, False en caso contrario
+        """
         conn = None
         try:
-            # Verificar que el usuario existe
-            usuario_existente = self.get_full_usuario_by_id(user_id)
-            if not usuario_existente:
-                raise ValueError(f"Usuario con ID {user_id} no existe")
-
-            # Validar campos a actualizar
-            if 'password_hash' in update_fields:
-                # Validar que la contraseña no esté vacía
-                if not update_fields['password_hash']:
-                    raise ValueError("La contraseña no puede estar vacía")
-                update_fields['password'] = update_fields.pop('password_hash')
-
-            if 'id_permiso' in update_fields:
-                permiso_obj = self.get_permiso_by_id(update_fields['id_permiso'])
-                if not permiso_obj:
-                    raise ValueError(f"Permiso con ID {update_fields['id_permiso']} no existe")
-
             conn = self._get_connection()
             if not conn:
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+                return False
             
             cursor = conn.cursor()
+            
+            # Mapear password_hash a password si existe
+            if 'password_hash' in update_fields:
+                update_fields['password'] = update_fields.pop('password_hash')
             
             # Construir la consulta dinámicamente
             set_clause = ", ".join([f"{field} = ?" for field in update_fields.keys()])
@@ -540,11 +509,11 @@ class DBManager:
             
             return cursor.rowcount > 0
             
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error al actualizar usuario: {e}")
+        except sqlite3.Error as e:
+            print(f"Error al actualizar usuario en la base de datos: {e}")
             if conn:
                 conn.rollback()
-            raise e
+            return False
         finally:
             if conn:
                 conn.close()
@@ -555,21 +524,18 @@ class DBManager:
     #para cuando el admin o empleado crea un cliente nuevo, tambien le cree el usuario
     def create_client_with_user(self, persona_data, usuario_data, role_data):
         """Crea solo un cliente (sin usuario) validando con objetos"""
-            # Validar creando objetos
-            persona_obj = self._crear_y_validar_persona(persona_data)
-            cliente_obj = Cliente(
-                fecha_alta=datetime.fromisoformat(role_data['fecha_alta'])
-            )
+        # Validar creando objetos
+        
 
-            # Verificar si el mail ya existe
-            if self.get_user_data_for_login_by_mail(persona_data['mail']):
-                raise ValueError(f"El mail {persona_data['mail']} ya está registrado")
+        # Verificar si el mail ya existe
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            raise ValueError(f"El mail {persona_data['mail']} ya está registrado.")
 
         conn = self._get_connection()
         if conn is None:
             print("Error: no se pudo abrir conexión a la BD.")
            
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            raise sqlite3.Error("No se pudo conectar a la base de datos")
         
         try:
             cursor = conn.cursor()
@@ -760,85 +726,61 @@ class DBManager:
         return lista_clientes
     
     def update_client_persona_data(self, id_cliente, persona_data):
-        """Actualiza datos de persona de un cliente validando con objetos"""
+        # AJUSTE: Se actualiza la columna 'fecha_nac'
+        sql_update_persona = """
+            UPDATE Persona
+            SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
+                fecha_nac = ?, tipo_documento = ?, nro_documento = ?
+            WHERE id_persona = (SELECT id_persona FROM Cliente WHERE id_cliente = ?)
+        """
         conn = None
         try:
-            # Validar creando objeto Persona
-            persona_obj = self._crear_y_validar_persona(persona_data)
-            
-            # Verificar que el cliente existe
-            cliente_existente = self.get_client_by_id(id_cliente)
-            if not cliente_existente:
-                raise ValueError(f"Cliente con ID {id_cliente} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            if conn is None: return False
             
             cursor = conn.cursor()
-            
-            sql_update_persona = """
-                UPDATE Persona
-                SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
-                    fecha_nac = ?, tipo_documento = ?, nro_documento = ?
-                WHERE id_persona = (SELECT id_persona FROM Cliente WHERE id_cliente = ?)
-            """
             cursor.execute(sql_update_persona, (
                 persona_data['nombre'], persona_data['apellido'],
                 persona_data['mail'], persona_data['telefono'],
-                persona_data['fecha_nacimiento'],
+                persona_data['fecha_nacimiento'], # El dato viene del dict como nacimiento
                 persona_data['tipo_documento_id'],
                 persona_data['nro_documento'],
                 id_cliente
             ))
             conn.commit()
             return cursor.rowcount > 0 
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar cliente: {e}")
             if conn:
                 conn.rollback()
-            raise e
+            return False
         finally:
             if conn:
                 conn.close()
-
-    def update_client_data(self, id_cliente, client_data):
-        """Actualiza datos específicos del cliente validando con objetos"""
+    def update_client_data(self, id_cliente, client_data): #intento de actualizar las fechas altas del cliente
+        sql_update_cliente = """
+            UPDATE Cliente
+            SET fecha_alta = ?
+            WHERE id_cliente = ?
+        """
         conn = None
         try:
-            # Validar creando objeto Cliente
-            cliente_obj = Cliente(
-                fecha_alta=datetime.fromisoformat(client_data['fecha_alta'])
-            )
-
-            # Verificar que el cliente existe
-            cliente_existente = self.get_client_by_id(id_cliente)
-            if not cliente_existente:
-                raise ValueError(f"Cliente con ID {id_cliente} no existe")
-
             conn = self._get_connection()
             if conn is None:
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+                return False
 
             cursor = conn.cursor()
-            sql_update_cliente = """
-                UPDATE Cliente
-                SET fecha_alta = ?
-                WHERE id_cliente = ?
-            """
             cursor.execute(sql_update_cliente, (
                 client_data['fecha_alta'],
                 id_cliente
             ))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar fecha_alta: {e}")
             if conn:
                 conn.rollback()
-            raise e
+            return False
         finally:
             if conn:
                 conn.close()
@@ -971,50 +913,17 @@ class DBManager:
         return None
 
     def create_vehiculo(self, data):
-        """Crea un vehículo validando con objetos"""
+        sql = """
+            INSERT INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, 
+                                  asientos, puertas, caja_manual, 
+                                  id_estado, id_color)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
         conn = None
         try:
-            # Validar creando objetos
-            marca_obj = self.get_marca_by_id(data['id_marca'])
-            color_obj = self.get_color_by_id(data['id_color'])
-            estado_obj = self.get_estado_auto_by_id(data['id_estado'])
-            
-            if not marca_obj:
-                raise ValueError(f"Marca con ID {data['id_marca']} no existe")
-            if not color_obj:
-                raise ValueError(f"Color con ID {data['id_color']} no existe")
-            if not estado_obj:
-                raise ValueError(f"Estado auto con ID {data['id_estado']} no existe")
-
-            vehiculo_obj = Vehiculo(
-                patente=data['patente'],
-                modelo=data['modelo'],
-                marca=marca_obj,
-                anio=data['anio'],
-                precio_flota=data['precio_flota'],
-                asientos=data['asientos'],
-                puertas=data['puertas'],
-                caja_manual=bool(data['caja_manual']),
-                estado=estado_obj,
-                color=color_obj
-            )
-
-            # Verificar si la patente ya existe
-            if self.get_vehiculo_by_patente(data['patente']):
-                raise ValueError(f"La patente {data['patente']} ya existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return False
             cursor = conn.cursor()
-            
-            sql = """
-                INSERT INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, 
-                                    asientos, puertas, caja_manual, 
-                                    id_estado, id_color)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
             cursor.execute(sql, (
                 data['patente'].upper(), 
                 data['modelo'], 
@@ -1029,65 +938,27 @@ class DBManager:
             ))
             conn.commit()
             return True
-            
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error al crear vehículo: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+        except sqlite3.Error as e:
+            print(f"Error al crear vehiculo: {e}")
+            if conn: conn.rollback()
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def update_vehiculo(self, patente, data):
-        """Actualiza un vehículo validando con objetos"""
-        conn = None
         patente = patente.upper()
-        
+        sql = """
+            UPDATE Vehiculo SET
+            modelo = ?, id_marca = ?, anio = ?, precio_flota = ?,
+            asientos = ?, puertas = ?, caja_manual = ?,
+            id_estado = ?, id_color = ?
+            WHERE patente = ?
+        """
+        conn = None
         try:
-            # Validar creando objetos
-            marca_obj = self.get_marca_by_id(data['id_marca'])
-            color_obj = self.get_color_by_id(data['id_color'])
-            estado_obj = self.get_estado_auto_by_id(data['id_estado'])
-            
-            if not marca_obj:
-                raise ValueError(f"Marca con ID {data['id_marca']} no existe")
-            if not color_obj:
-                raise ValueError(f"Color con ID {data['id_color']} no existe")
-            if not estado_obj:
-                raise ValueError(f"Estado auto con ID {data['id_estado']} no existe")
-
-            vehiculo_obj = Vehiculo(
-                patente=patente,
-                modelo=data['modelo'],
-                marca=marca_obj,
-                anio=data['anio'],
-                precio_flota=data['precio_flota'],
-                asientos=data['asientos'],
-                puertas=data['puertas'],
-                caja_manual=bool(data['caja_manual']),
-                estado=estado_obj,
-                color=color_obj
-            )
-
-            # Verificar que el vehículo existe
-            vehiculo_existente = self.get_vehiculo_by_patente(patente)
-            if not vehiculo_existente:
-                raise ValueError(f"Vehículo con patente {patente} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return False
             cursor = conn.cursor()
-            
-            sql = """
-                UPDATE Vehiculo SET
-                modelo = ?, id_marca = ?, anio = ?, precio_flota = ?,
-                asientos = ?, puertas = ?, caja_manual = ?,
-                id_estado = ?, id_color = ?
-                WHERE patente = ?
-            """
             cursor.execute(sql, (
                 data['modelo'], 
                 data['id_marca'], 
@@ -1102,15 +973,12 @@ class DBManager:
             ))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar vehiculo: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            if conn: conn.rollback()
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
             
     def delete_vehiculo(self, patente):
         sql = "DELETE FROM Vehiculo WHERE patente = ?"
@@ -1166,46 +1034,33 @@ class DBManager:
     # --- FUNCIONES DE ALQUILER ---
 
     def create_alquiler_transactional(self, data):
-        """Crea un alquiler validando con objetos"""
         conn = None
         try:
-            # Validar creando objetos
-            vehiculo_obj = self.get_vehiculo_by_patente(data['patente'])
-            if not vehiculo_obj:
-                raise ValueError(f"El vehículo {data['patente']} no existe")
+            conn = self._get_connection()
+            if conn is None: return False
             
-            cliente_obj = self.get_client_by_id(data['id_cliente'])
-            if not cliente_obj:
-                raise ValueError(f"El cliente con ID {data['id_cliente']} no existe")
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+
+            cursor.execute("SELECT id_estado FROM Vehiculo WHERE patente = ?", (data['patente'],))
+            row = cursor.fetchone()
             
-            estado_alquiler_obj = self.get_estado_alquiler_by_id(1)  # Estado inicial
+            if not row:
+                raise ValueError(f"El vehículo {data['patente']} no existe.")
             
+            if row['id_estado'] != 1: 
+                raise ValueError(f"El vehículo {data['patente']} no está libre (Estado ID: {row['id_estado']}).")
+
             fecha_inicio = datetime.fromisoformat(data['fecha_inicio'])
             fecha_fin = datetime.fromisoformat(data['fecha_fin'])
-            
-            alquiler_obj = Alquiler(
-                patente=data['patente'],
-                id_cliente=data['id_cliente'],
-                id_empleado=data['id_empleado'],
-                fecha_inicio=fecha_inicio,
-                fecha_fin=fecha_fin,
-                estado=estado_alquiler_obj,
-                vehiculo=vehiculo_obj,
-                cliente=cliente_obj
-            )
-
-            # Resto de validaciones...
-            if vehiculo_obj.estado.id_estado != 1: 
-                raise ValueError(f"El vehículo {data['patente']} no está libre (Estado: {vehiculo_obj.estado.descripcion})")
-
             hoy = datetime.now()
+            
             if fecha_inicio.date() < hoy.date():
                 raise ValueError("La fecha de inicio debe ser futura o igual a hoy.")
             
             if fecha_fin <= fecha_inicio:
                 raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio.")
 
-            # Validar conflictos con mantenimiento
             sql_check_mantenimiento = """
                 SELECT id_mantenimiento 
                 FROM Mantenimiento 
@@ -1213,13 +1068,6 @@ class DBManager:
                 AND id_estado IN (1, 3) 
                 AND (fecha_inicio <= ? AND fecha_fin >= ?)
             """
-            
-            conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-                
-            cursor = conn.cursor()
-            cursor.execute("BEGIN")
             
             cursor.execute(sql_check_mantenimiento, (
                 data['patente'], 
@@ -1230,10 +1078,9 @@ class DBManager:
             if cursor.fetchone():
                 raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado que coincide con las fechas solicitadas.")
 
-            # Insertar alquiler
             sql_alquiler = """
                 INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
-                                    fecha_inicio, fecha_fin, id_estado)
+                                      fecha_inicio, fecha_fin, id_estado)
                 VALUES (?, ?, ?, ?, ?, ?)
             """
 
@@ -1251,7 +1098,6 @@ class DBManager:
                 id_estado
             ))
 
-            # Actualizar estado del vehículo
             sql_update_auto = "UPDATE Vehiculo SET id_estado = 2 WHERE patente = ?"
             cursor.execute(sql_update_auto, (data['patente'],))
 
@@ -1347,38 +1193,20 @@ class DBManager:
         return None
 
     def update_alquiler_estado_only(self, id_alquiler, nuevo_id_estado):
-        """Actualiza solo el estado de un alquiler validando con objetos"""
+        sql = "UPDATE Alquiler SET id_estado = ? WHERE id_alquiler = ?"
         conn = None
         try:
-            # Validar creando objetos
-            estado_alquiler_obj = self.get_estado_alquiler_by_id(nuevo_id_estado)
-            if not estado_alquiler_obj:
-                raise ValueError(f"Estado de alquiler con ID {nuevo_id_estado} no existe")
-
-            # Verificar que el alquiler existe
-            alquiler_existente = self.get_alquiler_by_id(id_alquiler)
-            if not alquiler_existente:
-                raise ValueError(f"Alquiler con ID {id_alquiler} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return False
             cursor = conn.cursor()
-            
-            sql = "UPDATE Alquiler SET id_estado = ? WHERE id_alquiler = ?"
             cursor.execute(sql, (nuevo_id_estado, id_alquiler))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar estado alquiler: {e}")
-            if conn:
-                conn.rollback()
-            raise e
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def delete_alquiler(self, id_alquiler):
         conn = None
@@ -1467,45 +1295,34 @@ class DBManager:
     # --- FUNCIONES DE DANIO ---
 
     def create_danio(self, data):
-        """Crea un daño validando con objetos"""
         conn = None
         try:
-            # Validar creando objeto
-            danio_obj = Danio(
-                id_alquiler=data['id_alquiler'],
-                costo=data['costo'],
-                detalle=data['detalle']
-            )
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            if conn is None: return False
             
             cursor = conn.cursor()
             
-            # Validar que el alquiler existe y no está reservado
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['id_alquiler'],))
             alquiler = cursor.fetchone()
             
             if not alquiler:
-                raise ValueError(f"No se encontró el alquiler con ID {data['id_alquiler']}")
+                print(f"Error: No se encontró el alquiler con ID {data['id_alquiler']}")
+                return False
                 
             if alquiler[0] == 1:
-                raise ValueError("No se pueden registrar daños para alquileres en estado 'Reservado'")
+                print(f"Error: No se pueden registrar daños para alquileres en estado 'Reservado'")
+                return False
             
             sql = "INSERT INTO Danio (id_alquiler, costo, detalle) VALUES (?, ?, ?)"
             cursor.execute(sql, (data['id_alquiler'], data['costo'], data['detalle']))
             conn.commit()
             return True
             
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al crear daño: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def get_danios_by_alquiler(self, id_alquiler):
         sql = "SELECT * FROM Danio WHERE id_alquiler = ?"
@@ -1522,40 +1339,20 @@ class DBManager:
             if conn: conn.close()
 
     def update_danio(self, id_danio, data):
-        """Actualiza un daño validando con objetos"""
+        sql = "UPDATE Danio SET costo = ?, detalle = ? WHERE id_danio = ?"
         conn = None
         try:
-            # Validar creando objeto
-            danio_obj = Danio(
-                id_danio=id_danio,
-                costo=data['costo'],
-                detalle=data['detalle']
-            )
-
-            # Verificar que el daño existe
-            danio_existente = self.get_danio_by_id(id_danio)
-            if not danio_existente:
-                raise ValueError(f"Daño con ID {id_danio} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return False
             cursor = conn.cursor()
-            
-            sql = "UPDATE Danio SET costo = ?, detalle = ? WHERE id_danio = ?"
             cursor.execute(sql, (data['costo'], data['detalle'], id_danio))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar daño: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def delete_danio(self, id_danio):
         sql = "DELETE FROM Danio WHERE id_danio = ?"
@@ -1576,32 +1373,23 @@ class DBManager:
     # --- FUNCIONES DE MULTA ---
 
     def create_multa(self, data):
-        """Crea una multa validando con objetos"""
         conn = None
         try:
-            # Validar creando objeto
-            multa_obj = Multa(
-                alquiler_id=data['alquiler_id'],
-                costo=data['costo'],
-                detalle=data['detalle'],
-                fecha_multa=datetime.fromisoformat(data['fecha_multa'])
-            )
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            if conn is None: return False
             
             cursor = conn.cursor()
             
-            # Validar que el alquiler existe y no está reservado
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['alquiler_id'],))
             alquiler = cursor.fetchone()
             
             if not alquiler:
-                raise ValueError(f"No se encontró el alquiler con ID {data['alquiler_id']}")
+                print(f"Error: No se encontró el alquiler con ID {data['alquiler_id']}")
+                return False
                 
-            if alquiler[0] == 1:
-                raise ValueError("No se pueden registrar multas para alquileres en estado 'Reservado'")
+            if alquiler[0] == 1:  
+                print(f"Error: No se pueden registrar multas para alquileres en estado 'Reservado'")
+                return False
 
             sql = "INSERT INTO Multa (alquiler_id, costo, detalle, fecha_multa) VALUES (?, ?, ?, ?)"
             cursor.execute(sql, (
@@ -1613,15 +1401,11 @@ class DBManager:
             conn.commit()
             return True
             
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al crear multa: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            return False
         finally:
-            if conn: 
-                conn.close()
-
+            if conn: conn.close()
 
     def get_multas_by_alquiler(self, alquiler_id):
         sql = "SELECT * FROM Multa WHERE alquiler_id = ?"
@@ -1638,29 +1422,12 @@ class DBManager:
             if conn: conn.close()
 
     def update_multa(self, id_multa, data):
-        """Actualiza una multa validando con objetos"""
+        sql = "UPDATE Multa SET costo = ?, detalle = ?, fecha_multa = ? WHERE id_multa = ?"
         conn = None
         try:
-            # Validar creando objeto
-            multa_obj = Multa(
-                id_multa=id_multa,
-                costo=data['costo'],
-                detalle=data['detalle'],
-                fecha_multa=datetime.fromisoformat(data['fecha_multa'])
-            )
-
-            # Verificar que la multa existe
-            multa_existente = self.get_multa_by_id(id_multa)
-            if not multa_existente:
-                raise ValueError(f"Multa con ID {id_multa} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-            
+            if conn is None: return False
             cursor = conn.cursor()
-            
-            sql = "UPDATE Multa SET costo = ?, detalle = ?, fecha_multa = ? WHERE id_multa = ?"
             cursor.execute(sql, (
                 data['costo'], 
                 data['detalle'], 
@@ -1669,15 +1436,11 @@ class DBManager:
             ))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar multa: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def delete_multa(self, id_multa):
         sql = "DELETE FROM Multa WHERE id_multa = ?"
@@ -1698,33 +1461,14 @@ class DBManager:
     # --- FUNCIONES DE MANTENIMIENTO ---
 
     def schedule_mantenimiento(self, data):
-        """Programa un mantenimiento validando con objetos"""
         conn = None
         try:
-            # Validar creando objetos
-            vehiculo_obj = self.get_vehiculo_by_patente(data['patente'])
-            if not vehiculo_obj:
-                raise ValueError(f"Vehículo con patente {data['patente']} no existe")
-            
-            estado_mantenimiento_obj = self.get_estado_mantenimiento_by_id(3)  # Pendiente
-            
-            mantenimiento_obj = Mantenimiento(
-                patente=data['patente'],
-                id_empleado=data['id_empleado'],
-                fecha_inicio=datetime.fromisoformat(data['fecha_inicio']),
-                fecha_fin=datetime.fromisoformat(data['fecha_fin']),
-                detalle=data['detalle'],
-                estado=estado_mantenimiento_obj
-            )
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            if conn is None: return False
             
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
-            # Validar conflictos con alquileres
             sql_check_alquiler = """
                 SELECT id_alquiler FROM Alquiler 
                 WHERE patente = ? 
@@ -1742,7 +1486,6 @@ class DBManager:
             if cursor.fetchone():
                 raise ValueError("El vehículo tiene alquileres programados en esas fechas.")
 
-            # Insertar mantenimiento
             sql_insert = """
                 INSERT INTO Mantenimiento (patente, id_empleado, fecha_inicio, fecha_fin, detalle, id_estado)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -1753,7 +1496,7 @@ class DBManager:
                 data['fecha_inicio'],
                 data['fecha_fin'],
                 data['detalle'],
-                3  # Pendiente
+                3 
             ))
 
             conn.commit()
@@ -1761,12 +1504,10 @@ class DBManager:
 
         except (sqlite3.Error, ValueError) as e:
             print(f"Error al programar mantenimiento: {e}")
-            if conn: 
-                conn.rollback()
-            raise e
+            if conn: conn.rollback()
+            return False
         finally:
-            if conn: 
-                conn.close()
+            if conn: conn.close()
 
     def start_mantenimiento(self, id_mantenimiento):
         conn = None
@@ -2381,29 +2122,18 @@ class DBManager:
         return None
 
     def update_persona_por_id(self, id_persona, persona_data):
-        """Actualiza una persona validando con objetos"""
+        sql = """
+            UPDATE Persona
+            SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
+                fecha_nac = ?, tipo_documento = ?, nro_documento = ?
+            WHERE id_persona = ?
+        """
         conn = None
         try:
-            # Validar creando objeto Persona
-            persona_obj = self._crear_y_validar_persona(persona_data)
-            
-            # Verificar que la persona existe
-            persona_existente = self.get_persona_por_id(id_persona)
-            if not persona_existente:
-                raise ValueError(f"Persona con ID {id_persona} no existe")
-
             conn = self._get_connection()
-            if conn is None: 
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
+            if conn is None: return False
             
             cursor = conn.cursor()
-            
-            sql = """
-                UPDATE Persona
-                SET nombre = ?, apellido = ?, mail = ?, telefono = ?,
-                    fecha_nac = ?, tipo_documento = ?, nro_documento = ?
-                WHERE id_persona = ?
-            """
             cursor.execute(sql, (
                 persona_data['nombre'], 
                 persona_data['apellido'],
@@ -2416,73 +2146,52 @@ class DBManager:
             ))
             conn.commit()
             return cursor.rowcount > 0
-            
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
             print(f"Error al actualizar persona: {e}")
             if conn:
                 conn.rollback()
-            raise e
+            return False
         finally:
             if conn:
                 conn.close()
 
     def create_empleado(self, persona_data, usuario_data, role_data):
-        """Crea un empleado validando con objetos"""
-        conn = None
+        conn = self._get_connection()
+        if conn is None:
+            print("Error: no se pudo abrir conexión a la BD.")
+            return None
+
+        # Verificar mail duplicado
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            print(f"Error: el mail {persona_data['mail']} ya está registrado.")
+            return None
+
         try:
-            # Validar creando objetos
-            persona_obj = self._crear_y_validar_persona(persona_data)
-            
-            permiso_obj = self.get_permiso_by_id(usuario_data['id_permiso'])
-            if not permiso_obj:
-                raise ValueError(f"Permiso con ID {usuario_data['id_permiso']} no existe")
-
-            usuario_obj = Usuario(
-                user_name=usuario_data['user_name'],
-                password=usuario_data['password_hash'],
-                permiso=permiso_obj
-            )
-
-            empleado_obj = Empleado(
-                fecha_alta=datetime.fromisoformat(role_data['fecha_alta']),
-                horario=role_data['horario'],
-                sueldo=role_data['sueldo']
-            )
-
-            # Verificar si el mail ya existe
-            if self.get_user_data_for_login_by_mail(persona_data['mail']):
-                raise ValueError(f"El mail {persona_data['mail']} ya está registrado")
-
-            conn = self._get_connection()
-            if conn is None:
-                raise sqlite3.Error("No se pudo conectar a la base de datos")
-
             cursor = conn.cursor()
-            cursor.execute("BEGIN")
 
-            # Insertar Persona
+            # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 persona_data["nombre"], persona_data["apellido"], persona_data["mail"],
-                persona_data["telefono"], persona_data["fecha_nacimiento"],
+                persona_data["telefono"], persona_data["fecha_nac"],
                 persona_data["tipo_documento"], persona_data["nro_documento"]
             ))
             id_persona = cursor.lastrowid
 
-            # Insertar Usuario
+            # Insert Usuario
             cursor.execute("""
                 INSERT INTO Usuario(id_persona, user_name, password, id_permiso)
                 VALUES (?, ?, ?, ?)
             """, (
                 id_persona,
                 usuario_data["user_name"],
-                usuario_data["password_hash"],
+                usuario_data["password"],  # CORREGIDO
                 usuario_data["id_permiso"]
             ))
 
-            # Insertar Empleado
+            # Insert Empleado
             cursor.execute("""
                 INSERT INTO Empleado(id_persona, fecha_alta, horario, sueldo)
                 VALUES (?, ?, ?, ?)
@@ -2496,14 +2205,13 @@ class DBManager:
             conn.commit()
             return cursor.lastrowid
 
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error insertando empleado: {e}")
-            if conn:
-                conn.rollback()
-            raise e
+        except Exception as e:
+            print("Error insertando empleado:", e)
+            conn.rollback()
+            return None
+
         finally:
-            if conn:
-                conn.close()
+            conn.close()
 
     def get_all_empleados(self):
         sql = """
@@ -2548,178 +2256,3 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
-
-    def update_employee_full(self, id_empleado, persona_data, role_data):
-        """
-        Actualiza los datos de la persona y del empleado.
-        
-        Args:
-            id_empleado: ID del empleado a actualizar.
-            persona_data: dict con los campos de Persona (nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
-            role_data: dict con los campos de Empleado (sueldo, horario, fecha_alta)
-            
-        Retorna:
-            True si se actualizó al menos un registro, False en caso contrario.
-        """
-        conn = None
-        try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            # Primero obtener el id_persona asociado al empleado
-            cursor.execute("SELECT id_persona FROM Empleado WHERE id_empleado = ?", (id_empleado,))
-            row = cursor.fetchone()
-            if not row:
-                print(f"No se encontró empleado con id {id_empleado}")
-                return False
-            id_persona = row[0]
-            
-            # --- Actualizar Persona ---
-            sql_persona = """
-                UPDATE Persona
-                SET nombre = ?, apellido = ?, mail = ?, telefono = ?, fecha_nac = ?, tipo_documento = ?, nro_documento = ?
-                WHERE id_persona = ?
-            """
-            cursor.execute(sql_persona, (
-                persona_data["nombre"],
-                persona_data["apellido"],
-                persona_data["mail"],
-                persona_data["telefono"],
-                persona_data.get("fecha_nac", None),
-                persona_data["tipo_documento"],
-                persona_data["nro_documento"],
-                id_persona
-            ))
-            
-            # --- Actualizar Empleado ---
-            sql_empleado = """
-                UPDATE Empleado
-                SET sueldo = ?, horario = ?, fecha_alta = ?
-                WHERE id_empleado = ?
-            """
-            cursor.execute(sql_empleado, (
-                role_data["sueldo"],
-                role_data["horario"],
-                role_data["fecha_alta"],
-                id_empleado
-            ))
-            
-            conn.commit()
-            return cursor.rowcount > 0
-        except sqlite3.Error as e:
-            print(f"Error actualizando empleado completo: {e}")
-            if conn:
-                conn.rollback()
-            return False
-        finally:
-            if conn:
-                conn.close()
-
-    # Método auxiliar para crear y validar persona
-    def _crear_y_validar_persona(self, persona_data):
-        """Crea y valida un objeto Persona"""
-        documento_obj = self.get_documento_by_id(persona_data['tipo_documento_id'])
-        if not documento_obj:
-            raise ValueError(f"Tipo de documento con ID {persona_data['tipo_documento_id']} no existe")
-        
-        persona_obj = Persona(
-            nombre=persona_data['nombre'],
-            apellido=persona_data['apellido'],
-            mail=persona_data['mail'],
-            telefono=persona_data['telefono'],
-            fecha_nacimiento=datetime.fromisoformat(persona_data['fecha_nacimiento']),
-            tipo_documento=documento_obj,
-            nro_documento=persona_data['nro_documento']
-        )
-        
-        if not persona_obj.es_valida():
-            raise ValueError("Datos de persona inválidos")
-        
-        return persona_obj
-    
-    def get_persona_por_id(self, id_persona):
-        """Obtiene una persona por ID"""
-        sql = """
-            SELECT p.*, doc.descripcion as doc_desc
-            FROM Persona p
-            JOIN Documento doc ON p.tipo_documento = doc.id_tipo
-            WHERE p.id_persona = ?
-        """
-        conn = None
-        try:
-            conn = self._get_connection()
-            if conn is None: return None
-            
-            row = conn.cursor().execute(sql, (id_persona,)).fetchone()
-            
-            if row:
-                doc_obj = Documento(
-                    id_tipo=row['tipo_documento'],
-                    descripcion=row['doc_desc']
-                )
-                
-                return Persona(
-                    id_persona=row['id_persona'],
-                    nombre=row['nombre'],
-                    apellido=row['apellido'],
-                    mail=row['mail'],
-                    telefono=row['telefono'],
-                    fecha_nacimiento=datetime.fromisoformat(row['fecha_nac']),
-                    tipo_documento=doc_obj,
-                    nro_documento=row['nro_documento']
-                )
-        except sqlite3.Error as e:
-            print(f"Error al obtener persona por ID: {e}")
-        finally:
-            if conn:
-                conn.close()
-        return None
-
-    def get_danio_by_id(self, id_danio):
-        """Obtiene un daño por ID"""
-        sql = "SELECT * FROM Danio WHERE id_danio = ?"
-        conn = None
-        try:
-            conn = self._get_connection()
-            if conn is None: return None
-            
-            row = conn.cursor().execute(sql, (id_danio,)).fetchone()
-            
-            if row:
-                return Danio(
-                    id_danio=row['id_danio'],
-                    id_alquiler=row['id_alquiler'],
-                    costo=row['costo'],
-                    detalle=row['detalle']
-                )
-        except sqlite3.Error as e:
-            print(f"Error al obtener daño por ID: {e}")
-        finally:
-            if conn: 
-                conn.close()
-        return None
-
-    def get_multa_by_id(self, id_multa):
-        """Obtiene una multa por ID"""
-        sql = "SELECT * FROM Multa WHERE id_multa = ?"
-        conn = None
-        try:
-            conn = self._get_connection()
-            if conn is None: return None
-            
-            row = conn.cursor().execute(sql, (id_multa,)).fetchone()
-            
-            if row:
-                return Multa(
-                    id_multa=row['id_multa'],
-                    alquiler_id=row['alquiler_id'],
-                    costo=row['costo'],
-                    detalle=row['detalle'],
-                    fecha_multa=datetime.fromisoformat(row['fecha_multa'])
-                )
-        except sqlite3.Error as e:
-            print(f"Error al obtener multa por ID: {e}")
-        finally:
-            if conn: 
-                conn.close()
-        return None
