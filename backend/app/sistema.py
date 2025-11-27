@@ -756,9 +756,15 @@ class SistemaAlquiler:
             print("Se requiere permiso de Admin o Empleado.")
             return False
         
+        # Resolve the correct Empleado.id_empleado (DB FK). Usuario.id_usuario is NOT the same.
+        id_empleado_db = self.db_manager.get_empleado_id_by_usuario_id(usuario.id_usuario)
+        if id_empleado_db is None:
+            # Treat missing Empleado record as a validation issue so the API can return a clear 400
+            raise ValueError(f"El usuario '{usuario.user_name}' no está asociado a un registro de Empleado.")
+
         data = {
             'patente': patente,
-            'id_empleado': usuario.id_usuario,
+            'id_empleado': id_empleado_db,
             'fecha_inicio': fecha_inicio,
             'fecha_fin': fecha_fin_estimada,
             'detalle': detalle

@@ -110,62 +110,6 @@ def eliminar_usuario_sistema(id_usuario):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# modificar datos del usuario
-@api.route('/usuarios/<int:user_id>', methods=['PUT'])
-def actualizar_usuario(user_id):
-    """
-    Endpoint para actualizar la información de un usuario.
-    Permite actualizar el nombre de usuario y/o la contraseña.
-    """
-    try:
-        # Obtener el usuario que realiza la solicitud
-        usuario_actual = obtener_usuario_actual()
-        if not usuario_actual:
-            return jsonify({"error": "No autorizado. Se requiere autenticación"}), 401
-        
-        # Verificar que el usuario está actualizando su propio perfil o es admin
-        if usuario_actual.id_usuario != user_id and usuario_actual.permiso.descripcion.lower() != 'admin':
-            return jsonify({"error": "No autorizado para actualizar este perfil"}), 403
-        
-        # Obtener los datos de la solicitud
-        data = request.get_json()
-        
-        # Validar datos de entrada
-        if not data:
-            return jsonify({"error": "No se proporcionaron datos para actualizar"}), 400
-        
-        # Verificar que al menos un campo válido esté presente
-        valid_fields = ['user_name', 'current_password', 'new_password']
-        if not any(field in data for field in valid_fields):
-            return jsonify({
-                "error": "Debe proporcionar al menos un campo válido para actualizar (user_name, current_password con new_password)"
-            }), 400
-        
-        # Si se está intentando actualizar la contraseña, verificar que se proporcionen ambos campos
-        if 'current_password' in data or 'new_password' in data:
-            if 'current_password' not in data or 'new_password' not in data:
-                return jsonify({
-                    "error": "Para actualizar la contraseña, debe proporcionar tanto la contraseña actual como la nueva"
-                }), 400
-        
-        # Actualizar el usuario
-        exito = sistema.actualizar_usuario(user_id, data, usuario_actual)
-        
-        if exito:
-            # Si se actualizó el nombre de usuario, devolver el nuevo nombre
-            if 'user_name' in data:
-                return jsonify({
-                    "mensaje": "Perfil actualizado correctamente",
-                    "nuevo_nombre": data['user_name']
-                }), 200
-            return jsonify({"mensaje": "Perfil actualizado correctamente"}), 200
-        
-        return jsonify({"error": "No se pudo actualizar el perfil. Verifique los datos e intente nuevamente."}), 400
-    
-    except Exception as e:
-        return jsonify({"error": f"Error al actualizar el perfil: {str(e)}"}), 500
-
-
 # --- Endpoint LOGIN ---
 @api.route('/login', methods=['POST'])
 def login():
@@ -493,6 +437,7 @@ def eliminar_cliente(id_cliente):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
 # ============================
 #   EMPLEADOS - CRUD
@@ -845,7 +790,6 @@ def crear_danio(id_alquiler):
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
         data = request.get_json()
-        print(data)
         costo = data.get('costo')
         detalle = data.get('detalle')
 
@@ -983,9 +927,12 @@ def programar_mantenimiento():
         fecha_inicio = data.get('fecha_inicio')
         fecha_fin = data.get('fecha_fin')
         detalle = data.get('detalle')
+        try:
+            exito = sistema.programar_mantenimiento(patente, fecha_inicio, fecha_fin, detalle, usuario)
+        except ValueError as e:
+            # Business validation failed (e.g. overlapping rentals) — forward message to client
+            return jsonify({"error": str(e)}), 400
 
-        exito = sistema.programar_mantenimiento(patente, fecha_inicio, fecha_fin, detalle, usuario)
-        
         if exito:
             return jsonify({"mensaje": "Mantenimiento programado (Pendiente)"}), 201
         return jsonify({"error": "No se pudo programar (Fechas ocupadas o permisos insuficientes)"}), 400
@@ -1107,98 +1054,6 @@ def reporte_facturacion():
         return jsonify(data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-    # En api.py - agregar estos endpoints específicos para PDF
-
-@api.route('/reportes/pdf/detalle-clientes', methods=['GET'])
-def generar_pdf_detalle_clientes():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado"}), 401
-
-        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
-        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
-
-        data = sistema.reporte_detalle_clientes_pdf(fecha_desde, fecha_hasta, usuario)
-        return jsonify(data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@api.route('/reportes/pdf/alquileres-periodo', methods=['GET'])
-def generar_pdf_alquileres_periodo():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado"}), 401
-
-        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
-        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
-        periodo = request.args.get('periodo', 'mensual')  # mensual, trimestral, anual, semanal
-
-        data = sistema.reporte_alquileres_periodo_pdf(periodo, fecha_desde, fecha_hasta, usuario)
-        return jsonify(data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# REUTILIZAMOS los endpoints existentes para los otros reportes
-@api.route('/reportes/pdf/ranking-vehiculos', methods=['GET'])
-def generar_pdf_ranking_vehiculos():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado"}), 401
-
-        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
-        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
-
-        # Reutilizamos la función existente
-        data = sistema.reporte_ranking_vehiculos(fecha_desde, fecha_hasta)
-        return jsonify(data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@api.route('/reportes/pdf/facturacion-mensual', methods=['GET'])
-def generar_pdf_facturacion_mensual():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado"}), 401
-
-        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
-        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
-
-        # Reutilizamos la función existente
-        data = sistema.reporte_facturacion_mensual(fecha_desde, fecha_hasta, usuario)
-        
-        if data is None:
-            return jsonify({"error": "Permisos insuficientes"}), 403
-            
-        return jsonify(data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# En api.py - agregar nuevo endpoint
-@api.route('/reportes/pdf/detalle-clientes-completo', methods=['GET'])
-def generar_pdf_detalle_clientes_completo():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado"}), 401
-
-        fecha_desde = request.args.get('fecha_desde', '2000-01-01')
-        fecha_hasta = request.args.get('fecha_hasta', '2100-01-01')
-
-        # Esta función debería devolver los datos estructurados con alquileres individuales
-        data = sistema.reporte_detalle_clientes_completo_pdf(fecha_desde, fecha_hasta, usuario)
-        return jsonify(data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 # --- NUEVOS ENDPOINTS PARA DASHBOARD ---
 
@@ -1272,48 +1127,6 @@ def obtener_alquileres_empleado_dashboard():
         # Obtener los últimos 10 alquileres gestionados por este empleado
         alquileres = sistema.obtener_alquileres_empleado_dashboard(usuario.id_usuario, limite=10)
         return jsonify(alquileres), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@api.route('/mi-perfil', methods=['GET'])
-def obtener_mi_perfil():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
-
-        # Obtener los datos de la persona asociada al usuario
-        persona_data = sistema.obtener_persona_por_usuario(usuario.id_usuario)
-        
-        if not persona_data:
-            return jsonify({"error": "No se encontró el perfil asociado a este usuario"}), 404
-
-        return jsonify(persona_data), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@api.route('/mi-perfil', methods=['PUT'])
-def actualizar_mi_perfil():
-    try:
-        usuario = obtener_usuario_actual()
-        if not usuario:
-            return jsonify({"error": "No autorizado. Falta header user-id"}), 401
-
-        data = request.get_json()
-        
-        # Validar datos requeridos
-        campos_requeridos = ['nombre', 'apellido', 'mail', 'telefono', 'fecha_nacimiento', 'tipo_documento_id', 'nro_documento']
-        for campo in campos_requeridos:
-            if campo not in data:
-                return jsonify({"error": f"Falta el campo requerido: {campo}"}), 400
-
-        exito = sistema.actualizar_persona_por_usuario(usuario.id_usuario, data, usuario)
-        
-        if exito:
-            return jsonify({"mensaje": "Perfil actualizado exitosamente"}), 200
-        return jsonify({"error": "No se pudo actualizar el perfil"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
