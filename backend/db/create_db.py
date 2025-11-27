@@ -266,7 +266,8 @@ cursor.executemany("INSERT OR IGNORE INTO Marca (id_marca, descripcion) VALUES (
 cursor.executemany("INSERT OR IGNORE INTO EstadoAuto (id_estado, descripcion) VALUES (?, ?)", [
     (1, 'Libre'), 
     (2, 'Ocupado'), 
-    (3, 'En mantenimiento')
+    (3, 'En mantenimiento'),
+    (4, 'Pendiente Revsion')
 ])
 
 cursor.executemany("INSERT OR IGNORE INTO EstadoAlquiler (id_estado, descripcion) VALUES (?, ?)", [
