@@ -2314,3 +2314,54 @@ class DBManager:
                 cursor.close()
             if conn:
                 conn.close()
+
+    def delete_employee_full(self, id_empleado):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                return False
+
+            cursor = conn.cursor()
+
+            # Obtener id_persona desde Empleado
+            row = cursor.execute(
+                "SELECT id_persona FROM Empleado WHERE id_empleado = ?", (id_empleado,)
+            ).fetchone()
+
+            if not row:
+                print("Error: Empleado no encontrado.")
+                return False
+
+            id_persona = row["id_persona"]
+
+            cursor.execute("BEGIN")
+
+            # 1) Eliminar Usuario asociado
+            cursor.execute("DELETE FROM Usuario WHERE id_persona = ?", (id_persona,))
+
+            # 2) Eliminar Empleado
+            cursor.execute("DELETE FROM Empleado WHERE id_empleado = ?", (id_empleado,))
+
+            # 3) Eliminar Persona
+            cursor.execute("DELETE FROM Persona WHERE id_persona = ?", (id_persona,))
+
+            conn.commit()
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"Error de integridad: No se puede eliminar. "
+                f"El empleado (ID: {id_empleado}) probablemente tiene alquileres asociados.")
+            if conn:
+                conn.rollback()
+            return False
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al eliminar empleado: {e}")
+            if conn:
+                conn.rollback()
+            return False
+
+        finally:
+            if conn:
+                conn.close()

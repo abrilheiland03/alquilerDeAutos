@@ -1229,3 +1229,17 @@ class SistemaAlquiler:
         role_data = data.get("role", {})
         
         return self.db_manager.update_employee_full(id_empleado, persona_data, role_data)
+
+    def eliminar_empleado(self, id_empleado, usuario):
+        # Permisos: admin o empleado con rol superior
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
+            return False
+
+        exito = self.db_manager.delete_employee_full(id_empleado)
+
+        if exito:
+            print(f"Empleado {id_empleado} eliminado exitosamente.")
+            return True
+        else:
+            print(f"No se pudo eliminar al empleado {id_empleado}.")
+            return False

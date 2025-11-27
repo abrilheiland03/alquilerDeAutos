@@ -152,6 +152,23 @@ export default function EmployeeManagement() {
     setView("form");
   };
 
+  // Eliminar empleado
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este empleado?")) return;
+
+    try {
+      await employeeService.delete(id);
+      await loadEmployees(); // recargar lista
+    } catch (error) {
+      console.error("Error eliminando empleado:", error);
+
+      alert(
+        error?.response?.data?.error ||
+        "No se pudo eliminar. Puede tener alquileres asociados."
+      );
+    }
+  };
+
   // Volver
   const handleCancel = () => {
     setView("list");
@@ -250,11 +267,12 @@ export default function EmployeeManagement() {
                 </button>
 
                 <button
-                  onClick={() => console.log("eliminar")}
+                  onClick={() => handleDelete(emp.id_empleado)}
                   className="text-red-600 hover:text-red-800"
                 >
                   🗑 Eliminar
                 </button>
+
               </div>
             </div>
           ))}
