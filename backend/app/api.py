@@ -637,13 +637,31 @@ def actualizar_empleado(id_empleado):
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
         data = request.get_json()
-        exito = sistema.actualizar_datos_empleado(id_empleado, data, usuario)
+        id_empleado = int(id_empleado)
+        
+        persona = data.get("persona", {})
+        role = data.get("role", {})
+
+        required_persona_fields = ['nombre', 'apellido', 'mail', 'telefono', 'fecha_nac', 'tipo_documento', 'nro_documento']
+        required_role_fields = ['sueldo', 'horario', 'fecha_alta']
+
+        for field in required_persona_fields:
+            if field not in persona:
+                return jsonify({"error": f"Falta campo requerido en persona: {field}"}), 400
+
+        for field in required_role_fields:
+            if field not in role:
+                return jsonify({"error": f"Falta campo requerido en role: {field}"}), 400
+
+        exito = sistema.actualizar_datos_empleado(id_empleado, {"persona": persona, "role": role}, usuario)
 
         if exito:
             return jsonify({"mensaje": "Datos del empleado actualizados"}), 200
 
         return jsonify({"error": "No se pudo actualizar (Permisos o empleado no encontrado)"}), 400
 
+    except ValueError:
+        return jsonify({"error": "ID de empleado inválido"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

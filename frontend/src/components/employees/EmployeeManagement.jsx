@@ -62,6 +62,9 @@ export default function EmployeeManagement() {
     return `${numeric.slice(0, 3)}-${numeric.slice(3, 6)}-${numeric.slice(6, 10)}`;
   };
 
+  //errores
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handlePhoneChange = (e) => {
     const formatted = formatPhoneNumber(e.target.value);
     setFormData((prev) => ({ ...prev, telefono: formatted }));
@@ -97,15 +100,24 @@ export default function EmployeeManagement() {
       await employeeService.createOrUpdate(payload, formData.id);
       await loadEmployees();
       setView("list");
+      setErrorMessage(""); // Limpiar error si todo salió bien
     } catch (error) {
       console.error("Error guardando empleado:", error);
+
+      // Mostrar mensaje específico si es mail duplicado
+      if (error?.response?.data?.error?.includes("mail")) {
+        setErrorMessage("El mail ingresado ya se encuentra registrado.");
+      } else {
+        setErrorMessage("Error al guardar el empleado. Verifique los datos.");
+      }
     }
   };
+
 
   // Cargar datos para editar
   const handleEdit = (emp) => {
     setFormData({
-      id: emp.id,
+      id: emp.id_empleado, // <-- usar id_empleado aquí
       nombre: emp.nombre,
       apellido: emp.apellido,
       tipo_documento: emp.tipo_documento,
@@ -119,7 +131,7 @@ export default function EmployeeManagement() {
     });
 
     setView("form");
-  };
+};
 
   // Nuevo empleado → formulario vacío
   const handleNew = () => {
@@ -389,6 +401,13 @@ export default function EmployeeManagement() {
             />
           </div>
         </div>
+        
+        {/* Mostrar mensaje de error si existe */}
+        {errorMessage && (
+          <div className="mb-4 text-red-600 font-medium">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="flex justify-end gap-4 mt-6">
           <button
