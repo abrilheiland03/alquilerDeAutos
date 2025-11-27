@@ -2284,3 +2284,112 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
+    def update_employee_full(self, id_empleado, persona_data, role_data):
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            # --- Actualizar Persona ---
+            cursor.execute("""
+                UPDATE persona
+                SET nombre=?,
+                    apellido=?,
+                    mail=?,
+                    telefono=?,
+                    fecha_nac=?,
+                    tipo_documento=?,
+                    nro_documento=?
+                WHERE id_persona = (SELECT id_persona FROM empleado WHERE id_empleado=?)
+            """, (
+                persona_data["nombre"],
+                persona_data["apellido"],
+                persona_data["mail"],
+                persona_data["telefono"],
+                persona_data["fecha_nac"],
+                persona_data["tipo_documento"],
+                persona_data["nro_documento"],
+                id_empleado
+            ))
+
+            # --- Actualizar Empleado / Role ---
+            cursor.execute("""
+                UPDATE empleado
+                SET sueldo=?,
+                    horario=?,
+                    fecha_alta=?
+                WHERE id_empleado=?
+            """, (
+                role_data["sueldo"],
+                role_data["horario"],
+                role_data["fecha_alta"],
+                id_empleado
+            ))
+
+            conn.commit()
+            return True
+
+        except Exception as e:
+            print("ERROR update_employee_full:", e)
+            if conn:
+                conn.rollback()
+            return False
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    def delete_employee_full(self, id_empleado):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                return False
+
+            cursor = conn.cursor()
+
+            # Obtener id_persona desde Empleado
+            row = cursor.execute(
+                "SELECT id_persona FROM Empleado WHERE id_empleado = ?", (id_empleado,)
+            ).fetchone()
+
+            if not row:
+                print("Error: Empleado no encontrado.")
+                return False
+
+            id_persona = row["id_persona"]
+
+            cursor.execute("BEGIN")
+
+            # 1) Eliminar Usuario asociado
+            cursor.execute("DELETE FROM Usuario WHERE id_persona = ?", (id_persona,))
+
+            # 2) Eliminar Empleado
+            cursor.execute("DELETE FROM Empleado WHERE id_empleado = ?", (id_empleado,))
+
+            # 3) Eliminar Persona
+            cursor.execute("DELETE FROM Persona WHERE id_persona = ?", (id_persona,))
+
+            conn.commit()
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"Error de integridad: No se puede eliminar. "
+                f"El empleado (ID: {id_empleado}) probablemente tiene alquileres asociados.")
+            if conn:
+                conn.rollback()
+            return False
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al eliminar empleado: {e}")
+            if conn:
+                conn.rollback()
+            return False
+
+        finally:
+            if conn:
+                conn.close()
