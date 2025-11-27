@@ -2159,7 +2159,7 @@ class DBManager:
             """, (
                 id_persona,
                 usuario_data["user_name"],
-                usuario_data["password"],
+                usuario_data["password"],  # CORREGIDO
                 usuario_data["id_permiso"]
             ))
 

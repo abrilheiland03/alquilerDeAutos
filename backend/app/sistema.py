@@ -94,27 +94,30 @@ class SistemaAlquiler:
         
     def registrar_usuario_empleado(self, data):
         try:
-            persona_data = {
-                'nombre': data['nombre'],
-                'apellido': data['apellido'],
-                'mail': data['mail'],
-                'telefono': data['telefono'],
-                'fecha_nacimiento': data['fecha_nacimiento'],
-                'tipo_documento_id': data['tipo_documento_id'],
-                'nro_documento': data['nro_documento']
+            # Datos de usuario, con hash de la contraseña
+            usuario_data = {
+                'user_name': data['usuario']['user_name'],
+                'password_hash': self._hash_password(data['usuario']['password']),
+                'id_permiso': data['usuario']['id_permiso']
             }
 
-            usuario_data = {
-                'user_name': data['user_name'],
-                'password_hash': self._hash_password(data['password']),
-                'id_permiso': 2
+            persona_data = {
+                'nombre': data['persona']['nombre'],
+                'apellido': data['persona']['apellido'],
+                'mail': data['persona']['mail'],
+                'telefono': data['persona']['telefono'],
+                'fecha_nac': data['persona']['fecha_nac'],
+                'tipo_documento': data['persona']['tipo_documento'],
+                'nro_documento': data['persona']['nro_documento']
             }
 
             role_data = {
-                'fecha_alta': data['fecha_alta'],
-                'sueldo': data['sueldo']
+                'sueldo': data['role']['sueldo'],
+                'horario': data['role']['horario'],
+                'fecha_alta': data['role']['fecha_alta']
             }
 
+            # Crear el empleado en la BD
             id_empleado = self.db_manager.create_empleado(
                 persona_data, usuario_data, role_data
             )
@@ -125,7 +128,6 @@ class SistemaAlquiler:
             print("Error registrando empleado:", e)
             return None
 
-
     def login(self, mail, password):
         user_login_data = self.db_manager.get_user_data_for_login_by_mail(mail)
 
@@ -134,9 +136,18 @@ class SistemaAlquiler:
             return None
 
         stored_hash = user_login_data['password']
+
+        # Si la contraseña no está hasheada, la guardamos hasheada
         if not self._verify_password(password, stored_hash):
-            print("Login fallido: Contraseña incorrecta.")
-            return None
+            if stored_hash == password:  # Detecta password no hasheado
+                print("Login exitoso (contraseña no hasheada).")
+                hashed = self._hash_password(password)
+                success = self.db_manager.actualizar_usuario(user_login_data['id_usuario'], {'password_hash': hashed})
+                if not success:
+                    print("Error actualizando contraseña en la base de datos.")
+            else:
+                print("Login fallido: Contraseña incorrecta.")
+                return None
 
         id_usuario = user_login_data['id_usuario']
         usuario_completo = self.db_manager.get_full_usuario_by_id(id_usuario)
@@ -148,6 +159,7 @@ class SistemaAlquiler:
         self.usuario_actual = usuario_completo
         print(f"Login exitoso. Bienvenido {self.usuario_actual.user_name}")
         return usuario_completo
+
 
     def logout(self):
         print(f"Cerrando sesión de {self.usuario_actual.user_name}.")

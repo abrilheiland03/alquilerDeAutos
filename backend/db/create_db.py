@@ -333,7 +333,10 @@ try:
         id_persona_emp = cursor.lastrowid
         
         # Usuario (Permiso 2 = Empleado)
-        pass_hash = hashlib.sha256("12345".encode('utf-8')).hexdigest()
+        cursor.execute("SELECT nro_documento FROM Persona WHERE id_persona = ?", (id_persona_emp,))
+        nro_doc = cursor.fetchone()[0]
+
+        pass_hash = hashlib.sha256(str(nro_doc).encode('utf-8')).hexdigest()
         cursor.execute("""
             INSERT INTO Usuario (id_persona, user_name, password, id_permiso)
             VALUES (?, 'ana_emp', ?, 2)
