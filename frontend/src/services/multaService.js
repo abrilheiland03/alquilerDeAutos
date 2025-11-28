@@ -5,7 +5,7 @@ const multaService = {
     const response = await api.post(`/alquileres/${multaData.id_alquiler}/multas`, {
       costo: multaData.costo,
       detalle: multaData.detalle,
-      fecha_multa: `${multaData.fecha}T12:00:00` 
+      fecha_multa: `${multaData.fecha}T12:00:00`
     });
     return response.data;
   },
