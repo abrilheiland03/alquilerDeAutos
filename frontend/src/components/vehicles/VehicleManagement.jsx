@@ -1,5 +1,6 @@
 //todo modificado (para volver a version anterior ctrl z)
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { vehicleService } from '../../services/vehicleService';
@@ -38,6 +39,7 @@ const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
   const [estados, setEstados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [catalogosLoaded, setCatalogosLoaded] = useState(false);
+  
 
   // Cargar catálogos solo una vez cuando se abre el modal
   useEffect(() => {
@@ -487,6 +489,7 @@ const VehicleManagement = () => {
   const [rentalDates, setRentalDates] = useState(null);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [searchingVehicles, setSearchingVehicles] = useState(false);
+  const navigate = useNavigate();
 
   const canEdit = hasPermission('empleado');
   const canCreate = hasPermission('admin'); // Solo admin puede crear vehículos
@@ -617,6 +620,7 @@ const VehicleManagement = () => {
       showNotification('Alquiler creado exitosamente', 'success');
       closeRentalModal();
       fetchVehicles();
+      navigate('/rentals');
     } catch (error) {
       console.error('Error creating rental:', error);
       showNotification('Error al crear el alquiler', 'error');

@@ -174,8 +174,14 @@ const RentalInfo = ({
   };
 
   const calculateDaysAndTotal = () => {
-    if (!rental || !rental.fecha_inicio || !rental.fecha_fin || !rental.precio_flota) {
-      console.log('Datos faltantes para cálculo');
+    // Debug/log incoming rental object to help find missing fields
+    console.debug('DEBUG rental (calculateDaysAndTotal):', rental);
+
+    // Be tolerant: accept different price keys and treat 0 as valid
+    const price = rental?.precio_flota ?? rental?.precio ?? rental?.price ?? null;
+
+    if (!rental || !rental.fecha_inicio || !rental.fecha_fin || price == null) {
+      console.log('Datos faltantes para cálculo (fecha_inicio, fecha_fin o precio)');
       return { days: 0, total: 0 };
     }
     
@@ -193,7 +199,7 @@ const RentalInfo = ({
       
       const diffTime = end - start;
       const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-      const total = days * rental.precio_flota;
+      const total = days * price;
       
       return { days, total };
     } catch (error) {

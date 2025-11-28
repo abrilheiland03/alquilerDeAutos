@@ -401,7 +401,9 @@ try:
     # Toyota Corolla (Usado para el alquiler finalizado)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AA111AA', 'Corolla', 1, 2017, 25000.0, 5, 4, 0, 1, 2)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
-
+# Toyota Corolla (Usado para el alquiler finalizado)
+    cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   ('AH111AG', 'etios', 1, 2019, 15000.0, 5, 4, 0, 1, 2)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
     # Ford Focus (Usado para el mantenimiento finalizado)
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AF222BB', 'Focus', 2, 2022, 18000.0, 5, 5, 1, 1, 4)) # Estado 1 = Libre, Marca 2=Ford, Color 4=Azul
@@ -421,7 +423,7 @@ try:
                    ('AD343RF', 'Yaris', 1, 2019, 23000.0, 5, 4, 0, 2, 3)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
     
      #vehiculo ocupado a futuro
-    # Toyota Yaris (Usado para el alquiler futuro) quiero ver si se le muestra o no al cliente este auto
+    # Toyota hilux (Usado para el alquiler futuro) quiero ver si se le muestra o no al cliente este auto
     cursor.execute("INSERT OR IGNORE INTO Vehiculo (patente, modelo, id_marca, anio, precio_flota, asientos, puertas, caja_manual, id_estado, id_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                    ('AG290LF', 'Hilux', 1, 2024, 35000.0, 5, 4, 1, 3, 1)) # Estado 1 = Libre, Marca 1=Toyota, Color 2=Blanco
     # Obtener IDs necesarios para operaciones (suponiendo que se acaban de insertar o ya existían)

@@ -726,11 +726,14 @@ def cancelar_alquiler(id_alquiler):
         if not usuario:
             return jsonify({"error": "No autorizado. Falta header user-id"}), 401
 
-        exito = sistema.cancelar_alquiler(id_alquiler, usuario)
-        
+        try:
+            exito = sistema.cancelar_alquiler(id_alquiler, usuario)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
         if exito:
             return jsonify({"mensaje": "Alquiler cancelado"}), 200
-        return jsonify({"error": "No se pudo cancelar (Ya iniciado o permisos insuficientes)"}), 400
+        return jsonify({"error": "No se pudo cancelar (Error desconocido)"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

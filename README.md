@@ -42,6 +42,10 @@
 ## 🌟 **Opciones Avanzadas**
 
 - 🔒 **Módulo de reservas anticipadas**, con verificación de disponibilidad.  
+  
+Note on availability buffer
+
+- 🧼 When a vehicle is rented or reserved, the system enforces a configurable buffer window of 3 days after the rental end date to allow for service/cleaning and avoid back-to-back bookings. Availability queries take this 3-day margin into account when returning free vehicles for a requested date range.
 
 ---
 

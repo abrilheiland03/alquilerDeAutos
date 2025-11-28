@@ -464,7 +464,11 @@ class DBManager:
                     user_name=row['user_name'],
                     password=row['password'],
                     permiso=perm_obj)
-                
+
+                # Attach id_persona so callers can perform identity checks
+                # (this attribute is used e.g. in sistema.cancelar_alquiler)
+                setattr(usuario_obj, 'id_persona', row.get('id_persona'))
+
                 return usuario_obj
         except sqlite3.Error as e:
             print(f"Error al buscar usuario completo: {e}")
@@ -1140,6 +1144,7 @@ class DBManager:
             # Configurar el row_factory para devolver diccionarios
             conn.row_factory = sqlite3.Row
 
+            # Consulta base para vehículos que están en estado Libre
             query = """
             SELECT v.*, 
                 ea.descripcion as estado,
@@ -1149,7 +1154,7 @@ class DBManager:
             JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
             JOIN Marca m ON v.id_marca = m.id_marca
             JOIN Color c ON v.id_color = c.id_color
-            WHERE ea.descripcion IN ('Libre', 'Reservado')
+            WHERE ea.descripcion = 'Libre'
             """
 
             params = []
@@ -1160,21 +1165,53 @@ class DBManager:
                     inicio = datetime.fromisoformat(fecha_inicio)
                     fin = datetime.fromisoformat(fecha_fin)
 
-                    # Agregar 3 días de margen
-                    inicio_margen = (inicio - timedelta(days=3)).strftime('%Y-%m-%d')
-                    fin_margen = (fin + timedelta(days=3)).strftime('%Y-%m-%d')
-
+                    # CORRECCIÓN: Verificar conflictos de fechas sin margen excesivo
                     query += """
                     AND v.patente NOT IN (
                         SELECT a.patente 
                         FROM Alquiler a
                         JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
-                        WHERE a.fecha_inicio >= ? 
-                        AND a.fecha_fin <= ?
-                        AND ea.descripcion IN ('Reservado', 'En curso')
+                        WHERE ea.descripcion IN ('Reservado', 'Activo')
+                        AND (
+                            -- Verificar superposición directa
+                            (a.fecha_inicio < ? AND a.fecha_fin > ?) OR
+                            (a.fecha_inicio BETWEEN ? AND ?) OR
+                            (a.fecha_fin BETWEEN ? AND ?) OR
+                            (a.fecha_inicio <= ? AND a.fecha_fin >= ?)
+                        )
                     )
                     """
-                    params.extend([inicio_margen, fin_margen])
+                    # Parámetros para la consulta
+                    params.extend([
+                        fin, inicio,        # Primera condición: superposición
+                        inicio, fin,        # Segunda: inicio entre fechas
+                        inicio, fin,        # Tercera: fin entre fechas  
+                        inicio, fin         # Cuarta: alquiler cubre todo el período
+                    ])
+
+                    # CORRECCIÓN: También excluir vehículos en mantenimiento
+                    query += """
+                    AND v.patente NOT IN (
+                        SELECT m.patente 
+                        FROM Mantenimiento m
+                        JOIN EstadoMantenimiento em ON m.id_estado = em.id_estado
+                        WHERE em.descripcion IN ('Pendiente', 'Realizando')
+                        AND (
+                            (m.fecha_inicio < ? AND m.fecha_fin > ?) OR
+                            (m.fecha_inicio BETWEEN ? AND ?) OR
+                            (m.fecha_fin BETWEEN ? AND ?) OR
+                            (m.fecha_inicio <= ? AND m.fecha_fin >= ?)
+                        )
+                    )
+                    """
+                    # Parámetros para mantenimiento
+                    params.extend([
+                        fin, inicio,        # Primera condición: superposición
+                        inicio, fin,        # Segunda: inicio entre fechas
+                        inicio, fin,        # Tercera: fin entre fechas  
+                        inicio, fin         # Cuarta: mantenimiento cubre todo el período
+                    ])
+
                 except ValueError as e:
                     print(f"Error al procesar fechas: {e}")
                     return []
@@ -1191,6 +1228,10 @@ class DBManager:
                 # Asegurarse de que todos los campos necesarios estén presentes
                 if 'patente' in vehiculo:
                     vehiculos.append(vehiculo)
+
+            print(f"🔍 Vehículos libres encontrados: {len(vehiculos)}")
+            for v in vehiculos:
+                print(f"   - {v['patente']} - {v['modelo']} ({v['estado']})")
 
             return vehiculos
 
@@ -1217,88 +1258,90 @@ class DBManager:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
-            # Verificar si el vehículo existe
-            cursor.execute("SELECT id_estado FROM Vehiculo WHERE patente = ?", (data['patente'],))
+            # Verificar si el vehículo existe y está libre
+            cursor.execute("""
+                SELECT v.id_estado, ea.descripcion as estado_desc 
+                FROM Vehiculo v 
+                JOIN EstadoAuto ea ON v.id_estado = ea.id_estado 
+                WHERE v.patente = ?
+            """, (data['patente'],))
             row = cursor.fetchone()
             
             if not row:
                 raise ValueError(f"El vehículo {data['patente']} no existe.")
             
-            if row['id_estado'] not in [1, 5]:  # 1: Libre, 5: Reservado
-                raise ValueError(f"El vehículo {data['patente']} no está disponible para alquiler (Estado ID: {row['id_estado']}).")
+            # Solo permitir si está Libre
+            if row['estado_desc'] != 'Libre':
+                raise ValueError(f"El vehículo {data['patente']} no está disponible. Estado actual: {row['estado_desc']}")
 
-            # Convertir fechas a objetos datetime
+            # Convertir fechas
             fecha_inicio = datetime.fromisoformat(data['fecha_inicio'])
             fecha_fin = datetime.fromisoformat(data['fecha_fin'])
             hoy = datetime.now()
             
-            
             # Validaciones básicas de fechas
-            hoy_sin_hora = hoy.date()
-            fecha_inicio_sin_hora = fecha_inicio.date()
-            print(f"Fecha actual: {hoy}, Fecha inicio: {fecha_inicio}")
-            print(f"Fecha actual (solo fecha): {hoy_sin_hora}, Fecha inicio (solo fecha): {fecha_inicio_sin_hora}")
-
-            if fecha_inicio_sin_hora < hoy_sin_hora:
+            if fecha_inicio.date() < hoy.date():
                 raise ValueError("La fecha de inicio no puede ser anterior a hoy")
             
             if fecha_fin <= fecha_inicio:
                 raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio.")
 
-            # Verificar mantenimientos programados
+            # CORRECCIÓN: Verificar conflictos de manera más simple
+            sql_check_conflictos = """
+                SELECT id_alquiler 
+                FROM Alquiler 
+                WHERE patente = ? 
+                AND id_estado IN (1, 2)  -- Reservado o Activo
+                AND (
+                    (fecha_inicio < ? AND fecha_fin > ?) OR  -- Superposición
+                    (fecha_inicio BETWEEN ? AND ?) OR        -- Inicio dentro del rango
+                    (fecha_fin BETWEEN ? AND ?) OR           -- Fin dentro del rango
+                    (fecha_inicio <= ? AND fecha_fin >= ?)   -- Cubre todo el período
+                )
+                LIMIT 1
+            """
+            
+            cursor.execute(sql_check_conflictos, (
+                data['patente'],
+                fecha_fin, fecha_inicio,    # Primera condición
+                fecha_inicio, fecha_fin,    # Segunda condición  
+                fecha_inicio, fecha_fin,    # Tercera condición
+                fecha_inicio, fecha_fin     # Cuarta condición
+            ))
+            
+            if cursor.fetchone():
+                raise ValueError(f"El vehículo {data['patente']} ya tiene un alquiler programado que se superpone con las fechas solicitadas.")
+
+            # Verificar mantenimientos
             sql_check_mantenimiento = """
                 SELECT id_mantenimiento 
                 FROM Mantenimiento 
                 WHERE patente = ? 
-                AND id_estado IN (1, 3) 
-                AND (fecha_inicio <= ? AND fecha_fin >= ?)
+                AND id_estado IN (1, 3)  -- Realizando o Pendiente
+                AND (
+                    (fecha_inicio < ? AND fecha_fin > ?) OR
+                    (fecha_inicio BETWEEN ? AND ?) OR
+                    (fecha_fin BETWEEN ? AND ?) OR
+                    (fecha_inicio <= ? AND fecha_fin >= ?)
+                )
+                LIMIT 1
             """
             
             cursor.execute(sql_check_mantenimiento, (
                 data['patente'], 
-                data['fecha_fin'],    
-                data['fecha_inicio']  
+                fecha_fin, fecha_inicio,
+                fecha_inicio, fecha_fin,
+                fecha_inicio, fecha_fin,
+                fecha_inicio, fecha_fin
             ))
             
             if cursor.fetchone():
-                raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado que coincide con las fechas solicitadas.")
+                raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado en esas fechas.")
 
-            # Verificar disponibilidad del vehículo en las fechas solicitadas
-            sql_check_alquileres = """
-                SELECT fecha_inicio, fecha_fin 
-                FROM Alquiler 
-                WHERE patente = ? 
-                AND id_estado IN (1, 2)  -- Solo considerar reservas activas o en curso
-                AND fecha_fin >= ?  -- Solo alquileres que terminan después de la fecha de inicio solicitada
-                ORDER BY fecha_inicio
-            """
-
-            cursor.execute(sql_check_alquileres, (data['patente'], data['fecha_inicio']))
-            alquileres = cursor.fetchall()
-
-            for alq in alquileres:
-                alq_inicio = datetime.fromisoformat(alq['fecha_inicio'])
-                alq_fin = datetime.fromisoformat(alq['fecha_fin'])
-                
-                # Verificar superposición directa
-                if (fecha_inicio < alq_fin and fecha_fin > alq_inicio):
-                    raise ValueError(f"El vehículo ya está reservado desde {alq_inicio.date()} hasta {alq_fin.date()}")
-                
-                # Verificar si hay menos de 3 días entre alquileres
-                dias_antes = (alq_inicio - fecha_fin).days
-                if 0 < dias_antes < 3:
-                    raise ValueError(f"Debe haber al menos 3 días entre alquileres. El próximo alquiler comienza el {alq_inicio.date()}")
-                
-                dias_despues = (fecha_inicio - alq_fin).days
-                if 0 < dias_despues < 3:
-                    raise ValueError(f"Debe haber al menos 3 días entre alquileres. El alquiler anterior termina el {alq_fin.date()}")
-
-            # Determinar los estados
+            # Determinar estado del alquiler
             es_hoy = fecha_inicio.date() == hoy.date()
-            es_reservado = data.get('estado', '').upper() == 'RESERVADO' and not es_hoy
-
-            estado_vehiculo = 2 if es_hoy else (5 if es_reservado else 2)  # 2: Alquilado, 5: Reservado
-            estado_alquiler = 2 if es_hoy else (1 if es_reservado else 2)  # 2: En curso, 1: Reservado
+            estado_alquiler = 2 if es_hoy else 1  # 2: Activo, 1: Reservado
+            estado_vehiculo = 2 if es_hoy else 5  # 2: Alquilado, 5: Reservado
 
             # Insertar el alquiler
             sql_alquiler = """
@@ -1321,13 +1364,19 @@ class DBManager:
             cursor.execute(sql_update_auto, (estado_vehiculo, data['patente']))
 
             conn.commit()
+            print(f"✅ Alquiler creado exitosamente para {data['patente']}")
             return True
 
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error al crear alquiler: {e}")
+        except sqlite3.Error as e:
+            print(f"❌ Error al crear alquiler (DB error): {e}")
             if conn:
                 conn.rollback()
             return False
+        except ValueError:
+            # Business validation errors should propagate to caller (API -> 400)
+            if conn:
+                conn.rollback()
+            raise
         finally:
             if conn:
                 conn.close()
@@ -1478,7 +1527,7 @@ class DBManager:
                 raise ValueError("Alquiler no encontrado.")
             
             patente = row['patente']
-
+            
             sql_alquiler = "UPDATE Alquiler SET id_estado = ? WHERE id_alquiler = ?"
             cursor.execute(sql_alquiler, (nuevo_id_estado, id_alquiler))
 

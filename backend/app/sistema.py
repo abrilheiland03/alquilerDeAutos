@@ -567,31 +567,27 @@ class SistemaAlquiler:
 
     def cancelar_alquiler(self, id_alquiler, usuario):
         if not usuario:
-            print("Debe estar logueado para cancelar.")
-            return False
+            raise ValueError("Debe estar autenticado para cancelar el alquiler.")
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
         if not alquiler:
-            print("Alquiler no encontrado.")
-            return False
-
+            raise ValueError("Alquiler no encontrado.")
+        cliente = self.db_manager.get_client_by_id(alquiler['id_cliente'])
+        persona = self.db_manager.get_persona_por_usuario(usuario.id_usuario)
         es_admin = self.check_permission("Admin", usuario)
         es_empleado = self.check_permission("Empleado", usuario)
-        
         if not (es_admin or es_empleado):
-            if alquiler['id_persona_cliente'] != usuario.id_persona:
-                print("No tiene permiso para cancelar este alquiler (no le pertenece).")
-                return False
-
+            if cliente.id_persona != persona['id_persona']:
+                raise ValueError("No tiene permiso para cancelar este alquiler (no le pertenece).")
+        
         if alquiler['id_estado'] in [2, 3, 4, 5]:
-            print("El alquiler ya comenzó, no se puede cancelar.")
-            return False
-
+            raise ValueError("El alquiler ya comenzó o está en un estado que no permite cancelación.")
+        
         if self.db_manager.finalize_or_cancel_alquiler(id_alquiler, 5):
             print(f"Alquiler {id_alquiler} CANCELADO. Vehículo liberado.")
             return True
-        
-        return False
+
+        raise ValueError("No se pudo cancelar el alquiler (error interno).")
     
     def comenzar_alquiler(self, id_alquiler, usuario):
         es_admin = self.check_permission("Admin", usuario)
@@ -977,7 +973,7 @@ class SistemaAlquiler:
             for v in vehiculos:
                 try:
                     # Verificar si el vehículo está libre
-                    if hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre':
+                    if v['estado'] == 'Libre':
                         vehiculos_libres.append(v)
                     elif hasattr(v, 'estado') and isinstance(v.estado, str) and v.estado == 'Libre':
                         vehiculos_libres.append(v)
@@ -1032,10 +1028,11 @@ class SistemaAlquiler:
             # Obtener todos los alquileres del cliente usando id_usuario
             alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
             vehiculos = self.db_manager.get_all_vehiculos()
-            
-            vehiculos_libres = [v for v in vehiculos if hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre']
+
+            # Obtener vehículos libres (sin filtro de fechas) y alquileres activos del cliente
+            vehiculos_libres = self.db_manager.get_vehiculos_libres()
             alquileres_activos = [a for a in alquileres_cliente if a.get('id_estado') in [2, 3]]
-            
+
             # Encontrar vehículo favorito (más alquilado)
             vehiculo_favorito = self._obtener_vehiculo_favorito_cliente(usuario.id_usuario, alquileres_cliente, vehiculos)
             
@@ -1242,26 +1239,3 @@ class SistemaAlquiler:
             print(f"No se pudo eliminar al empleado {id_empleado}.")
             return False
         
-    def obtener_ultimo_alquiler_cliente(self, usuario):
-        try:
-            if not self.check_permission("Cliente", usuario):
-                return None
-                
-            # Obtener alquileres del usuario
-            alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
-            
-            if not alquileres_cliente:
-                return None
-            
-            # Ordenar por fecha de inicio (más reciente primero) y tomar el primero
-            alquileres_ordenados = sorted(
-                alquileres_cliente, 
-                key=lambda x: x.get('fecha_inicio', ''), 
-                reverse=True
-            )
-            
-            return alquileres_ordenados[0] if alquileres_ordenados else None
-            
-        except Exception as e:
-            print(f"Error obteniendo último alquiler: {e}")
-            return None
