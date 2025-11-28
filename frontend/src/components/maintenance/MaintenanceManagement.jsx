@@ -365,13 +365,19 @@ const MaintenanceCard = ({ maintenance, onStart, onComplete, onCancel, onDelete,
                 <XCircle className="h-4 w-4" />
               </button>
             )}
-            <button
-              onClick={() => onDelete(maintenance)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
-              title="Eliminar"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {/* Mostrar eliminar SOLO para mantenimientos ya finalizados o cancelados
+                así evitamos mostrar al mismo tiempo el botón de "Cancelar" (X)
+                y el de "Eliminar" (tacho) — ambos juntos resultaban confusos.
+            */}
+            {['Finalizado', 'Cancelado'].includes(maintenance.estado_desc) && onDelete && (
+              <button
+                onClick={() => onDelete(maintenance)}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
+                title="Eliminar"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -310,7 +310,6 @@ class DBManager:
         return lista
     
     # --- ABMC DE USUARIO ---
-    
     def create_full_user(self, persona_data, usuario_data, 
                          role_data, role_type):
         conn = None
@@ -408,6 +407,7 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+            
 
     def get_user_data_for_login_by_mail(self, mail):
         sql = """
@@ -464,10 +464,12 @@ class DBManager:
                     user_name=row['user_name'],
                     password=row['password'],
                     permiso=perm_obj)
+                
+                
 
                 # Attach id_persona so callers can perform identity checks
                 # (this attribute is used e.g. in sistema.cancelar_alquiler)
-                setattr(usuario_obj, 'id_persona', row.get('id_persona'))
+                setattr(usuario_obj, 'id_persona', row['id_persona'])
 
                 return usuario_obj
         except sqlite3.Error as e:
@@ -560,6 +562,7 @@ class DBManager:
             if conn:
                 conn.close()
     # --- ABMC de CLIENTE ---
+    #modifcando
     def create_client_with_user(self, persona_data, usuario_data, role_data):
         """Crea solo un cliente (sin usuario) validando con objetos"""
         # Validar creando objetos
@@ -577,18 +580,6 @@ class DBManager:
         
         try:
             cursor = conn.cursor()
-            cursor.execute("BEGIN")
-            fecha_nac = datetime.fromisoformat(persona_data['fecha_nac']).date()
-            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
-            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
-            documento = self.get_documento_by_id(persona_data['tipo_documento'])
-
-            usuario = Usuario(1, usuario_data['user_name'], 'hash', permiso)
-
-            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
-                fecha_nac, 
-                documento, 
-                int(persona_data['nro_documento']), )
             # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
@@ -610,7 +601,6 @@ class DBManager:
                 usuario_data["password"],  # CORREGIDO
                 usuario_data["id_permiso"]
             ))
-
             # Insert Cliente
             cursor.execute("""
                 INSERT INTO Cliente(id_persona, fecha_alta)

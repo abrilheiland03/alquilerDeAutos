@@ -567,27 +567,32 @@ class SistemaAlquiler:
 
     def cancelar_alquiler(self, id_alquiler, usuario):
         if not usuario:
-            raise ValueError("Debe estar autenticado para cancelar el alquiler.")
+            print("Debe estar logueado para cancelar.")
+            return False
 
         alquiler = self.db_manager.get_alquiler_by_id(id_alquiler)
         if not alquiler:
-            raise ValueError("Alquiler no encontrado.")
+            print("Alquiler no encontrado.")
+            return False
         cliente = self.db_manager.get_client_by_id(alquiler['id_cliente'])
         persona = self.db_manager.get_persona_por_usuario(usuario.id_usuario)
         es_admin = self.check_permission("Admin", usuario)
         es_empleado = self.check_permission("Empleado", usuario)
         if not (es_admin or es_empleado):
             if cliente.id_persona != persona['id_persona']:
-                raise ValueError("No tiene permiso para cancelar este alquiler (no le pertenece).")
+                print("No tiene permiso para cancelar este alquiler (no le pertenece).")
+                
+                return False
         
         if alquiler['id_estado'] in [2, 3, 4, 5]:
-            raise ValueError("El alquiler ya comenzó o está en un estado que no permite cancelación.")
+            print("El alquiler ya comenzó, no se puede cancelar.")
+            return False
         
         if self.db_manager.finalize_or_cancel_alquiler(id_alquiler, 5):
             print(f"Alquiler {id_alquiler} CANCELADO. Vehículo liberado.")
             return True
-
-        raise ValueError("No se pudo cancelar el alquiler (error interno).")
+        
+        return False
     
     def comenzar_alquiler(self, id_alquiler, usuario):
         es_admin = self.check_permission("Admin", usuario)
@@ -1028,11 +1033,11 @@ class SistemaAlquiler:
             # Obtener todos los alquileres del cliente usando id_usuario
             alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
             vehiculos = self.db_manager.get_all_vehiculos()
-
-            # Obtener vehículos libres (sin filtro de fechas) y alquileres activos del cliente
-            vehiculos_libres = self.db_manager.get_vehiculos_libres()
+            print(vehiculos)
+            
+            vehiculos_libres = [v for v in vehiculos if v['estado'] == 'Libre']
             alquileres_activos = [a for a in alquileres_cliente if a.get('id_estado') in [2, 3]]
-
+            
             # Encontrar vehículo favorito (más alquilado)
             vehiculo_favorito = self._obtener_vehiculo_favorito_cliente(usuario.id_usuario, alquileres_cliente, vehiculos)
             
