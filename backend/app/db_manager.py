@@ -602,17 +602,17 @@ class DBManager:
         try:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
-            fecha_nac = datetime.fromisoformat(persona_data['fecha_nacimiento']).date()
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nac']).date()
             fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
             permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
-            documento = self.get_documento_by_id(persona_data['tipo_documento_id'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento'])
 
-            usuario = Usuario(1, usuario_data['user_name'], usuario_data['password_hash'], permiso)
+            usuario = Usuario(1, usuario_data['user_name'], 'hash', permiso)
 
             persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
                 fecha_nac, 
                 documento, 
-                persona_data['nro_documento'], )
+                int(persona_data['nro_documento']), )
             # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
@@ -1025,8 +1025,8 @@ class DBManager:
                 patente=data['patente'].upper(),
                 modelo=data['modelo'],
                 marca=self.get_marca_by_id(data['id_marca']),
-                anio=data['anio'],
-                precio_flota=data['precio_flota'],
+                anio=int(data['anio']),
+                precio_flota=int(data['precio_flota']),
                 asientos=data['asientos'],
                 puertas=data['puertas'],
                 caja_manual=bool(data['caja_manual']),
