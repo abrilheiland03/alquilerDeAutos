@@ -1126,7 +1126,33 @@ def obtener_alquileres_empleado_dashboard():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+        
+@api.route('/usuarios/<int:user_id>', methods=['PUT'])
+def actualizar_usuario(user_id):
+    try:
+        # Obtener el usuario actual
+        usuario_actual = obtener_usuario_actual()
+        if not usuario_actual:
+            return jsonify({"error": "No autorizado"}), 401
 
+        # Solo el propio usuario o un admin puede actualizar
+        if usuario_actual.id_usuario != user_id and not sistema.check_permission("Admin", usuario_actual):
+            return jsonify({"error": "No tienes permiso para actualizar este usuario"}), 403
+
+        data = request.get_json()
+        
+        # Validar datos requeridos
+        if not data:
+            return jsonify({"error": "No se proporcionaron datos para actualizar"}), 400
+
+        # Actualizar el usuario
+        if sistema.actualizar_usuario(user_id, data):
+            return jsonify({"mensaje": "Usuario actualizado correctamente"}), 200
+        else:
+            return jsonify({"error": "No se pudo actualizar el usuario"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------
 # EJECUCIÓN
