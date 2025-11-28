@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import sqlite3
 import os
 from models.cliente import Cliente
@@ -11,7 +11,10 @@ from models.permiso import Permiso
 from models.usuario import Usuario
 from models.color import Color
 from models.marca import Marca
-
+from models.persona import Persona
+from models.empleado import Empleado
+from models.administrador import Administrador
+from models.alquiler import Alquiler
 
 
 
@@ -318,6 +321,19 @@ class DBManager:
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nacimiento']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento_id'])
+
+            usuario = Usuario(1, usuario_data['user_name'], usuario_data['password_hash'], permiso)
+
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                persona_data['nro_documento'], )
+            
+
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
                                         fecha_nac, tipo_documento, nro_documento)
@@ -345,14 +361,32 @@ class DBManager:
             ))
 
             if role_type == 'cliente':
+                persona_esp = Cliente(1, fecha_alta, 1, persona_data['nombre'], persona_data['apellido'], 
+                                      persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                persona_data['nro_documento'], usuario)
+
                 sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
             
             elif role_type == 'empleado':
+                persona_esp = Empleado(1, fecha_alta, role_data['sueldo'], 1, persona_data['nombre'], 
+                                       persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                                        fecha_nac,
+                                        documento,
+                                        persona_data['nro_documento'], usuario)
+
                 sql_role = "INSERT INTO Empleado (id_persona, fecha_alta, sueldo) VALUES (?, ?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta'], role_data['sueldo']))
             
             elif role_type == 'admin':
+                persona_esp = Administrador(1, role_data['descripcion'], 1, persona_data['nombre'],
+                                            persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                                        fecha_nac,
+                                        documento,
+                                        persona_data['nro_documento'], usuario)
+
                 sql_role = "INSERT INTO Administrador (id_persona, descripcion) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['descripcion']))
             
@@ -564,7 +598,18 @@ class DBManager:
         
         try:
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nacimiento']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento_id'])
 
+            usuario = Usuario(1, usuario_data['user_name'], usuario_data['password_hash'], permiso)
+
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                persona_data['nro_documento'], )
             # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
@@ -949,6 +994,19 @@ class DBManager:
             conn = self._get_connection()
             if conn is None: return False
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            vehiculo = Vehiculo(
+                patente=data['patente'].upper(),
+                modelo=data['modelo'],
+                marca=self.get_marca_by_id(data['id_marca']),
+                anio=data['anio'],
+                precio_flota=data['precio_flota'],
+                asientos=data['asientos'],
+                puertas=data['puertas'],
+                caja_manual=bool(data['caja_manual']),
+                estado=self.get_estado_auto_by_id(data['id_estado']),
+                color=self.get_color_by_id(data['id_color'])
+            )
             cursor.execute(sql, (
                 data['patente'].upper(), 
                 data['modelo'], 
@@ -1102,6 +1160,24 @@ class DBManager:
             
             if cursor.fetchone():
                 raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado que coincide con las fechas solicitadas.")
+            vehiculo = self.get_vehiculo_by_patente(data['patente'])
+            cliente = self.get_client_by_id(data['id_cliente'])
+            empleado = Empleado(data['id_empleado'], date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
+            
+            estado = self.get_estado_alquiler_by_id(1)
+            alquiler = Alquiler(
+                1,
+                vehiculo,
+                cliente,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            )
 
             sql_alquiler = """
                 INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
