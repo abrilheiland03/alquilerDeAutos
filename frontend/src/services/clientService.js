@@ -27,19 +27,6 @@ export const clientService = {
     return response.data;
   },
 
-  // Crear cliente o actualizarlo
-  createOrUpdate: async (payload, id = null) => {
-    if (id) {
-      // Actualizar empleado existente
-      const response = await apiClient.put(`/clientes/${id}`, payload);
-      return response.data;
-    } else {
-      // Crear nuevo empleado
-      const response = await apiClient.post('/clientes', payload);
-      return response.data;
-    }
-  },
-
   // Actualizar cliente
   update: async (id, clientData) => {
     const response = await apiClient.put(`/clientes/${id}`, clientData);

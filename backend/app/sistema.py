@@ -251,51 +251,39 @@ class SistemaAlquiler:
     
     # --- ABMC de CLIENTE ---
 
-    #modificado para que el admin o empleado pueda crear un cliente junto con su usuario
     def crear_cliente_mostrador(self, data, usuario):
-        # Validación de permisos
         if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
             return None
-
+        
         try:
-            persona = data["persona"]
-            usuario = data["usuario"]
-            role = data["role"]
-
-             # Datos para Persona
             persona_data = {
-                "id_cliente": None,
-                "nombre": persona["nombre"],
-                "apellido": persona["apellido"],
-                "mail": persona["mail"],
-                "telefono": persona["telefono"],
-                "fecha_nac": persona["fecha_nac"],
-                "tipo_documento": persona["tipo_documento"],
-                "nro_documento": persona["nro_documento"]
+                'nombre': data['nombre'], 'apellido': data['apellido'],
+                'mail': data['mail'], 'telefono': data['telefono'],
+                'fecha_nacimiento': data['fecha_nacimiento'],
+                'tipo_documento_id': data['tipo_documento_id'],
+                'nro_documento': data['nro_documento']
             }
-
-            # Usuario
-            usuario_data = {
-                "user_name": usuario["user_name"],
-                "password": usuario["password"],
-                "id_permiso": usuario["id_permiso"]
-            }
-
-            # --- Datos del rol (Cliente) ---
             role_data = {
-                'fecha_alta': data['role']['fecha_alta']
+                'fecha_alta': data.get('fecha_alta')
             }
 
-            # Crear cliente en la BD (Persona + Usuario + Cliente)
-            resultado = self.db_manager.create_client_with_user(
-                persona_data, usuario_data, role_data
+            id_cliente_creado = self.db_manager.create_client_only(
+                persona_data, role_data
             )
-            return resultado  # devuelve ids (cliente, usuario, persona)
 
-        except Exception as e:
-            print("Error en crear_cliente_mostrador:", e)
+            if id_cliente_creado:
+                print(f"Cliente (mostrador) creado con ID: {id_cliente_creado}")
+                return id_cliente_creado
+            else:
+                print("La creación del cliente falló.")
+                return None
+                
+        except KeyError as e:
+            print(f"Error en los datos de creación: falta la clave {e}")
             return None
-
+        except Exception as e:
+            print(f"Error inesperado durante la creación: {e}")
+            return None
 
     def buscar_cliente_por_id(self, id_cliente, usuario):
         if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
@@ -434,18 +422,8 @@ class SistemaAlquiler:
         
     # --- BUSCAR VEHICULOS LIBRES ---
 
-    def listar_vehiculos_libres(self, fecha_inicio=None, fecha_fin=None):
-        """
-        Obtiene vehículos libres, opcionalmente filtrados por rango de fechas.
-        
-        Args:
-            fecha_inicio (str, optional): Fecha de inicio en formato ISO (YYYY-MM-DD)
-            fecha_fin (str, optional): Fecha de fin en formato ISO (YYYY-MM-DD)
-            
-        Returns:
-            list: Lista de vehículos disponibles
-        """
-        return self.db_manager.get_vehiculos_libres(fecha_inicio, fecha_fin)
+    def listar_vehiculos_libres(self):
+        return self.db_manager.get_vehiculos_libres()
 
     # --- FUNCIONES DE ALQUILER ---
 
@@ -766,15 +744,9 @@ class SistemaAlquiler:
             print("Se requiere permiso de Admin o Empleado.")
             return False
         
-        # Resolve the correct Empleado.id_empleado (DB FK). Usuario.id_usuario is NOT the same.
-        id_empleado_db = self.db_manager.get_empleado_id_by_usuario_id(usuario.id_usuario)
-        if id_empleado_db is None:
-            # Treat missing Empleado record as a validation issue so the API can return a clear 400
-            raise ValueError(f"El usuario '{usuario.user_name}' no está asociado a un registro de Empleado.")
-
         data = {
             'patente': patente,
-            'id_empleado': id_empleado_db,
+            'id_empleado': usuario.id_usuario,
             'fecha_inicio': fecha_inicio,
             'fecha_fin': fecha_fin_estimada,
             'detalle': detalle
@@ -1236,26 +1208,3 @@ class SistemaAlquiler:
             print(f"Error en listar_todos_los_empleados: {e}")
             return []
 
-    def actualizar_datos_empleado(self, id_empleado, data, usuario_actual):
-        # Verificar permisos según tu lógica
-        if not self.check_permission('admin', usuario_actual):
-            return False
-        
-        persona_data = data.get("persona", {})
-        role_data = data.get("role", {})
-        
-        return self.db_manager.update_employee_full(id_empleado, persona_data, role_data)
-
-    def eliminar_empleado(self, id_empleado, usuario):
-        # Permisos: admin o empleado con rol superior
-        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
-            return False
-
-        exito = self.db_manager.delete_employee_full(id_empleado)
-
-        if exito:
-            print(f"Empleado {id_empleado} eliminado exitosamente.")
-            return True
-        else:
-            print(f"No se pudo eliminar al empleado {id_empleado}.")
-            return False

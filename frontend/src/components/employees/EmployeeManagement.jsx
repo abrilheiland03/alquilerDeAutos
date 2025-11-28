@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { employeeService } from "../../services/employeeService.js";
-import { FileText, Mail, Phone, Calendar, Edit, Trash2 } from "lucide-react";
 
 // --- Funciones de formateo para el sueldo ---
 function formatearSueldoVisual(valor) {
@@ -63,9 +62,6 @@ export default function EmployeeManagement() {
     return `${numeric.slice(0, 3)}-${numeric.slice(3, 6)}-${numeric.slice(6, 10)}`;
   };
 
-  //errores
-  const [errorMessage, setErrorMessage] = useState("");
-
   const handlePhoneChange = (e) => {
     const formatted = formatPhoneNumber(e.target.value);
     setFormData((prev) => ({ ...prev, telefono: formatted }));
@@ -101,24 +97,15 @@ export default function EmployeeManagement() {
       await employeeService.createOrUpdate(payload, formData.id);
       await loadEmployees();
       setView("list");
-      setErrorMessage(""); // Limpiar error si todo salió bien
     } catch (error) {
       console.error("Error guardando empleado:", error);
-
-      // Mostrar mensaje específico si es mail duplicado
-      if (error?.response?.data?.error?.includes("mail")) {
-        setErrorMessage("El mail ingresado ya se encuentra registrado.");
-      } else {
-        setErrorMessage("Error al guardar el empleado. Verifique los datos.");
-      }
     }
   };
-
 
   // Cargar datos para editar
   const handleEdit = (emp) => {
     setFormData({
-      id: emp.id_empleado, // <-- usar id_empleado aquí
+      id: emp.id,
       nombre: emp.nombre,
       apellido: emp.apellido,
       tipo_documento: emp.tipo_documento,
@@ -132,7 +119,7 @@ export default function EmployeeManagement() {
     });
 
     setView("form");
-};
+  };
 
   // Nuevo empleado → formulario vacío
   const handleNew = () => {
@@ -151,23 +138,6 @@ export default function EmployeeManagement() {
     });
 
     setView("form");
-  };
-
-  // Eliminar empleado
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este empleado?")) return;
-
-    try {
-      await employeeService.delete(id);
-      await loadEmployees(); // recargar lista
-    } catch (error) {
-      console.error("Error eliminando empleado:", error);
-
-      alert(
-        error?.response?.data?.error ||
-        "No se pudo eliminar. Puede tener alquileres asociados."
-      );
-    }
   };
 
   // Volver
@@ -246,85 +216,37 @@ export default function EmployeeManagement() {
           {employees.map((emp) => (
             <div
               key={emp.id_empleado}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700"
             >
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {emp.nombre} {emp.apellido}
-                    </h3>
+              <h2 className="text-xl font-semibold mb-2">
+                {emp.nombre} {emp.apellido}
+              </h2>
 
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
-                      <FileText className="h-4 w-4 mr-1" />
-                      DNI: {emp.nro_documento}
-                    </p>
-                  </div>
+              <p><strong>DNI:</strong> {emp.nro_documento}</p>
+              <p><strong>Email:</strong> {emp.mail}</p>
+              <p><strong>Teléfono:</strong> {emp.telefono}</p>
+              <p><strong>Sueldo:</strong> ${emp.sueldo}</p>
+              <p><strong>Horario:</strong> {emp.horario}</p>
+              <p><strong>Fecha Alta:</strong> {new Date(emp.fecha_alta).toLocaleDateString("es-AR")}</p>
 
-                  <div className="flex flex-col items-end">
-                    <span className="status-badge bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                      Empleado #{emp.id_empleado}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Desde {new Date(emp.fecha_alta).toLocaleDateString("es-AR")}
-                    </span>
-                  </div>
-                </div>
+              <div className="flex justify-end gap-4 mt-4">
+                <button
+                  onClick={() => handleEdit(emp)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  ✏ Editar
+                </button>
 
-                {/* Información del empleado */}
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Mail className="h-4 w-4 mr-2" />
-                    <span className="truncate">{emp.mail}</span>
-                  </div>
-
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Phone className="h-4 w-4 mr-2" />
-                    <span>{emp.telefono}</span>
-                  </div>
-
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>
-                      Sueldo: ${emp.sueldo} • Horario: {emp.horario}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Fecha de Alta */}
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
-                  <span>Fecha de alta:</span>
-                  <span className="font-medium">{new Date(emp.fecha_alta).toLocaleDateString("es-AR")}</span>
-                </div>
-
-                {/* Acciones */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex-1"></div>
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(emp)}
-                      className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg transition-colors duration-200"
-                      title="Editar"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(emp.id_empleado)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors duration-200"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={() => console.log("eliminar")}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  🗑 Eliminar
+                </button>
               </div>
             </div>
           ))}
         </div>
-
       </div>
     );
   }
@@ -467,13 +389,6 @@ export default function EmployeeManagement() {
             />
           </div>
         </div>
-        
-        {/* Mostrar mensaje de error si existe */}
-        {errorMessage && (
-          <div className="mb-4 text-red-600 font-medium">
-            {errorMessage}
-          </div>
-        )}
 
         <div className="flex justify-end gap-4 mt-6">
           <button

@@ -15,11 +15,9 @@ export const maintenanceService = {
 
   // Programar mantenimiento
   create: async (maintenanceData) => {
-    // apiClient already adds the user-id header from localStorage via interceptor
     const response = await apiClient.post('/mantenimientos', maintenanceData);
-  return response.data;
-}
-,
+    return response.data;
+  },
 
   // Iniciar mantenimiento
   start: async (id) => {

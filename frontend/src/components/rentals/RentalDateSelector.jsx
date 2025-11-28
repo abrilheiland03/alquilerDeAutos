@@ -1,33 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, Search } from 'lucide-react';
 
 const RentalDateSelector = ({ onSearch, loading }) => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [error, setError] = useState('');
-  const [minDate, setMinDate] = useState('');
-
-  // Formato YYYY-MM-DD
-  const formatDate = (date) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  // CORRECCIÓN: Convertir string de fecha a fecha LOCAL
-  const toLocalDate = (dateString) => {
-    const [year, month, day] = dateString.split("-");
-    return new Date(year, month - 1, day);
-  };
-
-  // Inicializar fecha mínima y fecha de inicio
-  useEffect(() => {
-    const today = formatDate(new Date());
-    setMinDate(today);
-    setFechaInicio(today);
-  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -38,14 +15,9 @@ const RentalDateSelector = ({ onSearch, loading }) => {
       return;
     }
 
-    // CORRECCIÓN: crear fechas locales para evitar desfases UTC
-    const inicio = toLocalDate(fechaInicio);
-    const fin = toLocalDate(fechaFin);
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
     const hoy = new Date();
-
-    // Comparar solo fechas
-    inicio.setHours(0, 0, 0, 0);
-    fin.setHours(0, 0, 0, 0);
     hoy.setHours(0, 0, 0, 0);
 
     if (inicio < hoy) {
@@ -61,14 +33,7 @@ const RentalDateSelector = ({ onSearch, loading }) => {
     onSearch(fechaInicio, fechaFin);
   };
 
-  const handleFechaInicioChange = (e) => {
-    const nuevaFecha = e.target.value;
-    setFechaInicio(nuevaFecha);
-
-    if (fechaFin && new Date(nuevaFecha) > new Date(fechaFin)) {
-      setFechaFin(nuevaFecha);
-    }
-  };
+  const minDate = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-200">
@@ -78,8 +43,6 @@ const RentalDateSelector = ({ onSearch, loading }) => {
       
       <form onSubmit={handleSearch} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Fecha de inicio */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Inicio *
@@ -89,15 +52,14 @@ const RentalDateSelector = ({ onSearch, loading }) => {
               <input
                 type="date"
                 value={fechaInicio}
-                onChange={handleFechaInicioChange}
+                onChange={(e) => setFechaInicio(e.target.value)}
                 min={minDate}
-                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 w-full"
+                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
           </div>
 
-          {/* Fecha de fin */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de Fin *
@@ -109,9 +71,8 @@ const RentalDateSelector = ({ onSearch, loading }) => {
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
                 min={fechaInicio || minDate}
-                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 w-full"
+                className="input-primary pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
-                disabled={!fechaInicio}
               />
             </div>
           </div>
