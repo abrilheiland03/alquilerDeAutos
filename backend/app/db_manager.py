@@ -15,6 +15,8 @@ from models.persona import Persona
 from models.empleado import Empleado
 from models.administrador import Administrador
 from models.alquiler import Alquiler
+from models.danio import Danio
+from models.multa import Multa
 
 
 
@@ -1179,6 +1181,7 @@ class DBManager:
                 estado
             )
 
+
             sql_alquiler = """
                 INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
                                       fecha_inicio, fecha_fin, id_estado)
@@ -1402,7 +1405,33 @@ class DBManager:
             if conn is None: return False
             
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            vehiculo = self.get_vehiculo_by_patente('AA111AA')
+            cliente = self.get_client_by_id(1)
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
             
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            alquiler = Alquiler(
+                1,
+                vehiculo,
+                cliente,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            )
+            danio = Danio(
+                1,
+                alquiler,
+                costo=data['costo'],
+                detalle=data['detalle']
+            )
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['id_alquiler'],))
             alquiler = cursor.fetchone()
             
@@ -1481,6 +1510,36 @@ class DBManager:
             
             cursor = conn.cursor()
             
+            cursor.execute("BEGIN")
+            vehiculo = self.get_vehiculo_by_patente('AA111AA')
+            cliente = self.get_client_by_id(1)
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
+            
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            fecha_multa = datetime.now() + timedelta(days=3)
+            alquiler = Alquiler(
+                1,
+                vehiculo,
+                cliente,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            )
+            multa = Multa(
+                1,
+                alquiler,
+                costo=data['costo'],
+                detalle=data['detalle'],
+                fecha_multa=fecha_multa
+            )
+
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['alquiler_id'],))
             alquiler = cursor.fetchone()
             
