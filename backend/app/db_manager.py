@@ -17,6 +17,7 @@ from models.administrador import Administrador
 from models.alquiler import Alquiler
 from models.danio import Danio
 from models.multa import Multa
+from models.mantenimiento import Mantenimiento
 
 
 
@@ -1645,6 +1646,28 @@ class DBManager:
             
             if cursor.fetchone():
                 raise ValueError("El vehículo tiene alquileres programados en esas fechas.")
+            
+            vehiculo = self.get_vehiculo_by_patente(data['patente'])
+            
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
+            
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            estado = self.get_estado_mantenimiento_by_id(3)
+            mantenimiento = Mantenimiento(
+                1,
+                vehiculo,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                'asda',
+                estado
+            )
 
             sql_insert = """
                 INSERT INTO Mantenimiento (patente, id_empleado, fecha_inicio, fecha_fin, detalle, id_estado)
@@ -2331,7 +2354,18 @@ class DBManager:
 
         try:
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nac']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento'])
 
+            usuario = Usuario(1, usuario_data['user_name'], 'hash', permiso)
+
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                int(persona_data['nro_documento']), )
             # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
