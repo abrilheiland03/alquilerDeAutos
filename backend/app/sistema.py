@@ -421,9 +421,19 @@ class SistemaAlquiler:
             return False
         
     # --- BUSCAR VEHICULOS LIBRES ---
-
-    def listar_vehiculos_libres(self):
-        return self.db_manager.get_vehiculos_libres()
+    #nuevo
+    def listar_vehiculos_libres(self, fecha_inicio=None, fecha_fin=None):
+        """
+        Obtiene vehículos libres, opcionalmente filtrados por rango de fechas.
+        
+        Args:
+            fecha_inicio (str, optional): Fecha de inicio en formato ISO (YYYY-MM-DD)
+            fecha_fin (str, optional): Fecha de fin en formato ISO (YYYY-MM-DD)
+            
+        Returns:
+            list: Lista de vehículos disponibles
+        """
+        return self.db_manager.get_vehiculos_libres(fecha_inicio, fecha_fin)
 
     # --- FUNCIONES DE ALQUILER ---
 
@@ -1208,3 +1218,50 @@ class SistemaAlquiler:
             print(f"Error en listar_todos_los_empleados: {e}")
             return []
 
+    def actualizar_datos_empleado(self, id_empleado, data, usuario_actual):
+        # Verificar permisos según tu lógica
+        if not self.check_permission('admin', usuario_actual):
+            return False
+        
+        persona_data = data.get("persona", {})
+        role_data = data.get("role", {})
+        
+        return self.db_manager.update_employee_full(id_empleado, persona_data, role_data)
+
+    def eliminar_empleado(self, id_empleado, usuario):
+        # Permisos: admin o empleado con rol superior
+        if not self.check_permission('admin', usuario) and not self.check_permission('empleado', usuario):
+            return False
+
+        exito = self.db_manager.delete_employee_full(id_empleado)
+
+        if exito:
+            print(f"Empleado {id_empleado} eliminado exitosamente.")
+            return True
+        else:
+            print(f"No se pudo eliminar al empleado {id_empleado}.")
+            return False
+        
+    def obtener_ultimo_alquiler_cliente(self, usuario):
+        try:
+            if not self.check_permission("Cliente", usuario):
+                return None
+                
+            # Obtener alquileres del usuario
+            alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
+            
+            if not alquileres_cliente:
+                return None
+            
+            # Ordenar por fecha de inicio (más reciente primero) y tomar el primero
+            alquileres_ordenados = sorted(
+                alquileres_cliente, 
+                key=lambda x: x.get('fecha_inicio', ''), 
+                reverse=True
+            )
+            
+            return alquileres_ordenados[0] if alquileres_ordenados else None
+            
+        except Exception as e:
+            print(f"Error obteniendo último alquiler: {e}")
+            return None

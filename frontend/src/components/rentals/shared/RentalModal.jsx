@@ -1,3 +1,4 @@
+//modificadoo
 import React, { useState, useEffect } from 'react';
 import { vehicleService } from "../../../services/vehicleService";
 import { clientService } from "../../../services/clientService";
@@ -5,12 +6,12 @@ import { X, Calendar, Car, User, DollarSign } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useNotification } from '../../../contexts/NotificationContext';
 
-const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
+const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user, initialData}) => {
   const [formData, setFormData] = useState({
-    patente: '',
+    patente: vehicle?.patente || '',
     id_cliente: '',
-    fecha_inicio: '',
-    fecha_fin: '',
+    fecha_inicio: vehicle?.fecha_inicio || '',
+    fecha_fin: vehicle?.fecha_fin || '',
     estado: 'RESERVADO'
   });
   const [vehicles, setVehicles] = useState([]);
@@ -31,27 +32,18 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
 
   useEffect(() => {
   if (isOpen) {
-    if (propio && vehicle && user) {
-      console.log('Vehicle data received:', vehicle);
-      console.log('User data received:', user);
-      
-      const now = new Date();
-      const startDate = new Date(now);
-      startDate.setDate(startDate.getDate());
-      const startString = getLocalDateString(startDate);
-
-      const endDate = new Date(now);
-      endDate.setDate(endDate.getDate() + 1);
-      const endString = getLocalDateString(endDate);
-      
-      setFormData({
-        patente: vehicle.patente || '',
-        id_cliente: user.userId || '', // Cambiar a userId
-        fecha_inicio: startString,
-        fecha_fin: endString,
-        estado: 'RESERVADO'
-      });
+    const dataSource = initialData || vehicle;
+    
+    if (dataSource) {
+      setFormData(prev => ({
+        ...prev,
+        patente: dataSource.patente || '',
+        id_cliente: user?.userId || '',
+        fecha_inicio: dataSource.fecha_inicio || prev.fecha_inicio,
+        fecha_fin: dataSource.fecha_fin || prev.fecha_fin
+      }));
     } else if (rental) {
+      // Existing rental data handling
       setFormData({
         patente: rental.patente || '',
         id_cliente: rental.id_cliente || '',
@@ -60,26 +52,28 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
         estado: rental.estado || 'RESERVADO'
       });
     } else {
+      // Default dates
       const today = new Date().toISOString().split('T')[0];
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
       
-      setFormData({
-        patente: '',
-        id_cliente: '',
-        fecha_inicio: today,
-        fecha_fin: tomorrowFormatted,
-        estado: 'RESERVADO'
-      });
+      setFormData(prev => ({
+        ...prev,
+        patente: vehicle?.patente || '',
+        id_cliente: user?.userId || '',
+        fecha_inicio: prev.fecha_inicio || today,
+        fecha_fin: prev.fecha_fin || tomorrowFormatted
+      }));
     }
+    
     setErrors({});
     
     if (!propio) {
       fetchAvailableData();
     }
   }
-}, [isOpen, rental, vehicle, user, propio]);
+}, [isOpen, rental, vehicle, user, propio, initialData]);
 
   useEffect(() => {
     calculatePrice();
@@ -88,8 +82,14 @@ const RentalModal = ({ isOpen, onClose, rental, onSave, vehicle, user }) => {
 
   const fetchAvailableData = async () => {
     try {
+      // Make sure you have the dates in the form data
+      if (!formData.fecha_inicio || !formData.fecha_fin) {
+        console.error('Start date and end date are required');
+        return;
+      }
+
       const [vehiclesData, clientsData] = await Promise.all([
-        vehicleService.getAvailable(),
+        vehicleService.getAvailable(formData.fecha_inicio, formData.fecha_fin),
         clientService.getAll()
       ]);
       

@@ -7,11 +7,16 @@ export const vehicleService = {
     return response.data;
   },
 
-  // Obtener vehículos libres
-  getAvailable: async () => {
-    const response = await apiClient.get('/vehiculos/libres');
-    return response.data;
-  },
+  // Obtener vehículos libres  !!modificado
+  getAvailable: async (fechaInicio, fechaFin) => {
+  const response = await apiClient.get('/vehiculos/libres', {
+    params: {
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin
+    }
+  });
+  return response.data;
+},
 
   // Obtener vehículo por patente
   getByPlate: async (patente) => {

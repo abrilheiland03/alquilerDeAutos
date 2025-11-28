@@ -1,3 +1,4 @@
+//todo modificado (para volver a version anterior ctrl z)
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -593,9 +594,17 @@ const VehicleManagement = () => {
       return;
     }
 
-    setSelectedVehicleForRental(vehicle);
+    setSelectedVehicleForRental({
+      ...vehicle,
+      // Si hay fechas de filtro, las incluimos en el vehículo seleccionado
+      ...(rentalDates && {
+        fecha_inicio: rentalDates.fecha_inicio,
+        fecha_fin: rentalDates.fecha_fin
+      })
+    });
     setRentalModalOpen(true);
   };
+
 
   const closeRentalModal = () => {
     setSelectedVehicleForRental(null);
@@ -788,7 +797,7 @@ const resetRentalFlow = () => {
                 Cambiar fechas
               </button>
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Vehículos disponibles del {new Date(rentalDates.fecha_inicio).toLocaleDateString()} al {new Date(rentalDates.fecha_fin).toLocaleDateString()}
+                Vehículos disponibles del {new Date(rentalDates.fecha_inicio + 'T00:00:00').toLocaleDateString('es-AR')} al {new Date(rentalDates.fecha_fin + 'T00:00:00').toLocaleDateString('es-AR')}
               </h2>
             </div>
           )}
@@ -936,9 +945,10 @@ const resetRentalFlow = () => {
       <RentalModal
         isOpen={rentalModalOpen}
         onClose={closeRentalModal}
+        onSave={handleSaveRental}
         vehicle={selectedVehicleForRental}
         user={user}
-        onSave={handleSaveRental}
+        initialData={selectedVehicleForRental} // Make sure this is passed
       />
     </div>
   );

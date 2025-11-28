@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import sqlite3
 import os
 from models.cliente import Cliente
@@ -11,6 +11,13 @@ from models.permiso import Permiso
 from models.usuario import Usuario
 from models.color import Color
 from models.marca import Marca
+from models.persona import Persona
+from models.empleado import Empleado
+from models.administrador import Administrador
+from models.alquiler import Alquiler
+from models.danio import Danio
+from models.multa import Multa
+from models.mantenimiento import Mantenimiento
 
 
 
@@ -308,12 +315,28 @@ class DBManager:
                          role_data, role_type):
         conn = None
         try:
+            # Verificar si el mail ya existe
+            if self.get_user_data_for_login_by_mail(persona_data['mail']):
+                print(f"Error: el mail {persona_data['mail']} ya está registrado.")
+                return None
+
             conn = self._get_connection()
             if conn is None: return None
-            
             cursor = conn.cursor()
-            
             cursor.execute("BEGIN")
+
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nacimiento']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento_id'])
+
+            usuario = Usuario(1, usuario_data['user_name'], usuario_data['password_hash'], permiso)
+            
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                int(persona_data['nro_documento']) )
+            
 
             sql_persona = """
                 INSERT INTO Persona (nombre, apellido, mail, telefono, 
@@ -342,14 +365,32 @@ class DBManager:
             ))
 
             if role_type == 'cliente':
+                persona_esp = Cliente(1, fecha_alta, 1, persona_data['nombre'], persona_data['apellido'], 
+                                      persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                int(persona_data['nro_documento']), usuario)
+
                 sql_role = "INSERT INTO Cliente (id_persona, fecha_alta) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta']))
             
             elif role_type == 'empleado':
+                persona_esp = Empleado(1, fecha_alta, role_data['sueldo'], 1, persona_data['nombre'], 
+                                       persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                                        fecha_nac,
+                                        documento,
+                                        int(persona_data['nro_documento']), usuario)
+
                 sql_role = "INSERT INTO Empleado (id_persona, fecha_alta, sueldo) VALUES (?, ?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['fecha_alta'], role_data['sueldo']))
             
             elif role_type == 'admin':
+                persona_esp = Administrador(1, role_data['descripcion'], 1, persona_data['nombre'],
+                                            persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                                        fecha_nac,
+                                        documento,
+                                        int(persona_data['nro_documento']), usuario)
+
                 sql_role = "INSERT INTO Administrador (id_persona, descripcion) VALUES (?, ?)"
                 cursor.execute(sql_role, (id_persona, role_data['descripcion']))
             
@@ -515,6 +556,77 @@ class DBManager:
             if conn:
                 conn.close()
     # --- ABMC de CLIENTE ---
+    def create_client_with_user(self, persona_data, usuario_data, role_data):
+        """Crea solo un cliente (sin usuario) validando con objetos"""
+        # Validar creando objetos
+        
+
+        # Verificar si el mail ya existe
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            raise ValueError(f"El mail {persona_data['mail']} ya está registrado.")
+
+        conn = self._get_connection()
+        if conn is None:
+            print("Error: no se pudo abrir conexión a la BD.")
+           
+            raise sqlite3.Error("No se pudo conectar a la base de datos")
+        
+        try:
+            cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nac']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento'])
+
+            usuario = Usuario(1, usuario_data['user_name'], 'hash', permiso)
+
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                int(persona_data['nro_documento']), )
+            # Insert Persona
+            cursor.execute("""
+                INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                persona_data["nombre"], persona_data["apellido"], persona_data["mail"],
+                persona_data["telefono"], persona_data["fecha_nac"],
+                persona_data["tipo_documento"], persona_data["nro_documento"]
+            ))
+            id_persona = cursor.lastrowid
+
+            # Insert Usuario
+            cursor.execute("""
+                INSERT INTO Usuario(id_persona, user_name, password, id_permiso)
+                VALUES (?, ?, ?, ?)
+            """, (
+                id_persona,
+                usuario_data["user_name"],
+                usuario_data["password"],  # CORREGIDO
+                usuario_data["id_permiso"]
+            ))
+
+            # Insert Cliente
+            cursor.execute("""
+                INSERT INTO Cliente(id_persona, fecha_alta)
+                VALUES (?, ?)
+            """, (
+                id_persona,
+                role_data["fecha_alta"]
+            ))
+
+            conn.commit()
+            return cursor.lastrowid
+
+        except Exception as e:
+            print("Error insertando cliente:", e)
+            conn.rollback()
+            return None
+
+        finally:
+            conn.close()
+
 
     def create_client_only(self, persona_data, role_data):
         conn = None
@@ -838,31 +950,56 @@ class DBManager:
         )
         return vehiculo_obj
 
+    #cambio-------------------------
+
     def get_all_vehiculos(self):
-        sql = """
-            SELECT v.*, 
-                   ea.descripcion as estado_desc,
-                   m.descripcion as marca_desc,
-                   c.descripcion as color_desc
-            FROM Vehiculo v
-            JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
-            JOIN Marca m ON v.id_marca = m.id_marca
-            JOIN Color c ON v.id_color = c.id_color
-            ORDER BY m.descripcion, v.modelo
-        """
         conn = None
-        lista = []
         try:
             conn = self._get_connection()
-            if conn is None: return lista
-            rows = conn.cursor().execute(sql).fetchall()
-            for row in rows:
-                lista.append(self._rebuild_vehiculo_obj(row))
-        except sqlite3.Error as e:
-            print(f"Error al obtener vehiculos: {e}")
+            if conn is None: 
+                return []
+
+            query = """
+            SELECT 
+                v.patente,
+                v.modelo,
+                v.anio,
+                v.precio_flota,
+                v.asientos,
+                v.puertas,
+                v.caja_manual,
+                ea.descripcion as estado,
+                m.descripcion as marca,
+                c.descripcion as color
+            FROM Vehiculo v
+            LEFT JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
+            LEFT JOIN Marca m ON v.id_marca = m.id_marca
+            LEFT JOIN Color c ON v.id_color = c.id_color
+            ORDER BY v.patente
+            """
+
+            cursor = conn.cursor()
+            cursor.execute(query)
+
+            # Obtener los nombres de las columnas
+            columns = [column[0] for column in cursor.description]
+
+            # Convertir los resultados a una lista de diccionarios
+            vehiculos = []
+            for row in cursor.fetchall():
+                vehiculo = dict(zip(columns, row))
+                # Asegurarse de que todos los campos necesarios estén presentes
+                vehiculo['caja_manual'] = bool(vehiculo.get('caja_manual', 0))
+                vehiculos.append(vehiculo)
+
+            return vehiculos
+
+        except Exception as e:
+            print(f"Error en get_all_vehiculos: {str(e)}")
+            return []
         finally:
-            if conn: conn.close()
-        return lista
+            if conn:
+                conn.close()
 
     def get_vehiculo_by_patente(self, patente):
         sql = """
@@ -901,6 +1038,19 @@ class DBManager:
             conn = self._get_connection()
             if conn is None: return False
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            vehiculo = Vehiculo(
+                patente=data['patente'].upper(),
+                modelo=data['modelo'],
+                marca=self.get_marca_by_id(data['id_marca']),
+                anio=int(data['anio']),
+                precio_flota=float(data['precio_flota']),
+                asientos=data['asientos'],
+                puertas=data['puertas'],
+                caja_manual=bool(data['caja_manual']),
+                estado=self.get_estado_auto_by_id(data['id_estado']),
+                color=self.get_color_by_id(data['id_color'])
+            )
             cursor.execute(sql, (
                 data['patente'].upper(), 
                 data['modelo'], 
@@ -979,65 +1129,123 @@ class DBManager:
         finally:
             if conn: conn.close()
 
-    def get_vehiculos_libres(self):
-        sql = """
+    #modificacion libres 
+    def get_vehiculos_libres(self, fecha_inicio=None, fecha_fin=None):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None: 
+                return []
+
+            # Configurar el row_factory para devolver diccionarios
+            conn.row_factory = sqlite3.Row
+
+            query = """
             SELECT v.*, 
-                   ea.descripcion as estado_desc,
-                   m.descripcion as marca_desc,
-                   c.descripcion as color_desc
+                ea.descripcion as estado,
+                m.descripcion as marca,
+                c.descripcion as color
             FROM Vehiculo v
             JOIN EstadoAuto ea ON v.id_estado = ea.id_estado
             JOIN Marca m ON v.id_marca = m.id_marca
             JOIN Color c ON v.id_color = c.id_color
-            WHERE ea.descripcion = 'Libre'
-            ORDER BY m.descripcion, v.modelo
-        """
-        conn = None
-        lista = []
-        try:
-            conn = self._get_connection()
-            if conn is None: return lista
-            rows = conn.cursor().execute(sql).fetchall()
-            for row in rows:
-                lista.append(self._rebuild_vehiculo_obj(row))
+            WHERE ea.descripcion IN ('Libre', 'Reservado')
+            """
+
+            params = []
+
+            # Si se proporcionan fechas, verificar disponibilidad
+            if fecha_inicio and fecha_fin:
+                try:
+                    inicio = datetime.fromisoformat(fecha_inicio)
+                    fin = datetime.fromisoformat(fecha_fin)
+
+                    # Agregar 3 días de margen
+                    inicio_margen = (inicio - timedelta(days=3)).strftime('%Y-%m-%d')
+                    fin_margen = (fin + timedelta(days=3)).strftime('%Y-%m-%d')
+
+                    query += """
+                    AND v.patente NOT IN (
+                        SELECT a.patente 
+                        FROM Alquiler a
+                        JOIN EstadoAlquiler ea ON a.id_estado = ea.id_estado
+                        WHERE a.fecha_inicio >= ? 
+                        AND a.fecha_fin <= ?
+                        AND ea.descripcion IN ('Reservado', 'En curso')
+                    )
+                    """
+                    params.extend([inicio_margen, fin_margen])
+                except ValueError as e:
+                    print(f"Error al procesar fechas: {e}")
+                    return []
+
+            query += " ORDER BY v.modelo"
+
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+
+            # Convertir los resultados a una lista de diccionarios
+            vehiculos = []
+            for row in cursor.fetchall():
+                vehiculo = dict(row)
+                # Asegurarse de que todos los campos necesarios estén presentes
+                if 'patente' in vehiculo:
+                    vehiculos.append(vehiculo)
+
+            return vehiculos
+
         except sqlite3.Error as e:
-            print(f"Error al obtener vehiculos libres: {e}")
+            print(f"Error al obtener vehículos libres: {e}")
+            return []
         finally:
-            if conn: conn.close()
-        return lista
+            if conn: 
+                conn.close()
 
     
     
     # --- FUNCIONES DE ALQUILER ---
 
+    #modificado
+
     def create_alquiler_transactional(self, data):
         conn = None
         try:
             conn = self._get_connection()
-            if conn is None: return False
-            
+            if conn is None: 
+                return False
+                
             cursor = conn.cursor()
             cursor.execute("BEGIN")
 
+            # Verificar si el vehículo existe
             cursor.execute("SELECT id_estado FROM Vehiculo WHERE patente = ?", (data['patente'],))
             row = cursor.fetchone()
             
             if not row:
                 raise ValueError(f"El vehículo {data['patente']} no existe.")
             
-            if row['id_estado'] != 1: 
-                raise ValueError(f"El vehículo {data['patente']} no está libre (Estado ID: {row['id_estado']}).")
+            if row['id_estado'] not in [1, 5]:  # 1: Libre, 5: Reservado
+                raise ValueError(f"El vehículo {data['patente']} no está disponible para alquiler (Estado ID: {row['id_estado']}).")
 
+            # Convertir fechas a objetos datetime
             fecha_inicio = datetime.fromisoformat(data['fecha_inicio'])
             fecha_fin = datetime.fromisoformat(data['fecha_fin'])
             hoy = datetime.now()
             
-            if fecha_inicio.date() < hoy.date():
-                raise ValueError("La fecha de inicio debe ser futura o igual a hoy.")
+            
+            # Validaciones básicas de fechas
+            hoy_sin_hora = hoy.date()
+            fecha_inicio_sin_hora = fecha_inicio.date()
+            print(f"Fecha actual: {hoy}, Fecha inicio: {fecha_inicio}")
+            print(f"Fecha actual (solo fecha): {hoy_sin_hora}, Fecha inicio (solo fecha): {fecha_inicio_sin_hora}")
+
+            if fecha_inicio_sin_hora < hoy_sin_hora:
+                raise ValueError("La fecha de inicio no puede ser anterior a hoy")
             
             if fecha_fin <= fecha_inicio:
                 raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio.")
 
+            # Verificar mantenimientos programados
             sql_check_mantenimiento = """
                 SELECT id_mantenimiento 
                 FROM Mantenimiento 
@@ -1055,28 +1263,62 @@ class DBManager:
             if cursor.fetchone():
                 raise ValueError(f"El vehículo {data['patente']} tiene un mantenimiento programado que coincide con las fechas solicitadas.")
 
-            sql_alquiler = """
-                INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
-                                      fecha_inicio, fecha_fin, id_estado)
-                VALUES (?, ?, ?, ?, ?, ?)
+            # Verificar disponibilidad del vehículo en las fechas solicitadas
+            sql_check_alquileres = """
+                SELECT fecha_inicio, fecha_fin 
+                FROM Alquiler 
+                WHERE patente = ? 
+                AND id_estado IN (1, 2)  -- Solo considerar reservas activas o en curso
+                AND fecha_fin >= ?  -- Solo alquileres que terminan después de la fecha de inicio solicitada
+                ORDER BY fecha_inicio
             """
 
-            if data.get('estado', '').upper() == 'RESERVADO':
-                id_estado = 1
-            else:
-                id_estado = 2
+            cursor.execute(sql_check_alquileres, (data['patente'], data['fecha_inicio']))
+            alquileres = cursor.fetchall()
 
+            for alq in alquileres:
+                alq_inicio = datetime.fromisoformat(alq['fecha_inicio'])
+                alq_fin = datetime.fromisoformat(alq['fecha_fin'])
+                
+                # Verificar superposición directa
+                if (fecha_inicio < alq_fin and fecha_fin > alq_inicio):
+                    raise ValueError(f"El vehículo ya está reservado desde {alq_inicio.date()} hasta {alq_fin.date()}")
+                
+                # Verificar si hay menos de 3 días entre alquileres
+                dias_antes = (alq_inicio - fecha_fin).days
+                if 0 < dias_antes < 3:
+                    raise ValueError(f"Debe haber al menos 3 días entre alquileres. El próximo alquiler comienza el {alq_inicio.date()}")
+                
+                dias_despues = (fecha_inicio - alq_fin).days
+                if 0 < dias_despues < 3:
+                    raise ValueError(f"Debe haber al menos 3 días entre alquileres. El alquiler anterior termina el {alq_fin.date()}")
+
+            # Determinar los estados
+            es_hoy = fecha_inicio.date() == hoy.date()
+            es_reservado = data.get('estado', '').upper() == 'RESERVADO' and not es_hoy
+
+            estado_vehiculo = 2 if es_hoy else (5 if es_reservado else 2)  # 2: Alquilado, 5: Reservado
+            estado_alquiler = 2 if es_hoy else (1 if es_reservado else 2)  # 2: En curso, 1: Reservado
+
+            # Insertar el alquiler
+            sql_alquiler = """
+                INSERT INTO Alquiler (patente, id_cliente, id_empleado, 
+                                    fecha_inicio, fecha_fin, id_estado)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """
+            
             cursor.execute(sql_alquiler, (
                 data['patente'],
                 data['id_cliente'],
                 data['id_empleado'],
                 data['fecha_inicio'],
                 data['fecha_fin'],
-                id_estado
+                estado_alquiler
             ))
 
-            sql_update_auto = "UPDATE Vehiculo SET id_estado = 2 WHERE patente = ?"
-            cursor.execute(sql_update_auto, (data['patente'],))
+            # Actualizar estado del vehículo
+            sql_update_auto = "UPDATE Vehiculo SET id_estado = ? WHERE patente = ?"
+            cursor.execute(sql_update_auto, (estado_vehiculo, data['patente']))
 
             conn.commit()
             return True
@@ -1089,6 +1331,7 @@ class DBManager:
         finally:
             if conn:
                 conn.close()
+
 
     def get_all_alquileres(self, id_persona_filtro=None):
         # CORRECCIÓN: Incluir todos los datos del cliente
@@ -1278,7 +1521,33 @@ class DBManager:
             if conn is None: return False
             
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            vehiculo = self.get_vehiculo_by_patente('AA111AA')
+            cliente = self.get_client_by_id(1)
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
             
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            alquiler = Alquiler(
+                1,
+                vehiculo,
+                cliente,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            )
+            danio = Danio(
+                1,
+                alquiler,
+                costo=data['costo'],
+                detalle=data['detalle']
+            )
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['id_alquiler'],))
             alquiler = cursor.fetchone()
             
@@ -1357,6 +1626,36 @@ class DBManager:
             
             cursor = conn.cursor()
             
+            cursor.execute("BEGIN")
+            vehiculo = self.get_vehiculo_by_patente('AA111AA')
+            cliente = self.get_client_by_id(1)
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
+            
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            fecha_multa = datetime.now() + timedelta(days=3)
+            alquiler = Alquiler(
+                1,
+                vehiculo,
+                cliente,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            )
+            multa = Multa(
+                1,
+                alquiler,
+                costo=data['costo'],
+                detalle=data['detalle'],
+                fecha_multa=fecha_multa
+            )
+
             cursor.execute("SELECT id_estado FROM Alquiler WHERE id_alquiler = ?", (data['alquiler_id'],))
             alquiler = cursor.fetchone()
             
@@ -1462,6 +1761,28 @@ class DBManager:
             
             if cursor.fetchone():
                 raise ValueError("El vehículo tiene alquileres programados en esas fechas.")
+            
+            vehiculo = self.get_vehiculo_by_patente(data['patente'])
+            
+            empleado = Empleado(1, date.today(), 100, 1,1, 'juan', 
+                                       'perez', 'hola@gmail.com', '12345678',
+                                        date.today() - timedelta(days=8000),
+                                        Documento(1, 'DNI'),
+                                        12345678, None)
+            
+            estado = self.get_estado_alquiler_by_id(1)
+            fecha_inicio = datetime.now() + timedelta(days=1)
+            fecha_fin = datetime.now() + timedelta(days=5)
+            estado = self.get_estado_mantenimiento_by_id(3)
+            mantenimiento = Mantenimiento(
+                1,
+                vehiculo,
+                empleado,
+                fecha_inicio,
+                fecha_fin,
+                'asda',
+                estado
+            )
 
             sql_insert = """
                 INSERT INTO Mantenimiento (patente, id_empleado, fecha_inicio, fecha_fin, detalle, id_estado)
@@ -1479,10 +1800,13 @@ class DBManager:
             conn.commit()
             return True
 
-        except (sqlite3.Error, ValueError) as e:
-            print(f"Error al programar mantenimiento: {e}")
+        except sqlite3.Error as e:
+            # DB-level errors (sqlite) -> log and return False
+            print(f"Error al programar mantenimiento (DB error): {e}")
             if conn: conn.rollback()
             return False
+        # NOTE: ValueError used as a business validation (overlapping rentals) should
+        # bubble up to the caller so the API endpoint can return an explanatory 400.
         finally:
             if conn: conn.close()
 
@@ -1582,6 +1906,7 @@ class DBManager:
             conn = self._get_connection()
             if conn is None: return lista
             rows = conn.cursor().execute(sql).fetchall()
+            
             for row in rows:
                 lista.append(dict(row))
             return lista
@@ -2138,9 +2463,25 @@ class DBManager:
             print("Error: no se pudo abrir conexión a la BD.")
             return None
 
+        # Verificar mail duplicado
+        if self.get_user_data_for_login_by_mail(persona_data['mail']):
+            print(f"Error: el mail {persona_data['mail']} ya está registrado.")
+            return None
+
         try:
             cursor = conn.cursor()
+            cursor.execute("BEGIN")
+            fecha_nac = datetime.fromisoformat(persona_data['fecha_nac']).date()
+            fecha_alta = datetime.fromisoformat(role_data.get('fecha_alta', date.today().isoformat())).date()
+            permiso = self.get_permiso_by_id(usuario_data['id_permiso'])
+            documento = self.get_documento_by_id(persona_data['tipo_documento'])
 
+            usuario = Usuario(1, usuario_data['user_name'], 'hash', permiso)
+
+            persona= Persona(1, persona_data['nombre'], persona_data['apellido'], persona_data['mail'], persona_data['telefono'],
+                fecha_nac, 
+                documento, 
+                int(persona_data['nro_documento']), )
             # Insert Persona
             cursor.execute("""
                 INSERT INTO Persona(nombre, apellido, mail, telefono, fecha_nac, tipo_documento, nro_documento)
@@ -2224,6 +2565,115 @@ class DBManager:
         except Exception as e:
             print(f"Error obteniendo empleados: {e}")
             return []
+
+        finally:
+            if conn:
+                conn.close()
+
+    def update_employee_full(self, id_empleado, persona_data, role_data):
+        conn = None
+        cursor = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            # --- Actualizar Persona ---
+            cursor.execute("""
+                UPDATE persona
+                SET nombre=?,
+                    apellido=?,
+                    mail=?,
+                    telefono=?,
+                    fecha_nac=?,
+                    tipo_documento=?,
+                    nro_documento=?
+                WHERE id_persona = (SELECT id_persona FROM empleado WHERE id_empleado=?)
+            """, (
+                persona_data["nombre"],
+                persona_data["apellido"],
+                persona_data["mail"],
+                persona_data["telefono"],
+                persona_data["fecha_nac"],
+                persona_data["tipo_documento"],
+                persona_data["nro_documento"],
+                id_empleado
+            ))
+
+            # --- Actualizar Empleado / Role ---
+            cursor.execute("""
+                UPDATE empleado
+                SET sueldo=?,
+                    horario=?,
+                    fecha_alta=?
+                WHERE id_empleado=?
+            """, (
+                role_data["sueldo"],
+                role_data["horario"],
+                role_data["fecha_alta"],
+                id_empleado
+            ))
+
+            conn.commit()
+            return True
+
+        except Exception as e:
+            print("ERROR update_employee_full:", e)
+            if conn:
+                conn.rollback()
+            return False
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    def delete_employee_full(self, id_empleado):
+        conn = None
+        try:
+            conn = self._get_connection()
+            if conn is None:
+                return False
+
+            cursor = conn.cursor()
+
+            # Obtener id_persona desde Empleado
+            row = cursor.execute(
+                "SELECT id_persona FROM Empleado WHERE id_empleado = ?", (id_empleado,)
+            ).fetchone()
+
+            if not row:
+                print("Error: Empleado no encontrado.")
+                return False
+
+            id_persona = row["id_persona"]
+
+            cursor.execute("BEGIN")
+
+            # 1) Eliminar Usuario asociado
+            cursor.execute("DELETE FROM Usuario WHERE id_persona = ?", (id_persona,))
+
+            # 2) Eliminar Empleado
+            cursor.execute("DELETE FROM Empleado WHERE id_empleado = ?", (id_empleado,))
+
+            # 3) Eliminar Persona
+            cursor.execute("DELETE FROM Persona WHERE id_persona = ?", (id_persona,))
+
+            conn.commit()
+            return True
+
+        except sqlite3.IntegrityError:
+            print(f"Error de integridad: No se puede eliminar. "
+                f"El empleado (ID: {id_empleado}) probablemente tiene alquileres asociados.")
+            if conn:
+                conn.rollback()
+            return False
+
+        except (sqlite3.Error, ValueError) as e:
+            print(f"Error al eliminar empleado: {e}")
+            if conn:
+                conn.rollback()
+            return False
 
         finally:
             if conn:
