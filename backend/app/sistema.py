@@ -1034,34 +1034,63 @@ class SistemaAlquiler:
             traceback.print_exc()
             return {}
 
+    ##
     def _estadisticas_cliente(self, usuario):
         try:
+            print(f"DEBUG: Obteniendo estadísticas para cliente ID: {usuario.id_usuario}")
+            
             # Obtener el ID de persona del usuario
             usuario_completo = self.db_manager.get_full_usuario_by_id(usuario.id_usuario)
             if not usuario_completo:
-                return {}
+                print("DEBUG: No se pudo obtener información completa del usuario")
+                return {
+                    'vehiculos_disponibles': 0,
+                    'alquileres_activos': 0,
+                    'total_alquileres': 0,
+                    'vehiculo_favorito': None,
+                    'total_vehiculos': 0
+                }
             
-            # Obtener todos los alquileres del cliente usando id_usuario
+            # Obtener todos los alquileres del cliente
             alquileres_cliente = self.db_manager.get_alquileres_por_usuario(usuario.id_usuario)
+            print(f"DEBUG: Alquileres del cliente: {len(alquileres_cliente)}")
+            
+            # Obtener vehículos disponibles
             vehiculos = self.db_manager.get_all_vehiculos()
+            vehiculos_libres = [v for v in vehiculos if hasattr(v, 'estado') and 
+                            ((hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre') or 
+                                (isinstance(v.estado, str) and v.estado == 'Libre'))]
             
-            vehiculos_libres = [v for v in vehiculos if hasattr(v.estado, 'descripcion') and v.estado.descripcion == 'Libre']
-            alquileres_activos = [a for a in alquileres_cliente if a.get('id_estado') in [2, 3]]
+            # Filtrar alquileres activos
+            alquileres_activos = [a for a in alquileres_cliente if isinstance(a, dict) and a.get('id_estado') in [2, 3]]
             
-            # Encontrar vehículo favorito (más alquilado)
+            # Obtener vehículo favorito
             vehiculo_favorito = self._obtener_vehiculo_favorito_cliente(usuario.id_usuario, alquileres_cliente, vehiculos)
             
-            return {
+            stats = {
                 'vehiculos_disponibles': len(vehiculos_libres),
                 'alquileres_activos': len(alquileres_activos),
                 'total_alquileres': len(alquileres_cliente),
                 'vehiculo_favorito': vehiculo_favorito,
-                'total_vehiculos': len(vehiculos)  # Agregado para mantener consistencia
+                'total_vehiculos': len(vehiculos)
             }
+            
+            print(f"DEBUG: Estadísticas del cliente: {stats}")
+            return stats
+            
         except Exception as e:
-            print(f"Error en estadísticas cliente: {e}")
-            return {}
+            print(f"ERROR en _estadisticas_cliente: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'vehiculos_disponibles': 0,
+                'alquileres_activos': 0,
+                'total_alquileres': 0,
+                'vehiculo_favorito': None,
+                'total_vehiculos': 0
+            }
 
+    ##
     def _obtener_vehiculo_favorito_cliente(self, id_usuario, alquileres_cliente, vehiculos):
         if not alquileres_cliente:
             return None
